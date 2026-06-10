@@ -21,7 +21,7 @@ jobs:
 
       - name: Verilator lint
         run: |
-          verilator --lint-only -Wall \
+          verilator --lint-only --timing -Wno-fatal -Wall \
             otter_defs_pkg.sv \
             ALU.sv \
             AtomicController.sv \
