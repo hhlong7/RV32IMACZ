@@ -1,6 +1,6 @@
 # RISC-V-MCPU
 
-## Verification-Quality Flow (Same-Day Upgrade)
+## Verification-Quality Flow
 
 This repo now includes a verification-oriented flow that layers assertions,
 constrained-random stress, functional coverage aggregation, and CI automation
@@ -40,6 +40,7 @@ The repository now includes a Spike-check integration point (`tools/spike_scoreb
 If `spike` is not installed locally, the step is reported as skipped and the
 rest of the verification suite still runs to completion.
 
+## Benchmark tables comparing cycles after adding new functionalities
 
 Historical benchmark comparison (captured on March 27, 2026 before the IF1/IF2 split):
 
