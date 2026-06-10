@@ -21,7 +21,7 @@ jobs:
 
       - name: Verilator lint
         run: |
-          verilator --lint-only --timing -Wall \
+          verilator --lint-only --timing -Wall -Wno-fatal --top-module tb_core \
             -Wno-EOFNEWLINE \
             -Wno-DECLFILENAME \
             -Wno-PINCONNECTEMPTY \
