@@ -21,7 +21,18 @@ jobs:
 
       - name: Verilator lint
         run: |
-          verilator --lint-only --timing -Wno-fatal -Wall \
+          verilator --lint-only --timing -Wall \
+            -Wno-EOFNEWLINE \
+            -Wno-DECLFILENAME \
+            -Wno-PINCONNECTEMPTY \
+            -Wno-MULTITOP \
+            -Wno-TIMESCALEMOD \
+            -Wno-WIDTHTRUNC \
+            -Wno-WIDTHEXPAND \
+            -Wno-UNUSEDSIGNAL \
+            -Wno-CASEINCOMPLETE \
+            -Wno-BLKSEQ \
+            -Wno-LATCH \
             otter_defs_pkg.sv \
             ALU.sv \
             AtomicController.sv \
