@@ -1,6 +1,6 @@
 # RV32IMACZ
 
-This repo contains a simulation-first RISC-V CPU project built around a
+This repo contains a simulation-first RISC-V CPU built around a
 seven-stage in-order core and a practical verification flow. The current
 software target is `rv32imac_zicsr_zifencei`, and the repo includes directed
 tests, randomized tests, and a FreeRTOS + CoreMark demo.
@@ -17,8 +17,6 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
   report aggregation
 
 ## Learn The Project
-
-If you are new to the repo, this is a good reading order:
 
 1. `otter_mcu_pipeline_template_v2.sv`
    Main core RTL and pipeline behavior.
