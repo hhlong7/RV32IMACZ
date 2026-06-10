@@ -102,7 +102,7 @@ memory image when it finishes.
 
 ## Latest Verification Run
 
-The verification flow was run on June 10, 2026 using the repo's real scripts,
+The final verification flow was run on June 10, 2026 using the repo's real scripts,
 not just listed as an example.
 
 Commands run:
