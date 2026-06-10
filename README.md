@@ -20,14 +20,14 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
 
 Top-level block view of the core:
 
-<p align="center">
-  <img src="docs/images/otter_mcu_block.svg" alt="OTTER_MCU top-level block diagram" width="900">
+<p align="left">
+  <img src="docs/images/otter_mcu_block.svg" alt="OTTER_MCU top-level block diagram" width="450">
 </p>
 
 Deeper module hierarchy view extracted from the RTL:
 
-<p align="center">
-  <img src="docs/images/otter_mcu_hierarchy.svg" alt="OTTER_MCU module hierarchy diagram" width="900">
+<p align="right">
+  <img src="docs/images/otter_mcu_hierarchy.svg" alt="OTTER_MCU module hierarchy diagram" width="450">
 </p>
 
 ## Learn The Project
