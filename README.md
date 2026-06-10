@@ -16,18 +16,45 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
 - Verification flows for directed regressions, constrained-random testing, and
   report aggregation
 
+## Supported ISA
+
+Current software target:
+
+```text
+rv32imac_zicsr_zifencei
+```
+
+Implemented ISA pieces:
+
+| Extension | Description |
+| --- | --- |
+| `RV32I` | Base 32-bit integer instruction set |
+| `RV32M` | Integer multiply and divide |
+| `RV32A` | Atomic instructions including `LR/SC` and AMOs |
+| `RV32C` | Compressed 16-bit instruction support |
+| `Zicsr` | CSR read/modify/write instructions |
+| `Zifencei` | Instruction-stream synchronization with `fence.i` |
+
+Related system support included in the core:
+
+- machine-mode CSR, trap, and `mret` handling
+- timer interrupt support
+- MMIO-backed software-visible I/O path
+- verification workloads covering arithmetic, control flow, cache behavior,
+  atomics, compressed instructions, CSR operations, traps, and `fence.i`
+
 ## Architecture Diagrams
 
 Top-level block view of the core:
 
-<p align="left">
-  <img src="docs/images/otter_mcu_block.svg" alt="OTTER_MCU top-level block diagram" width="450">
+<p align="center">
+  <img src="docs/images/otter_mcu_block.svg" alt="OTTER_MCU top-level block diagram" width="800">
 </p>
 
 Deeper module hierarchy view extracted from the RTL:
 
-<p align="right">
-  <img src="docs/images/otter_mcu_hierarchy.svg" alt="OTTER_MCU module hierarchy diagram" width="450">
+<p align="center">
+  <img src="docs/images/otter_mcu_hierarchy.svg" alt="OTTER_MCU module hierarchy diagram" width="800">
 </p>
 
 ## Learn The Project
