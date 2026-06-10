@@ -100,6 +100,45 @@ This builds the software image in `software/freertos_coremark/`, temporarily
 loads it into `Test_All.mem`, runs simulation, and restores your original
 memory image when it finishes.
 
+## Latest Verification Run
+
+The verification flow was run on June 10, 2026 using the repo's real scripts,
+not just listed as an example.
+
+Commands run:
+
+```bash
+bash tools/run_verification_quality.sh
+verilator --lint-only --timing -Wall -Wno-fatal --top-module tb_core ...
+bash tools/run_freertos_coremark.sh
+```
+
+Results:
+
+- Directed regression suite: `23 / 23` workloads passed
+- Randomized verification: standalone `TB_STORE_BUFFER` test passed
+- Seeded randomized RTL runs: `16 / 16` passed
+- Aggregate verification summary written to
+  `out/verification_logs/verification_summary.json`
+- Spike scoreboard hook completed and detected local Spike successfully
+- Verilator lint exited with code `0`
+- FreeRTOS + CoreMark smoke run passed with `pass_sseg=201` at cycle `373191`
+
+The June 10, 2026 aggregate summary reported:
+
+- all defined summary bins hit for hazard, cache, branch recovery, CSR/trap,
+  memory-ordering, atomic, and randomized instruction-class coverage
+- `branch_redirects=1272`
+- `ic_hit=3178`, `ic_miss=204`
+- `dc_hit=574`, `dc_miss=326`
+- `sb_enq=682`, `sb_fwd=150`, `fence_wait=380`
+- `atomic commits=244`, `sc_success=50`, `sc_fail=46`
+
+Lint note:
+
+- Verilator reported existing `PROCASSINIT` warnings in `tb_core.sv`, but the
+  lint command still completed successfully with exit code `0`
+
 ## Project Layout
 
 - Root `*.sv` files: core RTL, caches, MMIO, predictor, and testbenches
