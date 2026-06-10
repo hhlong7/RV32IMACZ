@@ -16,6 +16,20 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
 - Verification flows for directed regressions, constrained-random testing, and
   report aggregation
 
+## Architecture Diagrams
+
+Top-level block view of the core:
+
+<p align="center">
+  <img src="docs/images/otter_mcu_block.svg" alt="OTTER_MCU top-level block diagram" width="900">
+</p>
+
+Deeper module hierarchy view extracted from the RTL:
+
+<p align="center">
+  <img src="docs/images/otter_mcu_hierarchy.svg" alt="OTTER_MCU module hierarchy diagram" width="900">
+</p>
+
 ## Learn The Project
 
 1. `otter_mcu_pipeline_template_v2.sv`
