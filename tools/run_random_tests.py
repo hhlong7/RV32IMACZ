@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import random
+from collections import Counter
 import subprocess
 import sys
 import tempfile
@@ -30,6 +32,8 @@ ATOMIC_FAIL_BASE = 2600
 ATOMIC_SEEDS = [13, 37, 71, 89]
 ATOMIC_OPS_PER_TEST = 20
 ATOMIC_SCRATCH_WORDS = 8
+LOG_DIR_ENV = os.environ.get("VERIF_LOG_DIR", "").strip()
+LOG_DIR = pathlib.Path(LOG_DIR_ENV) if LOG_DIR_ENV else None
 
 SIM_SOURCES = [
     "otter_defs_pkg.sv",
@@ -202,7 +206,7 @@ def encode_addi(rd: str, rs1: str, imm: int) -> int:
     return (imm12 << 20) | (REG_NUM[rs1] << 15) | (REG_NUM[rd] << 7) | 0x13
 
 
-def build_program(seed: int, pass_code: int, fail_base: int) -> str:
+def build_program(seed: int, pass_code: int, fail_base: int, cov: Counter[str] | None = None) -> str:
     rng = random.Random(seed)
     reg_state = {idx: 0 for _, idx in REGS}
     scratch = [0] * 16
@@ -229,6 +233,8 @@ def build_program(seed: int, pass_code: int, fail_base: int) -> str:
 
     for _ in range(OPS_PER_TEST):
         kind = rng.choice(["load_imm", "alu", "alui", "muldiv", "storeload", "branch"])
+        if cov is not None:
+            cov[f"base_{kind}"] += 1
 
         if kind == "load_imm":
             rd_name, rd_idx = choose_reg()
@@ -390,7 +396,7 @@ def build_program(seed: int, pass_code: int, fail_base: int) -> str:
     return "\n".join(lines)
 
 
-def build_frontend_program(seed: int, pass_code: int, fail_base: int) -> str:
+def build_frontend_program(seed: int, pass_code: int, fail_base: int, cov: Counter[str] | None = None) -> str:
     rng = random.Random(seed)
     call_acc = 0
     patch_acc = 0
@@ -417,6 +423,8 @@ def build_frontend_program(seed: int, pass_code: int, fail_base: int) -> str:
 
     for idx in range(FRONTEND_OPS_PER_TEST):
         kind = rng.choice(["branch", "jump", "call", "patch"])
+        if cov is not None:
+            cov[f"frontend_{kind}"] += 1
 
         if kind == "branch":
             lhs = rng.randrange(-32, 32)
@@ -575,7 +583,7 @@ def build_frontend_program(seed: int, pass_code: int, fail_base: int) -> str:
     return "\n".join(lines)
 
 
-def build_dual_issue_program(seed: int, pass_code: int, fail_base: int) -> str:
+def build_dual_issue_program(seed: int, pass_code: int, fail_base: int, cov: Counter[str] | None = None) -> str:
     rng = random.Random(seed)
     reg_state = {idx: 0 for _, idx in REGS}
     control_acc = 0
@@ -663,6 +671,8 @@ def build_dual_issue_program(seed: int, pass_code: int, fail_base: int) -> str:
         }
 
     for idx in range(DUAL_ISSUE_BLOCKS):
+        if cov is not None:
+            cov["dual_pair_blocks"] += 1
         pair: list[dict[str, object]] = []
         while len(pair) < 2:
             cand = build_pairable_instr()
@@ -695,6 +705,8 @@ def build_dual_issue_program(seed: int, pass_code: int, fail_base: int) -> str:
         # bugs where a non-pairable instruction is buffered in slot 1 and later
         # slides up to become the oldest instruction.
         if rng.random() < 0.45:
+            if cov is not None:
+                cov["dual_control_blocks"] += 1
             step = rng.randrange(1, 8)
             control_acc += step
             lines.extend(
@@ -737,7 +749,7 @@ def build_dual_issue_program(seed: int, pass_code: int, fail_base: int) -> str:
     return "\n".join(lines)
 
 
-def build_atomic_program(seed: int, pass_code: int, fail_base: int) -> str:
+def build_atomic_program(seed: int, pass_code: int, fail_base: int, cov: Counter[str] | None = None) -> str:
     rng = random.Random(seed)
     scratch = [u32(rng.getrandbits(32)) for _ in range(ATOMIC_SCRATCH_WORDS)]
     lines = [
@@ -772,6 +784,8 @@ def build_atomic_program(seed: int, pass_code: int, fail_base: int) -> str:
 
     for _ in range(ATOMIC_OPS_PER_TEST):
         kind = rng.choice(["amo", "lrsc_success", "lrsc_fail", "fence"])
+        if cov is not None:
+            cov[f"atomic_{kind}"] += 1
         slot = rng.randrange(0, len(scratch))
         offset = slot * 4
 
@@ -894,6 +908,29 @@ def run(cmd: list[str], cwd: pathlib.Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
 
 
+def extract_tb_line(sim_out: str, prefix: str) -> str:
+    return next((line for line in sim_out.splitlines() if line.startswith(prefix)), "")
+
+
+def emit_sim_summary(tag: str, seed: int, pass_code: int, sim_out: str) -> None:
+    final_line = extract_tb_line(sim_out, "TB FINAL")
+    stats_line = extract_tb_line(sim_out, "TB STATS")
+    lsu_line = extract_tb_line(sim_out, "TB LSU")
+    atom_line = extract_tb_line(sim_out, "TB ATOM")
+    cov_line = extract_tb_line(sim_out, "TB COV")
+
+    if final_line:
+        print(f"{tag}_seed={seed} pass_code={pass_code} {final_line}")
+    if stats_line:
+        print(f"{tag}_seed={seed} {stats_line}")
+    if lsu_line:
+        print(f"{tag}_seed={seed} {lsu_line}")
+    if atom_line:
+        print(f"{tag}_seed={seed} {atom_line}")
+    if cov_line:
+        print(f"{tag}_seed={seed} {cov_line}")
+
+
 def compile_sim() -> None:
     cmd = ["iverilog", "-g2012", "-o", str(SIM), *SIM_SOURCES]
     result = run(cmd, ROOT)
@@ -923,6 +960,11 @@ def run_store_buffer_random_tb() -> None:
 
 
 def main() -> int:
+    if LOG_DIR is not None:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+    random_cov = Counter()
+
     run_store_buffer_random_tb()
     compile_sim()
 
@@ -935,7 +977,7 @@ def main() -> int:
             fail_base = FAIL_BASE + idx * 100
             asm_path = tmp / f"random_{seed}.s"
             mem_path = tmp / f"random_{seed}.mem"
-            asm_path.write_text(build_program(seed, pass_code, fail_base), encoding="ascii")
+            asm_path.write_text(build_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
 
             assemble = run(
                 [
@@ -980,8 +1022,9 @@ def main() -> int:
                 sys.stderr.write(sim.stderr)
                 return 1
 
-            final_line = next((line for line in sim.stdout.splitlines() if line.startswith("TB FINAL")), "")
-            print(f"seed={seed} pass_code={pass_code} {final_line}")
+            if LOG_DIR is not None:
+                (LOG_DIR / f"random_{seed}.log").write_text(sim.stdout, encoding="ascii")
+            emit_sim_summary("base", seed, pass_code, sim.stdout)
 
         # Then run a front-end-focused stream that stresses redirects, returns,
         # and fence.i patch/refetch behavior specific to the IF1/IF2 split.
@@ -990,7 +1033,7 @@ def main() -> int:
             fail_base = FRONTEND_FAIL_BASE + idx * 100
             asm_path = tmp / f"frontend_random_{seed}.s"
             mem_path = tmp / f"frontend_random_{seed}.mem"
-            asm_path.write_text(build_frontend_program(seed, pass_code, fail_base), encoding="ascii")
+            asm_path.write_text(build_frontend_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
 
             assemble = run(
                 [
@@ -1035,8 +1078,9 @@ def main() -> int:
                 sys.stderr.write(sim.stderr)
                 return 1
 
-            final_line = next((line for line in sim.stdout.splitlines() if line.startswith("TB FINAL")), "")
-            print(f"frontend_seed={seed} pass_code={pass_code} {final_line}")
+            if LOG_DIR is not None:
+                (LOG_DIR / f"frontend_{seed}.log").write_text(sim.stdout, encoding="ascii")
+            emit_sim_summary("frontend", seed, pass_code, sim.stdout)
 
         # Finally, target the new in-order dual-issue queue directly. These
         # programs emit independent simple-op pairs followed by younger control
@@ -1047,7 +1091,7 @@ def main() -> int:
             fail_base = DUAL_ISSUE_FAIL_BASE + idx * 100
             asm_path = tmp / f"dual_issue_random_{seed}.s"
             mem_path = tmp / f"dual_issue_random_{seed}.mem"
-            asm_path.write_text(build_dual_issue_program(seed, pass_code, fail_base), encoding="ascii")
+            asm_path.write_text(build_dual_issue_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
 
             assemble = run(
                 [
@@ -1092,8 +1136,9 @@ def main() -> int:
                 sys.stderr.write(sim.stderr)
                 return 1
 
-            final_line = next((line for line in sim.stdout.splitlines() if line.startswith("TB FINAL")), "")
-            print(f"dual_seed={seed} pass_code={pass_code} {final_line}")
+            if LOG_DIR is not None:
+                (LOG_DIR / f"dual_{seed}.log").write_text(sim.stdout, encoding="ascii")
+            emit_sim_summary("dual", seed, pass_code, sim.stdout)
 
         # Finally, randomize LR/SC reservation flow, AMO results, and the
         # stronger fence path so the new A-extension plumbing keeps old and new
@@ -1103,7 +1148,7 @@ def main() -> int:
             fail_base = ATOMIC_FAIL_BASE + idx * 100
             asm_path = tmp / f"atomic_random_{seed}.s"
             mem_path = tmp / f"atomic_random_{seed}.mem"
-            asm_path.write_text(build_atomic_program(seed, pass_code, fail_base), encoding="ascii")
+            asm_path.write_text(build_atomic_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
 
             assemble = run(
                 [
@@ -1148,8 +1193,12 @@ def main() -> int:
                 sys.stderr.write(sim.stderr)
                 return 1
 
-            final_line = next((line for line in sim.stdout.splitlines() if line.startswith("TB FINAL")), "")
-            print(f"atomic_seed={seed} pass_code={pass_code} {final_line}")
+            if LOG_DIR is not None:
+                (LOG_DIR / f"atomic_{seed}.log").write_text(sim.stdout, encoding="ascii")
+            emit_sim_summary("atomic", seed, pass_code, sim.stdout)
+
+    rand_cov_line = " ".join(f"{name}={value}" for name, value in sorted(random_cov.items()))
+    print(f"RAND COV {rand_cov_line}")
 
     return 0
 

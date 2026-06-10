@@ -3,8 +3,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SIM="/tmp/otter_sim"
+LOG_DIR="${VERIF_LOG_DIR:-}"
 
 cd "$ROOT"
+
+if [[ -n "$LOG_DIR" ]]; then
+  mkdir -p "$LOG_DIR"
+fi
 
 # Rebuild generated memories from the assembly tests before every regression run.
 python3 tools/assemble_tests.py test_files/asm/*.s --out-dir test_files/generated
@@ -82,5 +87,9 @@ for spec in "${tests[@]}"; do
   IFS=: read -r name pass mem <<< "$spec"
   cp "$mem" Test_All.mem
   echo "== $name =="
-  vvp "$SIM" +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000 | tail -n 4
+  sim_out="$(vvp "$SIM" +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000)"
+  if [[ -n "$LOG_DIR" ]]; then
+    printf '%s\n' "$sim_out" > "$LOG_DIR/${name}.log"
+  fi
+  printf '%s\n' "$sim_out" | tail -n 5
 done

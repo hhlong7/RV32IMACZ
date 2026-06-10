@@ -44,6 +44,15 @@ module tb_core;
     int reservation_set_count = 0;
     int reservation_clear_count = 0;
 
+    int hazard_load_use_count = 0;
+    int hazard_pair_issue_count = 0;
+    int branch_mispredict_count = 0;
+    int trap_commit_count = 0;
+    int mret_commit_count = 0;
+    int fence_complete_count = 0;
+    int atomic_wait_count = 0;
+    int lsu_busy_count = 0;
+
     bit prev_ic_hit = 1'b0;
     bit prev_ic_miss = 1'b0;
     bit prev_dc_hit = 1'b0;
@@ -104,6 +113,92 @@ module tb_core;
         #1;
 
         if (!reset) begin
+            // Pipeline-hazard correctness checks.
+            if (dut.loadUseStall_hz) begin
+                if (!dut.stallIF_hz || !dut.stallID_hz || !dut.flushEX_hz) begin
+                    $display("ASSERT_FAIL load-use hazard control mismatch cycle=%0d stallIF_hz=%0b stallID_hz=%0b flushEX_hz=%0b",
+                             cycle_count, dut.stallIF_hz, dut.stallID_hz, dut.flushEX_hz);
+                    $fatal(1);
+                end
+                hazard_load_use_count <= hazard_load_use_count + 1;
+            end
+
+            if (dut.issuePair)
+                hazard_pair_issue_count <= hazard_pair_issue_count + 1;
+
+            // Branch recovery: mispredicts must raise a redirect.
+            if (dut.branch_mispredict_ex1 && !dut.redirect_valid_ex1) begin
+                $display("ASSERT_FAIL branch mispredict without redirect cycle=%0d pc=0x%08x",
+                         cycle_count, dut.id_ex.pc);
+                $fatal(1);
+            end
+
+            if (dut.branch_mispredict_ex1)
+                branch_mispredict_count <= branch_mispredict_count + 1;
+
+            // Cache/front-end handshake consistency checks.
+            if (dut.miss && !dut.ic_stall) begin
+                $display("ASSERT_FAIL icache miss without ic_stall cycle=%0d pc=0x%08x",
+                         cycle_count, dut.pc_out);
+                $fatal(1);
+            end
+
+            if (dut.hit && dut.miss) begin
+                $display("ASSERT_FAIL icache hit/miss both high cycle=%0d pc=0x%08x",
+                         cycle_count, dut.pc_out);
+                $fatal(1);
+            end
+
+            if (dut.dcache_hit && dut.dcache_miss) begin
+                $display("ASSERT_FAIL dcache hit/miss both high cycle=%0d addr=0x%08x",
+                         cycle_count, dut.ex_mem.alu_result);
+                $fatal(1);
+            end
+
+            // Trap/CSR correctness checks.
+            if (dut.trap_commit_ex1 && dut.mret_commit_ex1) begin
+                $display("ASSERT_FAIL trap and mret commit together cycle=%0d pc=0x%08x",
+                         cycle_count, dut.id_ex.pc);
+                $fatal(1);
+            end
+
+            if (dut.interrupt_accept_id && !dut.trap_taken_id) begin
+                $display("ASSERT_FAIL interrupt accepted without trap_taken_id cycle=%0d pc=0x%08x",
+                         cycle_count, dut.if_id.pc);
+                $fatal(1);
+            end
+
+            if (dut.trap_commit_ex1)
+                trap_commit_count <= trap_commit_count + 1;
+            if (dut.mret_commit_ex1)
+                mret_commit_count <= mret_commit_count + 1;
+
+            // Memory ordering checks for fence/atomic behavior.
+            if (dut.fence_wait_ex1 && !dut.lsu_ordering_busy_ex1) begin
+                $display("ASSERT_FAIL fence_wait without lsu_ordering_busy cycle=%0d", cycle_count);
+                $fatal(1);
+            end
+
+            if (dut.fence_i_wait_ex1 && !dut.lsu_ordering_busy_ex1) begin
+                $display("ASSERT_FAIL fence_i_wait without lsu_ordering_busy cycle=%0d", cycle_count);
+                $fatal(1);
+            end
+
+            if (dut.atomic_commit_valid && (dut.atomic_commit_op == ATOMIC_SC) &&
+                (dut.atomic_commit_write != dut.atomic_commit_sc_success)) begin
+                $display("ASSERT_FAIL SC write/success mismatch cycle=%0d addr=0x%08x write=%0b sc_success=%0b",
+                         cycle_count, dut.atomic_commit_addr,
+                         dut.atomic_commit_write, dut.atomic_commit_sc_success);
+                $fatal(1);
+            end
+
+            if (dut.fence_complete_ex1 || dut.fence_i_complete_ex1)
+                fence_complete_count <= fence_complete_count + 1;
+            if (dut.atomic_wait_ex1)
+                atomic_wait_count <= atomic_wait_count + 1;
+            if (dut.lsu_ordering_busy_ex1)
+                lsu_busy_count <= lsu_busy_count + 1;
+
             if (dut.flushID)
                 flush_id_count <= flush_id_count + 1;
             if (dut.flushEX)
@@ -276,5 +371,9 @@ module tb_core;
         $display("TB ATOM commits=%0d writes=%0d sc_success=%0d sc_fail=%0d res_set=%0d res_clear=%0d",
                  atomic_commit_count, atomic_write_count, atomic_sc_success_count,
                  atomic_sc_fail_count, reservation_set_count, reservation_clear_count);
+        $display("TB COV hazard_load_use=%0d pair_issue=%0d branch_mispredict=%0d trap_commit=%0d mret_commit=%0d fence_complete=%0d atomic_wait=%0d lsu_busy=%0d",
+                 hazard_load_use_count, hazard_pair_issue_count, branch_mispredict_count,
+                 trap_commit_count, mret_commit_count, fence_complete_count,
+                 atomic_wait_count, lsu_busy_count);
     end
 endmodule

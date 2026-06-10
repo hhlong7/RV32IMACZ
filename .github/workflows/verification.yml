@@ -1,0 +1,67 @@
+name: verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  regress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install simulators
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator python3
+
+      - name: Verilator lint
+        run: |
+          verilator --lint-only -Wall \
+            otter_defs_pkg.sv \
+            ALU.sv \
+            AtomicController.sv \
+            AtomicDecode.sv \
+            BAG.sv \
+            BCG.sv \
+            BranchPredictor.sv \
+            BranchGenerator.sv \
+            CSR_FILE.sv \
+            CU_DCDR.sv \
+            DualIssueInOrder.sv \
+            FrontendPacketBuilder.sv \
+            FourMux.sv \
+            Hazard.sv \
+            ImmediateGenerator.sv \
+            OTTER_MMIO.sv \
+            PC.sv \
+            PC_MUX.sv \
+            PC_REG.sv \
+            REG_FILE.sv \
+            RVCExpander.sv \
+            StoreBuffer.sv \
+            ThreeMux.sv \
+            TwoMux.sv \
+            cache.sv \
+            cachefsm.sv \
+            datacache.sv \
+            datacachefsm.sv \
+            l2cache.sv \
+            imem.sv \
+            otter_memory_v1_07.sv \
+            otter_mcu_pipeline_template_v2.sv \
+            tb_core.sv
+
+      - name: Run verification suite
+        run: |
+          bash tools/run_verification_quality.sh out/verification_logs
+
+      - name: Upload verification artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-logs
+          path: out/verification_logs

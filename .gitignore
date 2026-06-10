@@ -1,0 +1,9 @@
+# macOS metadata
+.DS_Store
+
+# Verification outputs
+out/
+
+# Python cache
+__pycache__/
+*.pyc

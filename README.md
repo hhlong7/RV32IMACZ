@@ -1,5 +1,45 @@
 # RISC-V-MCPU
 
+## Verification-Quality Flow (Same-Day Upgrade)
+
+This repo now includes a verification-oriented flow that layers assertions,
+constrained-random stress, functional coverage aggregation, and CI automation
+on top of the existing directed regressions.
+
+### What was added
+
+- In-testbench assertion checks in `tb_core.sv` for:
+	- hazard control consistency (`loadUseStall_hz` -> `stallIF_hz/stallID_hz/flushEX_hz`)
+	- branch recovery correctness (`branch_mispredict_ex1` must redirect)
+	- cache handshake consistency (`hit/miss` mutual exclusion, miss->stall)
+	- CSR/trap correctness (no simultaneous trap+mret commit, interrupt acceptance path)
+	- memory-ordering and atomic invariants (`fence*_wait` implies LSU busy, SC write/success consistency)
+- Functional coverage counters printed as `TB COV ...` at end of simulation.
+- Random-test instruction class coverage emitted as `RAND COV ...`.
+- Log aggregation tool: `tools/verification_report.py`.
+- One-command verification run: `tools/run_verification_quality.sh`.
+- Optional Spike scoreboard hook: `tools/spike_scoreboard.py` (gracefully skips if Spike is missing).
+- CI flow: `.github/workflows/verification.yml` (Verilator lint + regression + random + artifact upload).
+
+### Run locally
+
+```bash
+bash tools/run_verification_quality.sh
+```
+
+This writes logs and a machine-readable summary JSON under `out/verification_logs`.
+The summary file is:
+
+```text
+out/verification_logs/verification_summary.json
+```
+
+### Notes on Spike scoreboard
+
+The repository now includes a Spike-check integration point (`tools/spike_scoreboard.py`).
+If `spike` is not installed locally, the step is reported as skipped and the
+rest of the verification suite still runs to completion.
+
 
 Historical benchmark comparison (captured on March 27, 2026 before the IF1/IF2 split):
 
