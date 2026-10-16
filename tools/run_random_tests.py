@@ -16,7 +16,6 @@ from typing import Callable
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SIM = pathlib.Path("/tmp/otter_random_sim")
-STOREBUF_SIM = pathlib.Path("/tmp/otter_storebuf_random_sim")
 PASS_BASE = 600
 FAIL_BASE = 900
 SEEDS = [3, 11, 29, 47]
@@ -899,23 +898,17 @@ def compile_sim() -> None:
         raise SystemExit(result.returncode)
 
 
-def run_store_buffer_random_tb() -> None:
-    compile_tb = run(["iverilog", "-g2012", "-o", str(STOREBUF_SIM), *STOREBUF_SOURCES], ROOT)
-    if compile_tb.returncode != 0:
-        sys.stderr.write(compile_tb.stdout)
-        sys.stderr.write(compile_tb.stderr)
-        raise SystemExit(compile_tb.returncode)
-
-    sim = run(["vvp", str(STOREBUF_SIM)], ROOT)
-    if sim.returncode != 0:
-        sys.stderr.write(sim.stdout)
-        sys.stderr.write(sim.stderr)
-        raise SystemExit(sim.returncode)
-    if "TB_STORE_BUFFER PASS" not in sim.stdout:
-        sys.stderr.write(sim.stdout)
-        sys.stderr.write(sim.stderr)
+def run_unit_tb(name: str, sources: list[str], pass_marker: str) -> None:
+    """Compile and run a self-checking module-level testbench."""
+    with tempfile.TemporaryDirectory(prefix="otter_unit_") as tmpdir:
+        sim_path = pathlib.Path(tmpdir) / "unit.vvp"
+        compile_tb = run(["iverilog", "-g2012", "-o", str(sim_path), *sources], ROOT)
+        sim = run(["vvp", "-n", str(sim_path)], ROOT) if compile_tb.returncode == 0 else compile_tb
+    if compile_tb.returncode != 0 or sim.returncode != 0 or pass_marker not in sim.stdout:
+        print(f"  {name} unit test FAIL")
+        sys.stderr.write(sim.stdout + sim.stderr)
         raise SystemExit(1)
-    print("  store-buffer unit test PASS")
+    print(f"  {name} unit test PASS")
 
 
 @dataclass(frozen=True)
@@ -976,7 +969,8 @@ def main() -> int:
 
     random_cov = Counter()
 
-    run_store_buffer_random_tb()
+    run_unit_tb("store-buffer", STOREBUF_SOURCES, "TB_STORE_BUFFER PASS")
+    run_unit_tb("cache-tags", ["cache_tags.sv", "tb_cache_tags.sv"], "TB_CACHE_TAGS PASS")
     compile_sim()
 
     with tempfile.TemporaryDirectory(prefix="otter_random_") as tmpdir:

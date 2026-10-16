@@ -1,4 +1,15 @@
-module l2cache(
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Module Name: l2cache
+// Description:
+//   Fully associative L2 (LINES x 32-byte lines) behind the L1 D-cache.
+//   Tags and replacement live in cache_tags. It serves whole-line refills to
+//   L1 one word per beat, captures lines refilled from memory, keeps resident
+//   lines current with drained stores, and drops lines an atomic overwrites.
+//////////////////////////////////////////////////////////////////////////////////
+module l2cache #(
+    parameter int LINES = 32
+) (
     input logic clk,
     input logic rst,
 
@@ -26,174 +37,82 @@ module l2cache(
     output logic queryCacheable,
     output logic [31:0] lineReadData
 );
-    parameter int TOTAL_BLOCKS = 32;
-    parameter int NUM_WAYS = 2;
-    parameter int NUM_SETS = TOTAL_BLOCKS / NUM_WAYS;
-    parameter int BLOCK_SIZE = 8;
-    localparam int INDEX_SIZE = $clog2(NUM_SETS);
-    localparam int OFFSET_SIZE = 3;
-    localparam int BYTE_OFFSET_SIZE = 2;
-    localparam int TAG_SIZE = 32 - INDEX_SIZE - OFFSET_SIZE - BYTE_OFFSET_SIZE;
+    import otter_defs_pkg::*;
 
-    logic [31:0] cache [NUM_WAYS-1:0][NUM_SETS-1:0][BLOCK_SIZE-1:0];
-    logic [TAG_SIZE-1:0] tags [NUM_WAYS-1:0][NUM_SETS-1:0];
-    logic valid [NUM_WAYS-1:0][NUM_SETS-1:0];
-    logic lru [NUM_SETS-1:0];
+    localparam int BLOCK_SIZE = 8;
+    localparam int LINE_BITS = $clog2(LINES);
+    localparam int PORT_QUERY = 0, PORT_LINE_READ = 1, PORT_DRAIN = 2, PORT_ATOMIC = 3;
 
-    logic [INDEX_SIZE-1:0] query_index;
-    logic [TAG_SIZE-1:0] query_tag;
-    logic [NUM_WAYS-1:0] query_way_hit;
-    logic query_cache_hit;
-    logic query_hit_way;
+    logic [31:0] data [LINES][BLOCK_SIZE];
 
-    logic [INDEX_SIZE-1:0] line_read_index;
-    logic [TAG_SIZE-1:0] line_read_tag;
-    logic [NUM_WAYS-1:0] line_read_way_hit;
-    logic line_read_cache_hit;
-    logic line_read_hit_way;
+    logic [3:0] tag_hit;
+    logic [3:0][LINE_BITS-1:0] tag_line;
+    logic [LINE_BITS-1:0] victim_line;
 
-    logic [INDEX_SIZE-1:0] fill_index;
-    logic [TAG_SIZE-1:0] fill_tag;
-    logic fill_replace_way;
+    logic drain_store_cacheable, atomic_invalidate_cacheable;
+    logic atomic_slot, drain_slot, query_slot;
 
-    logic drain_store_cacheable;
-    logic [INDEX_SIZE-1:0] drain_index;
-    logic [OFFSET_SIZE-1:0] drain_offset;
-    logic [TAG_SIZE-1:0] drain_tag;
-    logic [NUM_WAYS-1:0] drain_way_hit;
-    logic drain_cache_hit;
-    logic drain_hit_way;
-
-    logic atomic_invalidate_cacheable;
-    logic [INDEX_SIZE-1:0] atomic_invalidate_index;
-    logic [TAG_SIZE-1:0] atomic_invalidate_tag;
-
-    integer i;
-    integer j;
-
-    // Drained stores arrive in a packed form from the store buffer, so rebuild
-    // the bytes into their addressed lane positions before merging into a line.
-    function automatic [31:0] align_store_word(
+    function automatic logic [31:0] merge_store(
+        input logic [31:0] old_word,
         input logic [31:0] raw_data,
         input logic [3:0] byte_mask
     );
-        logic [31:0] aligned;
-        integer lane;
-        integer src_idx;
-        begin
-            aligned = 32'b0;
-            src_idx = 0;
-
-            for (lane = 0; lane < 4; lane = lane + 1) begin
-                if (byte_mask[lane]) begin
-                    aligned[(lane * 8) +: 8] = raw_data[(src_idx * 8) +: 8];
-                    src_idx = src_idx + 1;
-                end
+        int src;
+        merge_store = old_word;
+        src = 0;
+        // Drained stores arrive packed (low bytes first).
+        for (int lane = 0; lane < 4; lane++) begin
+            if (byte_mask[lane]) begin
+                merge_store[lane * 8 +: 8] = raw_data[src * 8 +: 8];
+                src++;
             end
-
-            align_store_word = aligned;
         end
     endfunction
-
-    // L2 is indexed/tagged exactly like L1, but only serves whole-line refill
-    // traffic and opportunistic write updates from drained stores.
-    assign query_index = queryAddr[BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + OFFSET_SIZE];
-    assign query_tag = queryAddr[31:BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE];
-    assign line_read_index = lineReadAddr[BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + OFFSET_SIZE];
-    assign line_read_tag = lineReadAddr[31:BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE];
-    assign fill_index = fillAddr[BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + OFFSET_SIZE];
-    assign fill_tag = fillAddr[31:BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE];
-    assign drain_index = drainStoreAddr[BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + OFFSET_SIZE];
-    assign drain_offset = drainStoreAddr[BYTE_OFFSET_SIZE + OFFSET_SIZE - 1:BYTE_OFFSET_SIZE];
-    assign drain_tag = drainStoreAddr[31:BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE];
-    assign atomic_invalidate_index = atomicInvalidateAddr[BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + OFFSET_SIZE];
-    assign atomic_invalidate_tag = atomicInvalidateAddr[31:BYTE_OFFSET_SIZE + OFFSET_SIZE + INDEX_SIZE];
 
     assign queryCacheable = (queryAddr < 32'h0001_0000);
     assign drain_store_cacheable = (drainStoreAddr < 32'h0001_0000);
     assign atomic_invalidate_cacheable = (atomicInvalidateAddr < 32'h0001_0000);
 
-    assign query_way_hit[0] = valid[0][query_index] && (tags[0][query_index] == query_tag);
-    assign query_way_hit[1] = valid[1][query_index] && (tags[1][query_index] == query_tag);
-    assign query_cache_hit = query_way_hit[0] | query_way_hit[1];
-    assign query_hit_way = query_way_hit[1];
+    assign queryHit = queryValid && queryCacheable && tag_hit[PORT_QUERY];
+    assign queryMiss = queryValid && queryCacheable && ~tag_hit[PORT_QUERY];
 
-    assign line_read_way_hit[0] = valid[0][line_read_index] && (tags[0][line_read_index] == line_read_tag);
-    assign line_read_way_hit[1] = valid[1][line_read_index] && (tags[1][line_read_index] == line_read_tag);
-    assign line_read_cache_hit = line_read_way_hit[0] | line_read_way_hit[1];
-    assign line_read_hit_way = line_read_way_hit[1];
+    // One update per cycle, in this priority: fill beat, atomic invalidate,
+    // drained-store merge, query-hit recency update.
+    assign atomic_slot = ~fillWrite && atomicInvalidateValid && atomic_invalidate_cacheable;
+    assign drain_slot = ~fillWrite && ~atomic_slot && drainStoreValid && drain_store_cacheable &&
+                        tag_hit[PORT_DRAIN];
+    assign query_slot = ~fillWrite && ~atomic_slot && ~drain_slot && queryHit;
 
-    assign fill_replace_way = ~valid[0][fill_index] ? 1'b0 :
-                              ~valid[1][fill_index] ? 1'b1 :
-                              lru[fill_index];
+    cache_tags #(
+        .LINES(LINES),
+        .TAG_BITS(CACHE_TAG_BITS),
+        .LOOKUPS(4),
+        .TRUE_LRU(CACHE_TRUE_LRU)
+    ) TAGS (
+        .clk(clk),
+        .rst(rst),
+        .lookup_tag({atomicInvalidateAddr[31:5], drainStoreAddr[31:5], lineReadAddr[31:5], queryAddr[31:5]}),
+        .lookup_hit(tag_hit),
+        .lookup_line(tag_line),
+        .victim_line(victim_line),
+        .flush(1'b0),
+        .fill_en(fillWrite && fillLast),
+        .fill_tag(fillAddr[31:5]),
+        .inval_en(atomic_slot && tag_hit[PORT_ATOMIC]),
+        .inval_line(tag_line[PORT_ATOMIC]),
+        .touch_en(drain_slot || query_slot),
+        .touch_line(drain_slot ? tag_line[PORT_DRAIN] : tag_line[PORT_QUERY])
+    );
 
-    assign drain_way_hit[0] = valid[0][drain_index] && (tags[0][drain_index] == drain_tag);
-    assign drain_way_hit[1] = valid[1][drain_index] && (tags[1][drain_index] == drain_tag);
-    assign drain_cache_hit = drain_way_hit[0] | drain_way_hit[1];
-    assign drain_hit_way = drain_way_hit[1];
+    // Refills from L2 stream the hit line out one word per beat.
+    assign lineReadData = tag_hit[PORT_LINE_READ] ? data[tag_line[PORT_LINE_READ]][lineReadSelect] : 32'b0;
 
-    // The front-side query path only reports hits for cacheable addresses.
-    assign queryHit = queryValid && queryCacheable && query_cache_hit;
-    assign queryMiss = queryValid && queryCacheable && ~query_cache_hit;
-
-    always_comb begin
-        lineReadData = 32'b0;
-
-        // Refills stream words back out of the hit way one word at a time.
-        if (line_read_cache_hit)
-            lineReadData = cache[line_read_hit_way][line_read_index][lineReadSelect];
-    end
-
+    // The refill address is stable for all beats, so the victim is too.
     always_ff @(negedge clk) begin
-        if (rst) begin
-            for (i = 0; i < NUM_WAYS; i = i + 1) begin
-                for (j = 0; j < NUM_SETS; j = j + 1) begin
-                    tags[i][j] <= '0;
-                    valid[i][j] <= 1'b0;
-                    if (i == 0)
-                        lru[j] <= 1'b0;
-                end
-            end
-        end else begin
-            // Fills write one word per cycle, then publish the tag/valid bit on
-            // the last beat so partially filled lines are never visible as hits.
-            if (fillWrite) begin
-                cache[fill_replace_way][fill_index][fillSelect] <= fillWordData;
-                if (fillLast) begin
-                    tags[fill_replace_way][fill_index] <= fill_tag;
-                    valid[fill_replace_way][fill_index] <= 1'b1;
-                    lru[fill_index] <= ~fill_replace_way;
-                end
-            end else if (atomicInvalidateValid && atomic_invalidate_cacheable) begin
-                // Atomic commits may update backing memory behind the cache, so
-                // invalidate any matching resident line to avoid stale reads.
-                if (valid[0][atomic_invalidate_index] &&
-                    (tags[0][atomic_invalidate_index] == atomic_invalidate_tag))
-                    valid[0][atomic_invalidate_index] <= 1'b0;
-                if (valid[1][atomic_invalidate_index] &&
-                    (tags[1][atomic_invalidate_index] == atomic_invalidate_tag))
-                    valid[1][atomic_invalidate_index] <= 1'b0;
-            end else if (drainStoreValid && drain_store_cacheable && drain_cache_hit) begin
-                logic [31:0] new_word;
-                logic [31:0] aligned_drain_word;
-                integer lane;
-
-                // Keep L2 coherent with the drained store stream when the line
-                // is already present, instead of forcing a later refill.
-                new_word = cache[drain_hit_way][drain_index][drain_offset];
-                aligned_drain_word = align_store_word(drainStoreData, drainStoreMask);
-
-                for (lane = 0; lane < 4; lane = lane + 1) begin
-                    if (drainStoreMask[lane])
-                        new_word[(lane * 8) +: 8] = aligned_drain_word[(lane * 8) +: 8];
-                end
-
-                cache[drain_hit_way][drain_index][drain_offset] <= new_word;
-                lru[drain_index] <= ~drain_hit_way;
-            end else if (queryHit) begin
-                // Normal read hits still refresh the replacement bit.
-                lru[query_index] <= ~query_hit_way;
-            end
-        end
+        if (fillWrite)
+            data[victim_line][fillSelect] <= fillWordData;
+        else if (drain_slot)
+            data[tag_line[PORT_DRAIN]][drainStoreAddr[4:2]] <=
+                merge_store(data[tag_line[PORT_DRAIN]][drainStoreAddr[4:2]], drainStoreData, drainStoreMask);
     end
 endmodule

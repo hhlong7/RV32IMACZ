@@ -16,6 +16,7 @@ OTTER_MMIO.sv
 REG_FILE.sv
 RVCExpander.sv
 StoreBuffer.sv
+cache_tags.sv
 cache.sv
 cachefsm.sv
 datacache.sv

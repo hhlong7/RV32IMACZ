@@ -2,15 +2,24 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Company: California Polytechnic University, San Luis Obispo
 // Engineer: Long Ho
-// Create Date: 02/23/2023 09:39:49 AM
-// Module Name: cache
+// Module Name: Cache (L1 instruction cache)
+// Description:
+//   Fully associative I-cache (LINES x 32-byte lines) with a one-line
+//   next-line prefetch buffer. Tags and replacement live in cache_tags.
+//
+//   Each cycle it looks up PC and PC+4 (for the two fetch slots). A miss
+//   fills a whole line at once from imem (`update`). A hit in the prefetch
+//   buffer that misses the cache promotes the buffered line into the cache.
+//   Every real access refreshes the prefetch buffer with the next line.
 //////////////////////////////////////////////////////////////////////////////////
-module Cache(
+module Cache #(
+    parameter int LINES = 16
+) (
     input logic [31:0] PC,
     input logic CLK,
     input logic RST,
-    input logic update, 
-    input logic invalidate, // invalidate the entire cache and prefetch buffer (fence.i)
+    input logic update,
+    input logic invalidate, // fence.i: drop every line and the prefetch buffer
     input logic [31:0] w0,
     input logic [31:0] w1,
     input logic [31:0] w2,
@@ -32,191 +41,122 @@ module Cache(
     output logic hit,
     output logic miss,
     output logic next_valid,
-    output logic prefetch_hit_event, 
+    output logic prefetch_hit_event,
     output logic prefetch_useless_event
 );
+    import otter_defs_pkg::*;
 
-    // 2 way set associative cache with LRU replacement and a one block next line buffer
-    // for next line prefetching
-    parameter int TOTAL_BLOCKS = 16;
-    parameter int NUM_WAYS = 2; // 2 way
-    parameter int NUM_SETS = TOTAL_BLOCKS / NUM_WAYS; 
-    parameter int BLOCK_SIZE = 8;
-    localparam int INDEX_SIZE = $clog2(NUM_SETS);
-    localparam int WORD_OFFSET_SIZE = 3;
-    localparam int BYTE_OFFSET_SIZE = 2;
-    localparam int TAG_SIZE = 32 - INDEX_SIZE - WORD_OFFSET_SIZE - BYTE_OFFSET_SIZE;
+    localparam int BLOCK_SIZE = 8;
+    localparam int LINE_BITS = $clog2(LINES);
+    localparam logic [31:0] NOP = 32'h0000_0013;
 
-    // assign default values to outputs to avoid latches
-    logic [31:0] data [NUM_WAYS-1:0][NUM_SETS-1:0][BLOCK_SIZE-1:0]; // 2D array of cache lines, each containing 8 words of data
-    logic [TAG_SIZE-1:0] tags [NUM_WAYS-1:0][NUM_SETS-1:0]; // 2D array of tags for each cache line
-    logic valid_bits [NUM_WAYS-1:0][NUM_SETS-1:0];
-    logic lru [NUM_SETS-1:0]; // 0 = way 0 is LRU, 1 = way 1 is LRU
+    logic [31:0] data [LINES][BLOCK_SIZE];
 
-    // Next-line prefetch buffer logics
-    logic prefetch_valid; 
-    logic [TAG_SIZE-1:0] prefetch_tag;  
-    logic [INDEX_SIZE-1:0] prefetch_index;
-    logic [31:0] prefetch_data [BLOCK_SIZE-1:0];
-    // Tracks whether the current stream-buffer line ever supplied an instruction
-    // before it got overwritten by the next prefetch opportunity.
+    // Next-line prefetch buffer.
+    logic prefetch_valid;
+    logic [CACHE_TAG_BITS-1:0] prefetch_tag;
+    logic [31:0] prefetch_data [BLOCK_SIZE];
+    // Whether the buffered line supplied an instruction before being replaced.
     logic prefetch_used;
 
-    // Decompose the PC into tag, index, and block offset for cache access
-    logic [INDEX_SIZE-1:0] index;
-    logic [WORD_OFFSET_SIZE-1:0] pc_offset;
-    logic [TAG_SIZE-1:0] pc_tag;
     logic [31:0] next_pc;
-    logic [INDEX_SIZE-1:0] next_fetch_index;
-    logic [WORD_OFFSET_SIZE-1:0] next_fetch_offset;
-    logic [TAG_SIZE-1:0] next_fetch_tag;
-    logic [31:0] next_block_addr;
-    logic [INDEX_SIZE-1:0] next_index;
-    logic [TAG_SIZE-1:0] next_tag;
+    logic [CACHE_TAG_BITS-1:0] pc_tag, next_fetch_tag, next_line_tag;
+    logic [2:0] pc_offset, next_fetch_offset;
 
-    logic [NUM_WAYS-1:0] way_hit;
-    logic [NUM_WAYS-1:0] next_way_hit;
-    logic cache_hit;
-    logic next_cache_hit;
-    logic prefetch_hit; // hit in the prefetch buffer, which is a hit for the current instruction but a miss for the main cache
-    logic next_prefetch_hit;
-    logic prefetch_only_hit; // hit in the prefetch buffer but not in the main cache, indicating a successful prefetch that avoided a miss on the next instruction
-    logic hit_way; // which way hit, valid only if cache_hit is true
-    logic next_hit_way; // next sequential word hit way for 2-wide fetch support
-    logic replace_way; // which way to replace on a cache miss, valid only if update is true
-    logic prefetch_refresh; 
+    logic [1:0] tag_hit;
+    logic [1:0][LINE_BITS-1:0] tag_line;
+    logic [LINE_BITS-1:0] victim_line;
 
-    integer i; // for loops
-    integer j;
+    logic cache_hit, next_cache_hit;
+    logic prefetch_hit, next_prefetch_hit, prefetch_only_hit;
+    logic prefetch_refresh;
+    logic fill;
 
-    
-    assign pc_offset = PC[BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE - 1:BYTE_OFFSET_SIZE];
-    assign index = PC[BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE];
-    assign pc_tag = PC[31:BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE + INDEX_SIZE];
     assign next_pc = PC + 32'd4;
-    assign next_fetch_offset = next_pc[BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE - 1:BYTE_OFFSET_SIZE];
-    assign next_fetch_index = next_pc[BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE];
-    assign next_fetch_tag = next_pc[31:BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE + INDEX_SIZE];
-    assign next_block_addr = {PC[31:5], 5'b0} + 32'd32; // address of the next sequential block, used for next-line prefetching
-    assign next_index = next_block_addr[BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE + INDEX_SIZE - 1:BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE];
-    assign next_tag = next_block_addr[31:BYTE_OFFSET_SIZE + WORD_OFFSET_SIZE + INDEX_SIZE];
+    assign pc_tag = PC[31:5];
+    assign pc_offset = PC[4:2];
+    assign next_fetch_tag = next_pc[31:5];
+    assign next_fetch_offset = next_pc[4:2];
+    assign next_line_tag = PC[31:5] + 1'b1;   // the sequentially next line
 
-    // Check for hits in both ways and determine which way to replace on a miss
-    assign way_hit[0] = valid_bits[0][index] && (tags[0][index] == pc_tag);
-    assign way_hit[1] = valid_bits[1][index] && (tags[1][index] == pc_tag);
-    assign cache_hit = way_hit[0] | way_hit[1]; // if either way hits, it's a cache hit
-    assign hit_way = way_hit[1]; // if way 1 hits, hit_way is 1; if way 0 hits, hit_way is 0
-    // The extra lookup is always for PC+4 so IF1 can build a 2-wide fetch
-    // packet without adding a second cache instance.
-    assign next_way_hit[0] = valid_bits[0][next_fetch_index] && (tags[0][next_fetch_index] == next_fetch_tag);
-    assign next_way_hit[1] = valid_bits[1][next_fetch_index] && (tags[1][next_fetch_index] == next_fetch_tag);
-    assign next_cache_hit = next_way_hit[0] | next_way_hit[1];
-    assign next_hit_way = next_way_hit[1];
-    assign replace_way = ~valid_bits[0][index] ? 1'b0 :
-                         ~valid_bits[1][index] ? 1'b1 :
-                         lru[index]; // replace the invalid way if there is one, otherwise replace the LRU way
-    // Check for a hit in the prefetch buffer, which is a hit if the buffer is valid and the tag and index match
-    assign prefetch_hit = prefetch_valid &&
-                          (prefetch_index == index) &&
-                          (prefetch_tag == pc_tag);
-    assign next_prefetch_hit = prefetch_valid &&
-                               (prefetch_index == next_fetch_index) &&
-                               (prefetch_tag == next_fetch_tag);
-    assign prefetch_only_hit = prefetch_hit && ~cache_hit;  // if it's a prefetch hit but not a cache hit, 
-                                                            // it means the prefetch buffer successfully supplied 
-                                                            // the instruction that wasn't in the cache, which is a sign of a useful prefetch.
-    // Any real instruction touch refreshes the one-line next-block prefetch buffer.
+    // Port 0 looks up PC; port 1 looks up PC+4 for the younger fetch slot.
+    cache_tags #(
+        .LINES(LINES),
+        .TAG_BITS(CACHE_TAG_BITS),
+        .LOOKUPS(2),
+        .TRUE_LRU(CACHE_TRUE_LRU)
+    ) TAGS (
+        .clk(CLK),
+        .rst(RST),
+        .lookup_tag({next_fetch_tag, pc_tag}),
+        .lookup_hit(tag_hit),
+        .lookup_line(tag_line),
+        .victim_line(victim_line),
+        .flush(invalidate),
+        .fill_en(fill),
+        .fill_tag(pc_tag),
+        .inval_en(1'b0),
+        .inval_line('0),
+        .touch_en(cache_hit),
+        .touch_line(tag_line[0])
+    );
+
+    assign cache_hit = tag_hit[0];
+    assign next_cache_hit = tag_hit[1];
+    assign prefetch_hit = prefetch_valid && (prefetch_tag == pc_tag);
+    assign next_prefetch_hit = prefetch_valid && (prefetch_tag == next_fetch_tag);
+    // The prefetch buffer supplied an instruction the cache did not have.
+    assign prefetch_only_hit = prefetch_hit && ~cache_hit;
+    // A miss refill or a prefetch promotion installs a line.
+    assign fill = update || prefetch_only_hit;
+    // Any real instruction touch refreshes the next-line prefetch buffer.
     assign prefetch_refresh = cache_hit || update || prefetch_only_hit;
-    // prefetch buffer hit only counts as a hit if its not also a cache hit
+
     assign hit = cache_hit || prefetch_hit;
-    assign miss = ~hit; 
+    assign miss = ~hit;
     assign next_valid = next_cache_hit || next_prefetch_hit;
     assign prefetch_hit_event = prefetch_only_hit;
-    // Count a useless prefetch when we are about to replace a valid prefetched line
-    // that was never consumed as an instruction fetch.
-    assign prefetch_useless_event = prefetch_refresh &&
-                                    prefetch_valid &&
-                                    ~prefetch_used &&
-                                    ~prefetch_hit; // if the prefetched line was actually hit, 
-                                                   // then it wasn't useless even if it was used, 
-                                                   // so we check ~prefetch_hit to avoid counting useful prefetches as useless.
+    // A prefetched line replaced without ever supplying an instruction.
+    assign prefetch_useless_event = prefetch_refresh && prefetch_valid && ~prefetch_used && ~prefetch_hit;
 
-    // On a cache hit, return the requested word from the cache. 
-    // On a miss, rd will be don't care (could be old data from the replaced line or just zero) since the pipeline will treat it as invalid and not use it.
-    // On a prefetch buffer hit, return the requested word from the prefetch buffer. 
-    // The prefetch buffer is only used for the current instruction and is not promoted to the main cache until the next instruction 
-    // causes a refresh (either hit or miss), so it won't cause stale data to be returned on a cache hit.
+    // rd/rd_next are only meaningful when hit/next_valid are high.
     always_comb begin
-        rd = 32'h0000_0013;
-        rd_next = 32'h0000_0013;
+        rd = NOP;
+        rd_next = NOP;
         if (cache_hit)
-            rd = data[hit_way][index][pc_offset];
+            rd = data[tag_line[0]][pc_offset];
         else if (prefetch_hit)
             rd = prefetch_data[pc_offset];
 
-        // rd_next is only meaningful when next_valid is high. It feeds the
-        // younger fetch slot in the same cycle as rd.
         if (next_cache_hit)
-            rd_next = data[next_hit_way][next_fetch_index][next_fetch_offset];
+            rd_next = data[tag_line[1]][next_fetch_offset];
         else if (next_prefetch_hit)
             rd_next = prefetch_data[next_fetch_offset];
     end
 
     always_ff @(negedge CLK) begin
-        if (RST || invalidate) begin // due to fence.i
-            // fence.i invalidates the same structures reset does: both cache ways and
-            // the stream buffer contents derived from the old instruction image.
-            prefetch_valid <= 1'b0; // invalidate the prefetch buffer
+        if (RST || invalidate) begin
+            prefetch_valid <= 1'b0;
             prefetch_tag <= '0;
-            prefetch_index <= '0;
             prefetch_used <= 1'b0;
-            // invalidate all cache lines and reset the LRU bis
-            for (i = 0; i < NUM_WAYS; i = i + 1) begin
-                for (j = 0; j < NUM_SETS; j = j + 1) begin
-                    tags[i][j] <= '0;
-                    valid_bits[i][j] <= 1'b0;
-                    if (i == 0)
-                        lru[j] <= 1'b0;
-                end
-            end
         end else begin
-            // on a cache hit, update the lru bit
-            if (cache_hit)
-                lru[index] <= ~hit_way;
-            // on a cache miss, update the cache line with the new data and tag
             if (update) begin
-                data[replace_way][index][0] <= w0;
-                data[replace_way][index][1] <= w1;
-                data[replace_way][index][2] <= w2;
-                data[replace_way][index][3] <= w3;
-                data[replace_way][index][4] <= w4;
-                data[replace_way][index][5] <= w5;
-                data[replace_way][index][6] <= w6;
-                data[replace_way][index][7] <= w7;
-                tags[replace_way][index] <= pc_tag;
-                valid_bits[replace_way][index] <= 1'b1;
-                lru[index] <= ~replace_way;
+                data[victim_line][0] <= w0;
+                data[victim_line][1] <= w1;
+                data[victim_line][2] <= w2;
+                data[victim_line][3] <= w3;
+                data[victim_line][4] <= w4;
+                data[victim_line][5] <= w5;
+                data[victim_line][6] <= w6;
+                data[victim_line][7] <= w7;
             end else if (prefetch_only_hit) begin
-                // prefetch hit = the current instruction is in the prefetch buffer but not in icache
-                // First use of a prefetched block promotes it into the main cache.
-                data[replace_way][index][0] <= prefetch_data[0];
-                data[replace_way][index][1] <= prefetch_data[1];
-                data[replace_way][index][2] <= prefetch_data[2];
-                data[replace_way][index][3] <= prefetch_data[3];
-                data[replace_way][index][4] <= prefetch_data[4];
-                data[replace_way][index][5] <= prefetch_data[5];
-                data[replace_way][index][6] <= prefetch_data[6];
-                data[replace_way][index][7] <= prefetch_data[7];
-                tags[replace_way][index] <= pc_tag;
-                valid_bits[replace_way][index] <= 1'b1;
-                lru[index] <= ~replace_way;
+                for (int w = 0; w < BLOCK_SIZE; w++)
+                    data[victim_line][w] <= prefetch_data[w];
             end
 
-            // refresh the prefetch buffer
-            if (prefetch_refresh) begin 
+            if (prefetch_refresh) begin
                 prefetch_valid <= 1'b1;
-                prefetch_tag <= next_tag;
-                prefetch_index <= next_index;
+                prefetch_tag <= next_line_tag;
                 prefetch_used <= 1'b0;
                 prefetch_data[0] <= pw0;
                 prefetch_data[1] <= pw1;
@@ -232,4 +172,3 @@ module Cache(
         end
     end
 endmodule
-//i love cpe333

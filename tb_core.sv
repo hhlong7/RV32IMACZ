@@ -345,15 +345,12 @@ module tb_core;
         end
 
         if (verbose_icache && !reset) begin
-            $display("ICACHE cycle=%0d pc=0x%08x idx=%0d off=%0d hit=%0b miss=%0b pref_valid=%0b pref_idx=%0d pref_hit=%0b pref_only=%0b update=%0b way_hit=%b v00=%0b v01=%0b v02=%0b rd=0x%08x",
-                     cycle_count, dut.pc_out, dut.OTTER_CACHE.index, dut.OTTER_CACHE.pc_offset,
-                     dut.hit, dut.miss, dut.OTTER_CACHE.prefetch_valid, dut.OTTER_CACHE.prefetch_index,
+            $display("ICACHE cycle=%0d pc=0x%08x hit=%0b miss=%0b line=%0d victim=%0d pref_valid=%0b pref_line=0x%07x pref_hit=%0b pref_only=%0b update=%0b rd=0x%08x",
+                     cycle_count, dut.pc_out, dut.hit, dut.miss,
+                     dut.OTTER_CACHE.tag_line[0], dut.OTTER_CACHE.victim_line,
+                     dut.OTTER_CACHE.prefetch_valid, dut.OTTER_CACHE.prefetch_tag,
                      dut.OTTER_CACHE.prefetch_hit, dut.prefetch_hit_event,
-                     dut.cache_update, dut.OTTER_CACHE.way_hit,
-                     dut.OTTER_CACHE.valid_bits[0][0],
-                     dut.OTTER_CACHE.valid_bits[0][1],
-                     dut.OTTER_CACHE.valid_bits[0][2],
-                     dut.rd);
+                     dut.cache_update, dut.rd);
         end
 
         if (verbose_lsu && !reset) begin

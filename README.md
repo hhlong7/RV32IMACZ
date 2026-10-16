@@ -11,7 +11,9 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
 - Two-slot front end with restricted dual issue
 - ISA support: RV32I, RV32M, RV32A, RV32C, `Zicsr`, `Zifencei`
 - Branch prediction with a small BHT, BTB, and RAS
-- Cache hierarchy with i-cache prefetch, L1 D-cache, L2 cache, and store buffer
+- Fully associative caches with tree pseudo-LRU replacement: 16-line L1
+  I-cache with next-line prefetch, 16-line L1 D-cache, 32-line L2 (32-byte
+  lines), plus a store buffer
 - Trap, CSR, timer-interrupt, and MMIO support
 - Verification flows for directed regressions, constrained-random testing, and
   report aggregation
@@ -75,7 +77,9 @@ Deeper module hierarchy view extracted from the RTL:
 
 Other useful files:
 
-- `StoreBuffer.sv`, `datacache.sv`, `l2cache.sv` for the memory path
+- `StoreBuffer.sv`, `datacache.sv`, `l2cache.sv` for the memory path;
+  `cache_tags.sv` holds the shared fully associative tag/replacement logic
+  (unit-tested by `tb_cache_tags.sv`)
 - `BranchPredictor.sv`, `FrontendPacketBuilder.sv`, `RVCExpander.sv` for the
   front end
 - `CSR_FILE.sv`, `AtomicController.sv`, `AtomicDecode.sv` for system and
@@ -247,6 +251,32 @@ two-level data-cache hierarchy. The repo also includes verification scripts and
 a software bring-up path so the project is easier to study and extend.
 
 ## Performance Snapshots
+
+### Fully Associative Caches (October 2026)
+
+The L1 I-cache, L1 D-cache, and L2 changed from 2-way set associative (LRU)
+to fully associative, sharing one tag/replacement module (`cache_tags.sv`).
+Both tree pseudo-LRU and true LRU were implemented and measured; pseudo-LRU
+is the default, and `IVERILOG_FLAGS=-DOTTER_TRUE_LRU` selects true LRU.
+
+| Workload | Metric | 2-way LRU (before) | FA pseudo-LRU | FA true LRU |
+| --- | --- | ---: | ---: | ---: |
+| FreeRTOS + CoreMark | cycles | 381,132 | **379,141** | 379,407 |
+| FreeRTOS + CoreMark | I-cache line fills | 2,178 | **890** | 1,049 |
+| FreeRTOS + CoreMark | D-cache misses | **1,018** | 1,080 | 1,074 |
+| FreeRTOS + CoreMark | misses served by L2 | 598 | 583 | **661** |
+| `system_workload` | cycles | 910 | 902 | **900** |
+| `system_workload_benchmark` | cycles | 993 | 984 | **982** |
+
+Replacement-logic cost (Yosys generic synthesis of `cache_tags`, one lookup
+port): 16 lines, 2,295 cells for pseudo-LRU vs 2,872 for true LRU (15 vs 64
+replacement-state bits); 32 lines, 4,660 vs 6,106. With performance within
+0.2% either way, pseudo-LRU is about 20-24% smaller, so it is the default.
+
+Verification: `tb_cache_tags.sv` checks both policies against independent
+reference models (20,000 random operations); the lockstep flow
+(`test_files/lockstep/cache_stress.s` plus 1,000 random programs) and the
+full regression pass for both policies.
 
 These snapshots are kept here so the project history stays visible.
 

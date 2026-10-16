@@ -3,6 +3,10 @@
 #
 #   tools/build_sim.sh [output.vvp]      (default: out/otter_tb.vvp)
 #
+# Extra compiler flags come from IVERILOG_FLAGS, e.g. selecting true-LRU cache
+# replacement instead of the default tree pseudo-LRU:
+#   IVERILOG_FLAGS=-DOTTER_TRUE_LRU tools/build_sim.sh
+#
 # Icarus prints two notices about SystemVerilog features it has not
 # implemented: "constant selects in always_* processes" (it watches the whole
 # vector instead of the selected bits) and "unique/unique0 qualities are
@@ -20,7 +24,8 @@ trap 'rm -f "$log"' EXIT
 
 cd "$ROOT"
 status=0
-iverilog -g2012 -o "$OUT" -c rtl.f tb_core.sv >"$log" 2>&1 || status=$?
+# shellcheck disable=SC2086  # IVERILOG_FLAGS is a word list on purpose
+iverilog -g2012 ${IVERILOG_FLAGS:-} -o "$OUT" -c rtl.f tb_core.sv >"$log" 2>&1 || status=$?
 
 grep -v -e "sorry: constant selects in always_\* processes" \
         -e "sorry: Case unique/unique0 qualities are ignored" "$log" || true

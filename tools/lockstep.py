@@ -23,6 +23,7 @@ import concurrent.futures
 import os
 import pathlib
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -144,7 +145,10 @@ def build_program(source: pathlib.Path, workdir: pathlib.Path) -> tuple[pathlib.
 
 
 def compile_rtl(out: pathlib.Path) -> None:
-    result = run(["iverilog", "-g2012", "-o", str(out), "-c", str(ROOT / "rtl.f"), str(ROOT / "tb_core.sv")], cwd=ROOT)
+    # IVERILOG_FLAGS passes build options through, e.g. -DOTTER_TRUE_LRU.
+    extra = shlex.split(os.environ.get("IVERILOG_FLAGS", ""))
+    result = run(["iverilog", "-g2012", *extra, "-o", str(out), "-c", str(ROOT / "rtl.f"), str(ROOT / "tb_core.sv")],
+                 cwd=ROOT)
     if result.returncode != 0:
         raise RuntimeError(f"iverilog failed:\n{result.stdout}{result.stderr}")
 

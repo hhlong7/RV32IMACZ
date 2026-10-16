@@ -22,6 +22,16 @@ package otter_defs_pkg;
         logic [31:0] jal_offset;
     } frontend_t;
 
+    // Cache replacement policy for the fully associative L1 I/D caches and
+    // L2: tree pseudo-LRU by default; build with -DOTTER_TRUE_LRU for true LRU.
+`ifdef OTTER_TRUE_LRU
+    localparam bit CACHE_TRUE_LRU = 1'b1;
+`else
+    localparam bit CACHE_TRUE_LRU = 1'b0;
+`endif
+    // Line address: everything above the 32-byte line offset.
+    localparam int CACHE_TAG_BITS = 27;
+
     // RV32 major opcodes (instruction bits [6:0]).
     localparam logic [6:0] OPC_LOAD     = 7'b0000011;
     localparam logic [6:0] OPC_MISC_MEM = 7'b0001111;
