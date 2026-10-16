@@ -428,7 +428,7 @@ stage_csr:
     bne t2, t0, fail_914          # Fail if mscratch did not hold the written value.
 
     csrrs t3, 0x301, x0           # Read misa.
-    li t4, 0x40001105             # Expected misa: RV32IMAC.
+    li t4, 0x40001125             # Expected misa: RV32IMAFC.
     bne t3, t4, fail_915          # Fail if misa does not match the implemented ISA.
 
     csrrw x0, 0x300, x0           # Clear mstatus to zero.

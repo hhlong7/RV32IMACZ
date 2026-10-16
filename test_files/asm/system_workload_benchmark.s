@@ -550,7 +550,7 @@ stage_csr:
     bne t2, t0, fail_914
 
     csrrs t3, 0x301, x0
-    li t4, 0x40001105
+    li t4, 0x40001125
     bne t3, t4, fail_915
 
     csrrw x0, 0x300, x0

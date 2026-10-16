@@ -20,6 +20,9 @@ package otter_defs_pkg;
         logic rd_is_link;
         logic rs1_is_link;
         logic [31:0] jal_offset;
+        // The instruction as fetched (16 bits for compressed): reported in
+        // mtval when the instruction is illegal.
+        logic [31:0] raw_ir;
     } frontend_t;
 
     // Cache replacement policy for the fully associative L1 I/D caches and
@@ -45,6 +48,15 @@ package otter_defs_pkg;
     localparam logic [6:0] OPC_JALR     = 7'b1100111;
     localparam logic [6:0] OPC_JAL      = 7'b1101111;
     localparam logic [6:0] OPC_SYSTEM   = 7'b1110011;
+    localparam logic [6:0] OPC_LOAD_FP  = 7'b0000111;
+    localparam logic [6:0] OPC_STORE_FP = 7'b0100111;
+    localparam logic [6:0] OPC_OP_FP    = 7'b1010011;
+
+    // Which FP execution unit an instruction uses.
+    localparam logic [1:0] FP_UNIT_NONE = 2'd0;  // not FP arithmetic (incl. flw/fsw)
+    localparam logic [1:0] FP_UNIT_ADD  = 2'd1;  // pipelined adder (fadd/fsub)
+    localparam logic [1:0] FP_UNIT_MUL  = 2'd2;  // pipelined multiplier
+    localparam logic [1:0] FP_UNIT_DIV  = 2'd3;  // iterative divider
 
     // Branch, JAL, or JALR.
     function automatic logic is_control_ir(input logic [31:0] ir);

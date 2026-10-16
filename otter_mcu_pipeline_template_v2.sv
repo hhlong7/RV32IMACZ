@@ -67,6 +67,18 @@ module OTTER_MCU(
         logic atomic_rl;
         logic [31:0] trap_cause;
         logic [31:0] trap_tval;
+
+        // Floating point. For FP instructions rs1/rs2 carry FP operand values
+        // (fp_rs1/fp_rs2 say which), and an FP register result is written
+        // from mem_data at WB.
+        logic fp_write;          // writes FP register rd (flw, FP arithmetic)
+        logic [1:0] fp_unit;     // FP_UNIT_* for FP arithmetic
+        logic fp_sub;
+        logic [2:0] fp_rm;       // resolved rounding mode
+        logic fp_rs1;
+        logic fp_rs2;
+        logic [31:0] fp_result;  // fdiv result, captured as it leaves EX1
+        logic [4:0] fp_flags;    // exception flags, accrued into fflags at WB
     } pipe_t;
 
     // Front-end queue: if_id is the oldest ready-to-issue slot, and if1_if2 is
@@ -243,6 +255,22 @@ module OTTER_MCU(
     logic blocks_pair_id;
 
     logic [31:0] rs1_val, rs2_val;
+    logic [31:0] frs1_val, frs2_val;
+
+    // FP decode / state
+    logic fp_instr_id, fp_load_id, fp_store_id, fp_sub_id, fp_write_id;
+    logic [1:0] fp_unit_id;
+    logic uses_frs1_id, uses_frs2_id, fp_dyn_rm_id, fp_illegal_id;
+    logic [2:0] fp_rm_id;
+    logic [2:0] frm_csr;
+    logic [1:0] fs_csr;
+    logic fp_issue_ex1, fp_dirty_ex1, fdiv_wait_ex1, fp_flags_pending;
+    logic fadd_ex1, fmul_ex1, fdiv_ex1;
+    logic fadd_valid, fmul_valid, fdiv_busy, fdiv_valid;
+    logic [31:0] fadd_result, fmul_result, fdiv_result;
+    logic [4:0] fadd_flags, fmul_flags, fdiv_flags;
+    logic [31:0] fp_mem_value;
+    logic [4:0] fp_mem_flags;
     logic [31:0] rs1_pair_val, rs2_pair_val;
     logic [31:0] wd, wd_pair;
     logic [1:0] retire_count_wb;
@@ -455,6 +483,7 @@ module OTTER_MCU(
         .pc_i(pc_out),
         .ir_i(fetch_slot0_ir),
         .instr_is_compressed_i(fetch_slot0_is_compressed),
+        .raw_i(fetch_slot0_window),
         .ras_valid_i(ras_valid),
         .ras_top_i(ras_top),
         .btb_hit_i(btb_hit_if0),
@@ -468,6 +497,7 @@ module OTTER_MCU(
         .pc_i(pc_out_inc),
         .ir_i(fetch_slot1_ir),
         .instr_is_compressed_i(fetch_slot1_is_compressed),
+        .raw_i(fetch_slot1_window),
         .ras_valid_i(ras_valid),
         .ras_top_i(ras_top),
         .btb_hit_i(btb_hit_if1),
@@ -481,7 +511,7 @@ module OTTER_MCU(
     // Front-end queue control
 
     assign dc_stall = dc_ctrl_stall || storebuf_full_stall_event;
-    assign stallEX1 = fence_wait_ex1 || fence_i_wait_ex1 || atomic_wait_ex1;
+    assign stallEX1 = fence_wait_ex1 || fence_i_wait_ex1 || atomic_wait_ex1 || fdiv_wait_ex1;
     assign stallIF = stallIF_hz || stallEX1;
     assign stallID = stallID_hz || stallEX1;
     assign stallIF2 = stallIF || stallID;
@@ -941,6 +971,11 @@ module OTTER_MCU(
         .store_conflict_stall_event(storebuf_conflict_stall_event),
         .dcache_store_drain_event(storebuf_drain_event),
         .fence_wait_event(fence_wait_event),
+        .fp_dirty(fp_dirty_ex1),
+        .fflags_accrue(mem_wb.valid && (|mem_wb.fp_unit) && ~dc_stall),
+        .fflags_new(mem_wb.fp_flags),
+        .frm(frm_csr),
+        .fs(fs_csr),
         .mtvec(mtvec_csr),
         .mepc(mepc_csr),
         .interrupt_pending(csr_interrupt_pending),
@@ -949,6 +984,34 @@ module OTTER_MCU(
 
 //////////////////////////////////////////////////////////////////
     // Decode stage
+
+    FPDecode OTTER_FP_DECODE(
+        .ir_i(if_id.ir),
+        .frm_i(frm_csr),
+        .fs_i(fs_csr),
+        .fp_instr_o(fp_instr_id),
+        .fp_load_o(fp_load_id),
+        .fp_store_o(fp_store_id),
+        .fp_unit_o(fp_unit_id),
+        .fp_sub_o(fp_sub_id),
+        .fp_write_o(fp_write_id),
+        .uses_frs1_o(uses_frs1_id),
+        .uses_frs2_o(uses_frs2_id),
+        .dyn_rm_o(fp_dyn_rm_id),
+        .rm_o(fp_rm_id),
+        .illegal_o(fp_illegal_id)
+    );
+
+    FP_REG_FILE OTTER_FP_REG_FILE(
+        .CLK(CLK),
+        .WE(mem_wb.valid && mem_wb.fp_write && ~dc_stall),
+        .WA(mem_wb.ir[11:7]),
+        .WD(mem_wb.mem_data),
+        .RA1(if_id.ir[19:15]),
+        .RA2(if_id.ir[24:20]),
+        .RD1(frs1_val),
+        .RD2(frs2_val)
+    );
 
     REG_FILE OTTER_REG_FILE(
         .CLK(CLK),
@@ -1068,7 +1131,8 @@ module OTTER_MCU(
                                (csr_en_de && csr_access_illegal_id) ||
                                ((if_id.ir[6:0] == OPC_SYSTEM) &&
                                 (if_id.ir[14:12] == 3'b000) &&
-                                ~(ecall_id || ebreak_id || mret_id || wfi_id)));
+                                ~(ecall_id || ebreak_id || mret_id || wfi_id)) ||
+                               fp_illegal_id);
 
     // Take asynchronous interrupts only at a clean instruction boundary: no
     // older stage may still own an architectural update, so the trap path
@@ -1077,7 +1141,8 @@ module OTTER_MCU(
     function automatic logic stage_has_side_effects(input pipe_t stage);
         stage_has_side_effects = stage.valid &&
                                  (stage.regWrite || stage.memRead || stage.memWrite || stage.csr_en ||
-                                  stage.csr_write || stage.atomic_valid || stage.trap_taken || stage.mret);
+                                  stage.csr_write || stage.atomic_valid || stage.trap_taken || stage.mret ||
+                                  stage.fp_write);
     endfunction
 
     assign interrupt_accept_id = instr_present_id && csr_interrupt_pending &&
@@ -1095,15 +1160,20 @@ module OTTER_MCU(
     // mtval: the instruction bits for illegal instructions, the PC for
     // breakpoints (both optional in the spec), zero otherwise.
     assign trap_tval_id = interrupt_accept_id ? 32'b0 :
-                          illegal_instr_id ? if_id.ir :
+                          illegal_instr_id ? if_id.raw_ir :
                           ebreak_id ? if_id.pc :
                           32'b0;
 
-    assign csr_read_if_id = instr_present_id && csr_en_de;
-    assign csr_addr_hazard_id = if_id.ir[31:20];
+    // An FP op with a dynamic rounding mode reads frm in ID, so it waits for
+    // older writes to frm/fcsr like a CSR read of frm.
+    assign csr_read_if_id = instr_present_id && (csr_en_de || fp_dyn_rm_id);
+    assign csr_addr_hazard_id = fp_dyn_rm_id ? 12'h002 : if_id.ir[31:20];
     // Anything that may trap or MRET must not pass an older in-flight write to
     // a trap CSR. Memory operations count: misaligned addresses trap in EX1.
-    assign machine_ctrl_hazard_id = trap_taken_id || mret_id || mem_rden2 || mem_we2;
+    // FP instructions and FP CSR accesses check mstatus.FS in ID, so they also
+    // wait for older mstatus writes.
+    assign machine_ctrl_hazard_id = trap_taken_id || mret_id || mem_rden2 || mem_we2 || fp_instr_id ||
+                                    (csr_en_de && (if_id.ir[31:20] >= 12'h001) && (if_id.ir[31:20] <= 12'h003));
 
     // Keep the pairing policy isolated from the main decode path so future
     // widening experiments only need to touch one module.
@@ -1147,6 +1217,8 @@ module OTTER_MCU(
         .regWrite_if_id(reg_wr_wb),
         .rd_if_id(if_id.ir[11:7]),
         .blocksPair_if_id(blocks_pair_id),
+        .usesFrs1_if_id(instr_present_id && uses_frs1_id),
+        .usesFrs2_if_id(instr_present_id && uses_frs2_id),
 
         .valid_if_pair(if1_if2.valid),
         .opcode_if_pair(if1_if2.ir[6:0]),
@@ -1190,6 +1262,9 @@ module OTTER_MCU(
         .csrWrite_mem_wb_pair(mem_wb_pair.csr_write),
         .csrAddr_mem_wb_pair(mem_wb_pair.csr_addr),
 
+        .fpWrite_id_ex(id_ex.valid && id_ex.fp_write),
+        .fpFlagsPending(fp_flags_pending),
+
         .stallIF(stallIF_hz),
         .stallID(stallID_hz),
         .flushEX(flushEX_hz),
@@ -1209,8 +1284,8 @@ module OTTER_MCU(
         id_slot0.pc = if_id.pc;
         id_slot0.pc_next = if_id.pc_next;
         id_slot0.ir = if_id.ir;
-        id_slot0.rs1 = rs1_val;
-        id_slot0.rs2 = rs2_val;
+        id_slot0.rs1 = uses_frs1_id ? frs1_val : rs1_val;
+        id_slot0.rs2 = uses_frs2_id ? frs2_val : rs2_val;
         id_slot0.alu_src_a = alu_src_a_de;
         id_slot0.alu_src_b = alu_src_b_de;
         id_slot0.alu_fun = alu_fun_de;
@@ -1233,6 +1308,14 @@ module OTTER_MCU(
         id_slot0.atomic_rl = atomic_valid_id && atomic_rl_id;
         id_slot0.trap_cause = trap_cause_id;
         id_slot0.trap_tval = trap_tval_id;
+        if (!trap_taken_id) begin
+            id_slot0.fp_write = fp_write_id;
+            id_slot0.fp_unit = fp_unit_id;
+            id_slot0.fp_sub = fp_sub_id;
+            id_slot0.fp_rm = fp_rm_id;
+            id_slot0.fp_rs1 = uses_frs1_id;
+            id_slot0.fp_rs2 = uses_frs2_id;
+        end
     end
 
     // Decoded slot-1 bundle: pure integer execution with no prediction, LSU,
@@ -1340,8 +1423,27 @@ module OTTER_MCU(
                     bypass = srcs[i].data;
     endfunction
 
-    assign rs1f = bypass(id_ex.ir[19:15], id_ex.rs1, bypass_srcs);
-    assign rs2f = bypass(id_ex.ir[24:20], id_ex.rs2, bypass_srcs);
+    // FP operands come from FP producers only. An FP result is ready in MEM
+    // (FP unit output, fdiv result, or flw data) and at WB; the hazard unit
+    // keeps an FP consumer out of EX1 while its producer is still in EX2.
+    bypass_t fp_src_mem, fp_src_wb;
+    // {hit, rd, data}
+    assign fp_src_mem = {ex_mem.valid && ex_mem.fp_write, ex_mem.ir[11:7], fp_mem_value};
+    assign fp_src_wb = {mem_wb.valid && mem_wb.fp_write, mem_wb.ir[11:7], mem_wb.mem_data};
+
+    function automatic logic [31:0] fp_bypass(input logic [4:0] src, input logic [31:0] reg_value,
+                                              input bypass_t mem_src, input bypass_t wb_src);
+        fp_bypass = reg_value;
+        if (wb_src.hit && (wb_src.rd == src))
+            fp_bypass = wb_src.data;
+        if (mem_src.hit && (mem_src.rd == src))
+            fp_bypass = mem_src.data;
+    endfunction
+
+    assign rs1f = id_ex.fp_rs1 ? fp_bypass(id_ex.ir[19:15], id_ex.rs1, fp_src_mem, fp_src_wb)
+                               : bypass(id_ex.ir[19:15], id_ex.rs1, bypass_srcs);
+    assign rs2f = id_ex.fp_rs2 ? fp_bypass(id_ex.ir[24:20], id_ex.rs2, fp_src_mem, fp_src_wb)
+                               : bypass(id_ex.ir[24:20], id_ex.rs2, bypass_srcs);
     assign rs1f_pair = bypass(id_ex_pair.ir[19:15], id_ex_pair.rs1, bypass_srcs);
     assign rs2f_pair = bypass(id_ex_pair.ir[24:20], id_ex_pair.rs2, bypass_srcs);
 
@@ -1394,6 +1496,103 @@ module OTTER_MCU(
     assign csr_write_ex1 = id_ex.valid && id_ex.csr_en &&
                            ((id_ex.csr_cmd == 2'b01) || (csr_src_ex1 != 32'b0));
     assign exec_result_ex1 = id_ex.csr_en ? id_ex.csr_rdata : alu_result_ex1;
+
+//////////////////////////////////////////////////////////////////
+    // Floating-point units
+    //
+    // The pipelined adder and multiplier run beside EX1 -> EX2 -> MEM: an op
+    // enters as it leaves EX1, the units advance with the pipe, and the
+    // result appears in MEM like load data. fdiv waits in EX1 while the
+    // iterative divider runs, then carries its result down the pipe.
+
+    // Which FP unit the instruction in EX1 uses. Decoded in one always_comb
+    // block: Icarus 13 can mis-evaluate struct-field compares in continuous
+    // assignments and port expressions.
+    always_comb begin
+        fadd_ex1 = 1'b0;
+        fmul_ex1 = 1'b0;
+        fdiv_ex1 = 1'b0;
+        if (id_ex.valid) begin
+            unique case (id_ex.fp_unit)
+                FP_UNIT_ADD: fadd_ex1 = 1'b1;
+                FP_UNIT_MUL: fmul_ex1 = 1'b1;
+                FP_UNIT_DIV: fdiv_ex1 = 1'b1;
+                default: ;
+            endcase
+        end
+    end
+
+    // The instruction in EX1 moves to EX2 at the next edge (when ~dc_stall).
+    assign fp_issue_ex1 = id_ex.valid && ~stallEX1 && ~control_kill_ex1;
+    // An FP register write marks mstatus.FS Dirty as it leaves EX1; nothing
+    // past EX1 can be squashed.
+    assign fp_dirty_ex1 = fp_issue_ex1 && id_ex.fp_write && ~dc_stall;
+
+    fp_adder OTTER_FP_ADDER(
+        .clk(CLK),
+        .rst(RESET),
+        .advance(~dc_stall),
+        .in_valid(fp_issue_ex1 && fadd_ex1),
+        .in_sub(id_ex.fp_sub),
+        .in_a(rs1f),
+        .in_b(rs2f),
+        .in_rm(id_ex.fp_rm),
+        .out_valid(fadd_valid),
+        .out_result(fadd_result),
+        .out_flags(fadd_flags)
+    );
+
+    fp_multiplier OTTER_FP_MULTIPLIER(
+        .clk(CLK),
+        .rst(RESET),
+        .advance(~dc_stall),
+        .in_valid(fp_issue_ex1 && fmul_ex1),
+        .in_a(rs1f),
+        .in_b(rs2f),
+        .in_rm(id_ex.fp_rm),
+        .out_valid(fmul_valid),
+        .out_result(fmul_result),
+        .out_flags(fmul_flags)
+    );
+
+    fp_divider OTTER_FP_DIVIDER(
+        .clk(CLK),
+        .rst(RESET),
+        // Start only while the pipe is moving: during an LSU stall a
+        // forwarded operand (e.g. load data still being refilled) is not
+        // valid yet.
+        .in_valid(fdiv_ex1 && ~fdiv_busy && ~dc_stall),
+        .in_a(rs1f),
+        .in_b(rs2f),
+        .in_rm(id_ex.fp_rm),
+        .busy(fdiv_busy),
+        .out_valid(fdiv_valid),
+        .out_result(fdiv_result),
+        .out_flags(fdiv_flags),
+        .ack(fdiv_ex1 && fdiv_valid && ~dc_stall)
+    );
+
+    assign fdiv_wait_ex1 = fdiv_ex1 && ~fdiv_valid;
+
+    // FP results in MEM: unit output, fdiv result, or flw data.
+    always_comb begin
+        unique case (ex_mem.fp_unit)
+            FP_UNIT_ADD: begin fp_mem_value = fadd_result; fp_mem_flags = fadd_flags; end
+            FP_UNIT_MUL: begin fp_mem_value = fmul_result; fp_mem_flags = fmul_flags; end
+            FP_UNIT_DIV: begin fp_mem_value = ex_mem.fp_result; fp_mem_flags = ex_mem.fp_flags; end
+            default:     begin fp_mem_value = mem_dout2; fp_mem_flags = 5'b0; end
+        endcase
+    end
+
+    // FP_UNIT_NONE is 0, so any set bit means FP arithmetic. (Written without
+    // a comparison: Icarus 13 returns X for the equivalent compare inside
+    // this function.)
+    function automatic logic has_fp_arith(input pipe_t stage);
+        has_fp_arith = stage.valid && (|stage.fp_unit);
+    endfunction
+
+    assign fp_flags_pending = has_fp_arith(id_ex) || has_fp_arith(ex1_ex2) ||
+                              has_fp_arith(ex_mem) || has_fp_arith(mem_wb);
 
     assign is_branch_ex1 = id_ex.valid && (id_ex.ir[6:0] == OPC_BRANCH);
     assign is_jal_ex1 = id_ex.valid && (id_ex.ir[6:0] == OPC_JAL);
@@ -1496,6 +1695,8 @@ module OTTER_MCU(
                 ex1_ex2.alu_result <= exec_result_ex1;
                 ex1_ex2.csr_write <= csr_write_ex1;
                 ex1_ex2.csr_wdata <= csr_wdata_ex1;
+                ex1_ex2.fp_result <= fdiv_result;
+                ex1_ex2.fp_flags <= fdiv_flags;
             end
 
             if (id_ex_pair.valid && ~stallEX1) begin
@@ -1537,7 +1738,9 @@ module OTTER_MCU(
             // The pair lane has no MEM side effects; it simply waits for
             // ordered retirement beside slot 0.
             mem_wb <= ex_mem;
-            mem_wb.mem_data <= ex_mem.valid ? mem_dout2 : 32'b0;
+            mem_wb.mem_data <= ~ex_mem.valid ? 32'b0 :
+                                ex_mem.fp_write ? fp_mem_value : mem_dout2;
+            mem_wb.fp_flags <= fp_mem_flags;
             mem_wb_pair <= ex_mem_pair;
         end
     end

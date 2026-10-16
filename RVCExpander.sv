@@ -39,13 +39,17 @@ module RVCExpander(
                                              5'd2, 3'b000, compact_reg(cinst[4:2]), 7'b0010011};
                             illegal_c = (cinst[12:5] == 8'b0);
                         end
-                        3'b010: begin
+                        3'b010,
+                        3'b011: begin   // c.lw / c.flw
                             expanded_ir_o = {5'b0, cinst[5], cinst[12:10], cinst[6], 2'b00,
-                                             compact_reg(cinst[9:7]), 3'b010, compact_reg(cinst[4:2]), 7'b0000011};
+                                             compact_reg(cinst[9:7]), 3'b010, compact_reg(cinst[4:2]),
+                                             cinst[13] ? 7'b0000111 : 7'b0000011};
                         end
-                        3'b110: begin
+                        3'b110,
+                        3'b111: begin   // c.sw / c.fsw
                             expanded_ir_o = {5'b0, cinst[5], cinst[12], compact_reg(cinst[4:2]),
-                                             compact_reg(cinst[9:7]), 3'b010, cinst[11:10], cinst[6], 2'b00, 7'b0100011};
+                                             compact_reg(cinst[9:7]), 3'b010, cinst[11:10], cinst[6], 2'b00,
+                                             cinst[13] ? 7'b0100111 : 7'b0100011};
                         end
                         default: illegal_c = 1'b1;
                     endcase
@@ -124,10 +128,14 @@ module RVCExpander(
                             expanded_ir_o = {7'b0000000, cinst[6:2], cinst[11:7], 3'b001, cinst[11:7], 7'b0010011};
                             illegal_c = cinst[12];
                         end
-                        3'b010: begin
+                        3'b010: begin   // c.lwsp (rd=x0 reserved)
                             expanded_ir_o = {4'b0, cinst[3:2], cinst[12], cinst[6:4], 2'b00,
                                              5'd2, 3'b010, cinst[11:7], 7'b0000011};
                             illegal_c = (cinst[11:7] == 5'd0);
+                        end
+                        3'b011: begin   // c.flwsp (any f register)
+                            expanded_ir_o = {4'b0, cinst[3:2], cinst[12], cinst[6:4], 2'b00,
+                                             5'd2, 3'b010, cinst[11:7], 7'b0000111};
                         end
                         3'b100: begin
                             if (~cinst[12]) begin
@@ -147,9 +155,11 @@ module RVCExpander(
                                 end
                             end
                         end
-                        3'b110: begin
+                        3'b110,
+                        3'b111: begin   // c.swsp / c.fswsp
                             expanded_ir_o = {4'b0, cinst[8:7], cinst[12], cinst[6:2],
-                                             5'd2, 3'b010, cinst[11:9], 2'b00, 7'b0100011};
+                                             5'd2, 3'b010, cinst[11:9], 2'b00,
+                                             cinst[13] ? 7'b0100111 : 7'b0100011};
                         end
                         default: illegal_c = 1'b1;
                     endcase

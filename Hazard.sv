@@ -19,6 +19,8 @@ module Hazard(
     input  logic        regWrite_if_id,
     input  logic [4:0]  rd_if_id,
     input  logic        blocksPair_if_id,
+    input  logic        usesFrs1_if_id,   // reads FP source registers
+    input  logic        usesFrs2_if_id,
 
     // Younger decode slot that may issue in parallel with the oldest slot.
     input  logic        valid_if_pair,
@@ -65,6 +67,12 @@ module Hazard(
     input  logic        csrWrite_mem_wb_pair,
     input  logic [11:0] csrAddr_mem_wb_pair,
 
+    // FP state still in flight: an FP register write in EX1 (its result is
+    // not ready, and it marks mstatus.FS Dirty as it leaves EX1), and FP
+    // arithmetic anywhere from EX1 to WB (its flags reach fflags at WB).
+    input  logic        fpWrite_id_ex,
+    input  logic        fpFlagsPending,
+
     output logic stallIF,
     output logic stallID,
     output logic flushEX,
@@ -80,6 +88,8 @@ module Hazard(
     logic uses_rs2_if_pair;
 
     logic load_block_if_id;
+    logic fp_block_if_id;
+    logic fp_state_block_if_id;
     logic load_block_if_pair;
     logic csr_block_if_id;
     logic machine_block_if_id;
@@ -97,6 +107,8 @@ module Hazard(
                 OPC_LOAD, // loads
                 OPC_AMO, // atomics
                 OPC_STORE, // stores
+                OPC_LOAD_FP, // flw/fsw base address
+                OPC_STORE_FP,
                 OPC_BRANCH, // branches
                 OPC_JALR: opcode_uses_rs1 = 1'b1; // JALR
                 OPC_SYSTEM: opcode_uses_rs1 = (funct3 != 3'b000) && ~funct3[2];
@@ -118,6 +130,18 @@ module Hazard(
                 default: opcode_uses_rs2 = 1'b0;
             endcase
         end
+    endfunction
+
+    // True when a read of CSR `read` must wait for an older write of CSR
+    // `write`: the same CSR, the FP CSRs that alias one another (fcsr holds
+    // frm and fflags), or mstatus, whose FS field any FP CSR write sets Dirty.
+    function automatic logic csr_conflict(input logic [11:0] read, input logic [11:0] write);
+        logic read_fp, write_fp;
+        read_fp = (read == 12'h001) || (read == 12'h002) || (read == 12'h003);
+        write_fp = (write == 12'h001) || (write == 12'h002) || (write == 12'h003);
+        csr_conflict = (read == write) ||
+                       (read_fp && write_fp && ((read == 12'h003) || (write == 12'h003))) ||
+                       ((read == 12'h300) && write_fp);
     endfunction
 
     // CSRs that trap entry or MRET read (mstatus, mtvec, mepc) or write
@@ -171,13 +195,27 @@ module Hazard(
         machine_block_if_id = 1'b0;
         for (int i = 0; i < CSR_STAGES; i++) begin
             if (older_csr_write[i]) begin
-                csr_block_if_id |= (older_csr_addr[i] == csrAddr_if_id);
+                csr_block_if_id |= csr_conflict(csrAddr_if_id, older_csr_addr[i]);
                 machine_block_if_id |= is_trap_csr(older_csr_addr[i]);
             end
         end
         csr_block_if_id &= valid_if_id && csrRead_if_id;
         machine_block_if_id &= valid_if_id && machineCtrl_if_id;
     end
+
+    // An FP result is ready in MEM, one stage later than an ALU result, so
+    // an FP consumer directly behind its producer waits one cycle (f0 is a
+    // real register, unlike x0).
+    assign fp_block_if_id = valid_if_id && fpWrite_id_ex && valid_id_ex &&
+                            ((usesFrs1_if_id && (rs1_if_id == rd_id_ex)) ||
+                             (usesFrs2_if_id && (rs2_if_id == rd_id_ex)));
+
+    // Reads of FP state that is still being produced: mstatus while an FP
+    // register write is about to set FS Dirty, fflags/fcsr while older FP
+    // arithmetic has not yet recorded its flags.
+    assign fp_state_block_if_id = valid_if_id && csrRead_if_id &&
+                                  (((csrAddr_if_id == 12'h300) && fpWrite_id_ex) ||
+                                   (((csrAddr_if_id == 12'h001) || (csrAddr_if_id == 12'h003)) && fpFlagsPending));
 
     // Slot 1 cannot consume or overwrite a destination that slot 0 is still
     // producing inside the same issue bundle.
@@ -187,7 +225,8 @@ module Hazard(
                               (regWrite_if_pair && (rd_if_pair == rd_if_id)));
 
     assign loadUseStall = load_block_if_id;
-    assign stallIF = load_block_if_id || csr_block_if_id || machine_block_if_id;
+    assign stallIF = load_block_if_id || csr_block_if_id || machine_block_if_id ||
+                     fp_block_if_id || fp_state_block_if_id;
     assign stallID = stallIF;
     assign flushEX = stallIF;
 

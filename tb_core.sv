@@ -123,6 +123,16 @@ module tb_core;
         return reg_write ? ir[11:7] : 5'd0;
     endfunction
 
+    // FP register writes are reported as registers 32-63 (f0-f31).
+    task automatic log_retire(input logic [31:0] pc, input logic reg_write, input logic fp_write,
+                              input logic [31:0] ir);
+        if (fp_write)
+            $fdisplay(commit_fd, "R %08x %0d %08x", pc, 32 + ir[11:7], dut.OTTER_FP_REG_FILE.ram[ir[11:7]]);
+        else
+            $fdisplay(commit_fd, "R %08x %0d %08x", pc, retired_rd(reg_write, ir),
+                      dut.OTTER_REG_FILE.ram[retired_rd(reg_write, ir)]);
+    endtask
+
     always @(posedge clk) begin
         if (!reset) begin
             if (dut.hit)
@@ -151,13 +161,9 @@ module tb_core;
         if (commit_fd != 0 && !reset) begin
             if (!dut.dc_stall) begin
                 if (dut.mem_wb.valid)
-                    $fdisplay(commit_fd, "R %08x %0d %08x", dut.mem_wb.pc,
-                              retired_rd(dut.mem_wb.regWrite, dut.mem_wb.ir),
-                              dut.OTTER_REG_FILE.ram[retired_rd(dut.mem_wb.regWrite, dut.mem_wb.ir)]);
+                    log_retire(dut.mem_wb.pc, dut.mem_wb.regWrite, dut.mem_wb.fp_write, dut.mem_wb.ir);
                 if (dut.mem_wb_pair.valid)
-                    $fdisplay(commit_fd, "R %08x %0d %08x", dut.mem_wb_pair.pc,
-                              retired_rd(dut.mem_wb_pair.regWrite, dut.mem_wb_pair.ir),
-                              dut.OTTER_REG_FILE.ram[retired_rd(dut.mem_wb_pair.regWrite, dut.mem_wb_pair.ir)]);
+                    log_retire(dut.mem_wb_pair.pc, dut.mem_wb_pair.regWrite, dut.mem_wb_pair.fp_write, dut.mem_wb_pair.ir);
             end
 
             if (dut.atomic_commit_valid && dut.atomic_commit_write)
@@ -184,6 +190,16 @@ module tb_core;
 
             if (dut.issuePair)
                 hazard_pair_issue_count <= hazard_pair_issue_count + 1;
+
+            // FP unit results must line up with the instruction in MEM.
+            if (dut.ex_mem.valid && dut.ex_mem.fp_unit == 2'd1 && !dut.fadd_valid) begin
+                $display("ASSERT_FAIL fadd in MEM without an adder result cycle=%0d pc=0x%08x", cycle_count, dut.ex_mem.pc);
+                $fatal(1);
+            end
+            if (dut.ex_mem.valid && dut.ex_mem.fp_unit == 2'd2 && !dut.fmul_valid) begin
+                $display("ASSERT_FAIL fmul in MEM without a multiplier result cycle=%0d pc=0x%08x", cycle_count, dut.ex_mem.pc);
+                $fatal(1);
+            end
 
             // Branch recovery: mispredicts must raise a redirect.
             if (dut.branch_mispredict_ex1 && !dut.redirect_valid_ex1) begin

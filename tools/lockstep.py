@@ -37,7 +37,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCKSTEP_DIR = ROOT / "test_files" / "lockstep"
 LINKER_SCRIPT = LOCKSTEP_DIR / "link.ld"
 
-ISA = "rv32imac_zicsr_zifencei"
+# F covers the core's single-precision subset (fadd/fsub/fmul/fdiv, flw/fsw);
+# test programs only use those FP instructions.
+ISA = "rv32imafc_zicsr_zifencei"
 TEXT_BASE = 0x2000
 MEM_BYTES = 64 * 1024
 PASS_CODE = 1337
@@ -74,11 +76,13 @@ class Retire:
     value: int
     text: str = ""
 
+    # rd 1-31 are x registers, 32-63 are f0-f31, 0 means no register write.
     def key(self) -> tuple[int, int, int]:
         return (self.pc, self.rd, self.value if self.rd else 0)
 
     def __str__(self) -> str:
-        reg = f"x{self.rd}=0x{self.value:08x}" if self.rd else "no reg write"
+        name = f"f{self.rd - 32}" if self.rd >= 32 else f"x{self.rd}"
+        reg = f"{name}=0x{self.value:08x}" if self.rd else "no reg write"
         return f"pc=0x{self.pc:08x} {reg}" + (f"   [{self.text}]" if self.text else "")
 
 
@@ -184,6 +188,9 @@ def parse_spike_log(text: str) -> Trace:
             tok = tokens[i]
             if re.fullmatch(r"x\d+", tok):
                 rd, value = int(tok[1:]), int(tokens[i + 1], 16)
+                i += 2
+            elif re.fullmatch(r"f\d+", tok):
+                rd, value = 32 + int(tok[1:]), int(tokens[i + 1], 16)
                 i += 2
             elif tok == "mem":
                 addr = int(tokens[i + 1], 16)

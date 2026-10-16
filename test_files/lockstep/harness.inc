@@ -31,6 +31,22 @@ _start:
     li t0, 0
 .endm
 
+# Turns on the FP unit (mstatus.FS = Initial) and gives every f register a
+# defined value: Spike does not reset them, the RTL resets them to zero.
+.macro FP_INIT
+    li t0, 0x2000
+    csrs mstatus, t0
+    la t0, lockstep_fp_zero
+    .irp r, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+    I32 flw f\r, 0(t0)
+    .endr
+    .pushsection .data
+    .balign 4
+lockstep_fp_zero: .word 0
+    .popsection
+    li t0, 0
+.endm
+
 # Signals the RTL testbench through the seven-segment MMIO register, then
 # stops Spike through HTIF tohost.
 .macro LOCKSTEP_PASS

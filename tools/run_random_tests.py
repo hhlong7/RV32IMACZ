@@ -898,12 +898,21 @@ def compile_sim() -> None:
         raise SystemExit(result.returncode)
 
 
-def run_unit_tb(name: str, sources: list[str], pass_marker: str) -> None:
-    """Compile and run a self-checking module-level testbench."""
+def run_unit_tb(name: str, sources: list[str], pass_marker: str, vectors: int = 0) -> None:
+    """Compile and run a self-checking module-level testbench.
+
+    With vectors > 0, tools/fp_ref.py first writes that many FP reference
+    vectors and the testbench reads them via +VECTORS.
+    """
     with tempfile.TemporaryDirectory(prefix="otter_unit_") as tmpdir:
         sim_path = pathlib.Path(tmpdir) / "unit.vvp"
+        plusargs = []
+        if vectors:
+            vec_path = pathlib.Path(tmpdir) / "vectors.txt"
+            run([sys.executable, "tools/fp_ref.py", "vectors", str(vec_path), "--count", str(vectors)], ROOT)
+            plusargs.append(f"+VECTORS={vec_path}")
         compile_tb = run(["iverilog", "-g2012", "-o", str(sim_path), *sources], ROOT)
-        sim = run(["vvp", "-n", str(sim_path)], ROOT) if compile_tb.returncode == 0 else compile_tb
+        sim = run(["vvp", "-n", str(sim_path), *plusargs], ROOT) if compile_tb.returncode == 0 else compile_tb
     if compile_tb.returncode != 0 or sim.returncode != 0 or pass_marker not in sim.stdout:
         print(f"  {name} unit test FAIL")
         sys.stderr.write(sim.stdout + sim.stderr)
@@ -971,6 +980,8 @@ def main() -> int:
 
     run_unit_tb("store-buffer", STOREBUF_SOURCES, "TB_STORE_BUFFER PASS")
     run_unit_tb("cache-tags", ["cache_tags.sv", "tb_cache_tags.sv"], "TB_CACHE_TAGS PASS")
+    run_unit_tb("fp-units", ["fpu_pkg.sv", "fp_adder.sv", "fp_multiplier.sv", "fp_divider.sv",
+                             "tb_fpu_units.sv"], "TB_FPU PASS", vectors=30000)
     compile_sim()
 
     with tempfile.TemporaryDirectory(prefix="otter_random_") as tmpdir:

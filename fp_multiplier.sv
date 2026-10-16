@@ -1,0 +1,123 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Module Name: fp_multiplier
+// Description:
+//   Pipelined IEEE-754 single-precision multiplier (fmul.s). Three stages,
+//   one new operation per cycle:
+//     S1  unpack, special cases, sign and exponent
+//     S2  24x24 significand multiply (exact 48-bit product)
+//     S3  normalize and round (combinational output from the S2 register)
+//   Same timing and `advance` stall behavior as fp_adder.
+//////////////////////////////////////////////////////////////////////////////////
+module fp_multiplier (
+    input  logic        clk,
+    input  logic        rst,
+    input  logic        advance,
+
+    input  logic        in_valid,
+    input  logic [31:0] in_a,
+    input  logic [31:0] in_b,
+    input  logic [2:0]  in_rm,
+
+    output logic        out_valid,
+    output logic [31:0] out_result,
+    output logic [4:0]  out_flags
+);
+    import fpu_pkg::*;
+
+    typedef struct packed {
+        logic valid;
+        logic [2:0] rm;
+        logic special;
+        logic [31:0] special_result;
+        logic [4:0] special_flags;
+        logic sign;
+        int exp;                 // exponent of the product of the two hidden bits
+        logic [23:0] sig_a;
+        logic [23:0] sig_b;
+    } s1_t;
+
+    typedef struct packed {
+        logic valid;
+        logic [2:0] rm;
+        logic special;
+        logic [31:0] special_result;
+        logic [4:0] special_flags;
+        logic sign;
+        int exp;
+        logic [47:0] product;
+    } s2_t;
+
+    s1_t s1_d, s1_q;
+    s2_t s2_d, s2_q;
+
+    // ---- S1 ------------------------------------------------------------------
+    always_comb begin
+        s1_d = '0;
+        s1_d.valid = in_valid;
+        s1_d.rm = in_rm;
+        s1_d.sign = in_a[31] ^ in_b[31];
+
+        if (is_nan(in_a) || is_nan(in_b)) begin
+            s1_d.special = 1'b1;
+            s1_d.special_result = CANONICAL_NAN;
+            s1_d.special_flags[FLAG_NV] = is_snan(in_a) || is_snan(in_b);
+        end else if ((is_inf(in_a) && is_zero(in_b)) || (is_zero(in_a) && is_inf(in_b))) begin
+            s1_d.special = 1'b1;
+            s1_d.special_result = CANONICAL_NAN;
+            s1_d.special_flags[FLAG_NV] = 1'b1;
+        end else if (is_inf(in_a) || is_inf(in_b)) begin
+            s1_d.special = 1'b1;
+            s1_d.special_result = signed_inf(s1_d.sign);
+        end else if (is_zero(in_a) || is_zero(in_b)) begin
+            s1_d.special = 1'b1;
+            s1_d.special_result = {s1_d.sign, 31'b0};
+        end
+
+        s1_d.sig_a = unpack_sig(in_a);
+        s1_d.sig_b = unpack_sig(in_b);
+        s1_d.exp = unpack_exp(in_a) + unpack_exp(in_b) - 127;
+    end
+
+    // ---- S2 ------------------------------------------------------------------
+    always_comb begin
+        s2_d.valid = s1_q.valid;
+        s2_d.rm = s1_q.rm;
+        s2_d.special = s1_q.special;
+        s2_d.special_result = s1_q.special_result;
+        s2_d.special_flags = s1_q.special_flags;
+        s2_d.sign = s1_q.sign;
+        s2_d.exp = s1_q.exp;
+        s2_d.product = s1_q.sig_a * s1_q.sig_b;
+    end
+
+    // ---- S3 ------------------------------------------------------------------
+    always_comb begin
+        logic [36:0] packed_result;
+        int msb;
+
+        msb = leading_one(64'(s2_q.product));
+        // Two hidden bits multiply to bit 46 of the product.
+        packed_result = round_pack(s2_q.sign, s2_q.exp + msb - 46,
+                                   to_sig27(64'(s2_q.product), msb, 1'b0), s2_q.rm);
+
+        out_valid = s2_q.valid;
+        if (s2_q.special) begin
+            out_result = s2_q.special_result;
+            out_flags = s2_q.special_flags;
+        end else begin
+            out_result = packed_result[31:0];
+            out_flags = packed_result[36:32];
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            s1_q <= '0;
+            s2_q <= '0;
+        end else if (advance) begin
+            s1_q <= s1_d;
+            s2_q <= s2_d;
+        end
+    end
+endmodule

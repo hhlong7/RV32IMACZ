@@ -6,8 +6,13 @@
 //              performance counters for an M-only RV32IMAC hart.
 //
 // Implemented CSRs
-//   mstatus  0x300   MIE and MPIE writable; MPP reads as M (M-only hart)
-//   misa     0x301   RV32IMAC; writes are ignored (WARL)
+//   fflags   0x001   accrued FP exception flags {NV, DZ, OF, UF, NX}
+//   frm      0x002   FP rounding mode
+//   fcsr     0x003   {frm, fflags}; FP CSRs trap while mstatus.FS is Off
+//   mstatus  0x300   MIE, MPIE, and FS writable; MPP reads as M (M-only
+//                    hart); SD reads as 1 when FS is Dirty
+//   misa     0x301   RV32IMAFC (F: the supported single-precision subset);
+//                    writes are ignored (WARL)
 //   mie      0x304   MTIE and MEIE writable
 //   mtvec    0x305   direct mode only (MODE is read-only zero)
 //   mscratch 0x340
@@ -65,18 +70,28 @@ module CSR_FILE(
     input logic dcache_store_drain_event,
     input logic fence_wait_event,
 
+    // Floating-point state. fp_dirty marks mstatus.FS Dirty (an FP register
+    // is being written); fflags_accrue ORs a retiring FP op's flags in.
+    input logic fp_dirty,
+    input logic fflags_accrue,
+    input logic [4:0] fflags_new,
+    output logic [2:0] frm,
+    output logic [1:0] fs,
+
     output logic [31:0] mtvec,
     output logic [31:0] mepc,
     output logic interrupt_pending,
     output logic [31:0] interrupt_cause
 );
-    // MXL=1 (32-bit) | M | I | C | A
-    localparam logic [31:0] MISA_VALUE = 32'h4000_1105;
+    // MXL=1 (32-bit) | M | I | F | C | A
+    localparam logic [31:0] MISA_VALUE = 32'h4000_1125;
 
     localparam int MSTATUS_MIE = 3;
     localparam int MSTATUS_MPIE = 7;
     localparam logic [31:0] MSTATUS_MPP_M = 32'h0000_1800;
-    localparam logic [31:0] MSTATUS_WRITABLE = 32'h0000_0088;
+    localparam logic [31:0] MSTATUS_WRITABLE = 32'h0000_6088;   // FS, MPIE, MIE
+    localparam int MSTATUS_FS_LO = 13;
+    localparam logic [1:0] FS_DIRTY = 2'b11;
 
     localparam int MIP_MTIP = 7;
     localparam int MIP_MEIP = 11;
@@ -97,6 +112,8 @@ module CSR_FILE(
     logic [31:0] mcause_reg;
     logic [31:0] mtval_reg;
     logic [31:0] mip_live;
+    logic [4:0] fflags_reg;
+    logic [2:0] frm_reg;
 
     logic [63:0] counters [0:LAST_COUNTER];
     logic [LAST_COUNTER:FIRST_HPM] hpm_event;
@@ -130,6 +147,7 @@ module CSR_FILE(
 
     function automatic logic csr_supported(input logic [11:0] addr);
         unique case (addr)
+            12'h001, 12'h002, 12'h003,
             12'h300, 12'h301, 12'h304, 12'h305,
             12'h340, 12'h341, 12'h342, 12'h343, 12'h344,
             12'hF11, 12'hF12, 12'hF13, 12'hF14: csr_supported = 1'b1;
@@ -142,8 +160,14 @@ module CSR_FILE(
         csr_readonly = (addr[11:10] == 2'b11);
     endfunction
 
+    function automatic logic is_fp_csr(input logic [11:0] addr);
+        is_fp_csr = (addr == 12'h001) || (addr == 12'h002) || (addr == 12'h003);
+    endfunction
+
     assign mtvec = mtvec_reg;
     assign mepc = mepc_reg;
+    assign frm = frm_reg;
+    assign fs = mstatus_reg[MSTATUS_FS_LO +: 2];
 
     assign mip_live = (timer_interrupt_pending ? (32'd1 << MIP_MTIP) : 32'b0) |
                       (external_interrupt_pending ? (32'd1 << MIP_MEIP) : 32'b0);
@@ -153,11 +177,15 @@ module CSR_FILE(
                                                                        : MCAUSE_M_TIMER_INTERRUPT;
 
     assign access_illegal = ~csr_supported(read_addr) ||
-                            (access_write_attempt && csr_readonly(read_addr));
+                            (access_write_attempt && csr_readonly(read_addr)) ||
+                            (is_fp_csr(read_addr) && (fs == 2'b00));
 
     always_comb begin
         unique case (read_addr)
-            12'h300: read_data = mstatus_reg;
+            12'h001: read_data = {27'b0, fflags_reg};
+            12'h002: read_data = {29'b0, frm_reg};
+            12'h003: read_data = {24'b0, frm_reg, fflags_reg};
+            12'h300: read_data = {fs == FS_DIRTY, mstatus_reg[30:0]};
             12'h301: read_data = MISA_VALUE;
             12'h304: read_data = mie_reg;
             12'h305: read_data = mtvec_reg;
@@ -198,6 +226,8 @@ module CSR_FILE(
             mepc_reg <= 32'b0;
             mcause_reg <= 32'b0;
             mtval_reg <= 32'b0;
+            fflags_reg <= 5'b0;
+            frm_reg <= 3'b0;
             for (int i = 0; i <= LAST_COUNTER; i++)
                 counters[i] <= 64'b0;
         end else begin
@@ -205,6 +235,14 @@ module CSR_FILE(
 
             if (write_en) begin
                 unique case (write_addr)
+                    // Writing FP state also marks it Dirty.
+                    12'h001: begin fflags_reg <= write_data[4:0]; next_mstatus[MSTATUS_FS_LO +: 2] = FS_DIRTY; end
+                    12'h002: begin frm_reg <= write_data[2:0]; next_mstatus[MSTATUS_FS_LO +: 2] = FS_DIRTY; end
+                    12'h003: begin
+                        fflags_reg <= write_data[4:0];
+                        frm_reg <= write_data[7:5];
+                        next_mstatus[MSTATUS_FS_LO +: 2] = FS_DIRTY;
+                    end
                     12'h300: next_mstatus = (write_data & MSTATUS_WRITABLE) | MSTATUS_MPP_M;
                     12'h304: mie_reg <= write_data & MIE_WRITABLE;
                     12'h305: mtvec_reg <= {write_data[31:2], 2'b00};
@@ -231,6 +269,13 @@ module CSR_FILE(
                 next_mstatus[MSTATUS_MIE] = next_mstatus[MSTATUS_MPIE];
                 next_mstatus[MSTATUS_MPIE] = 1'b1;
             end
+
+            if (fp_dirty)
+                next_mstatus[MSTATUS_FS_LO +: 2] = FS_DIRTY;
+            // FP ops never retire in the same cycle as an FP CSR write (they
+            // do not dual-issue), so accruing flags cannot race a write.
+            if (fflags_accrue)
+                fflags_reg <= fflags_reg | fflags_new;
 
             for (int i = 0; i <= LAST_COUNTER; i++) begin
                 next_count = counters[i];

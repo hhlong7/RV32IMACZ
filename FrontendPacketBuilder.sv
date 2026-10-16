@@ -5,6 +5,7 @@ module FrontendPacketBuilder(
     input logic [31:0] pc_i,
     input logic [31:0] ir_i,
     input logic instr_is_compressed_i,
+    input logic [31:0] raw_i,           // fetch window before RVC expansion
     input logic ras_valid_i,
     input logic [31:0] ras_top_i,
     input logic btb_hit_i,
@@ -23,6 +24,7 @@ module FrontendPacketBuilder(
         // Fall-through PC for either a 16-bit or a 32-bit instruction.
         packet_o.pc_next = pc_i + (instr_is_compressed_i ? 32'd2 : 32'd4);
         packet_o.ir = ir_i;
+        packet_o.raw_ir = instr_is_compressed_i ? {16'b0, raw_i[15:0]} : raw_i;
 
         // Classify the instruction once here so the fetch stages can carry a
         // fully annotated packet instead of re-decoding branch intent later.

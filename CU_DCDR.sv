@@ -146,6 +146,34 @@ module CU_DCDR(
                 end
             end
 
+            OPC_LOAD_FP: begin // flw: integer address, FP destination
+                ALU_SRCB = 2'b01;
+                RF_WR_SEL = 2'b10;
+                MEM_RD_EN2 = 1'b1;
+                REGWRITE = 1'b0;
+                if (IR_FUNCT != 3'b010) begin
+                    LEGAL_INSTR = 1'b0;
+                    MEM_RD_EN2 = 1'b0;
+                end
+            end
+
+            OPC_STORE_FP: begin // fsw: integer address, FP data
+                ALU_SRCB = 2'b10;
+                MEM_WR_EN2 = 1'b1;
+                REGWRITE = 1'b0;
+                if (IR_FUNCT != 3'b010) begin
+                    LEGAL_INSTR = 1'b0;
+                    MEM_WR_EN2 = 1'b0;
+                end
+            end
+
+            OPC_OP_FP: begin // fadd/fsub/fmul/fdiv.s; rounding mode checked by FPDecode
+                REGWRITE = 1'b0;
+                if ((IR_FUNCT7 != 7'b0000000) && (IR_FUNCT7 != 7'b0000100) &&
+                    (IR_FUNCT7 != 7'b0001000) && (IR_FUNCT7 != 7'b0001100))
+                    LEGAL_INSTR = 1'b0;
+            end
+
             OPC_BRANCH: begin // B-type branch instructions
                 ALU_SRCA = 1'b0; // Select RS1 for ALU source A
                 ALU_SRCB = 2'b00; // Select RS2 for ALU source B

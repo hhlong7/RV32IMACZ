@@ -1,4 +1,5 @@
 otter_defs_pkg.sv
+fpu_pkg.sv
 ALU.sv
 AtomicController.sv
 AtomicDecode.sv
@@ -8,6 +9,11 @@ BranchPredictor.sv
 BranchGenerator.sv
 CSR_FILE.sv
 CU_DCDR.sv
+FPDecode.sv
+FP_REG_FILE.sv
+fp_adder.sv
+fp_multiplier.sv
+fp_divider.sv
 DualIssueInOrder.sv
 FrontendPacketBuilder.sv
 Hazard.sv

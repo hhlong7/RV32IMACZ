@@ -32,7 +32,7 @@ main:
     bne t1, t0, fail_677
 
     csrrs t2, 0x301, x0
-    li t3, 0x40001105
+    li t3, 0x40001125
     bne t2, t3, fail_678
 
     csrrs t4, 0xC00, x0
