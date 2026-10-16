@@ -59,6 +59,19 @@ module tb_core;
     bit prev_dc_miss = 1'b0;
     bit verbose_lsu = 1'b0;
     bit verbose_pipe = 1'b0;
+    bit verbose_mmio = 1'b0;
+    bit print_stats = 1'b0;  // +STATS: machine-readable lines for the scripts
+    string run_status = "STOPPED";
+
+    // Counters for the end-of-run report (the core's own CSR counters supply
+    // cycles, retired instructions, and the HPM events).
+    int fetch_count = 0;
+    int pair_retire_count = 0;
+    int control_count = 0;
+    int load_count = 0;
+    int l2_hit_count = 0;
+    int l2_miss_count = 0;
+    int lsu_stall_cycles = 0;
 
     logic [31:0] last_sseg = 32'b0;
     logic [31:0] last_leds = 32'b0;
@@ -83,33 +96,14 @@ module tb_core;
     always #5 clk = ~clk;
 
     initial begin
-        if ($value$plusargs("MAX_CYCLES=%d", max_cycles))
-            $display("TB max_cycles=%0d", max_cycles);
-
-        if ($value$plusargs("PASS_SSEG=%d", pass_sseg)) begin
-            pass_sseg_valid = 1'b1;
-            $display("TB pass_sseg=%0d", pass_sseg);
-        end
-
-        if ($value$plusargs("FAIL_SSEG=%d", fail_sseg)) begin
-            fail_sseg_valid = 1'b1;
-            $display("TB fail_sseg=%0d", fail_sseg);
-        end
-
-        if ($test$plusargs("VERBOSE_ICACHE")) begin
-            verbose_icache = 1'b1;
-            $display("TB verbose_icache enabled");
-        end
-
-        if ($test$plusargs("VERBOSE_LSU")) begin
-            verbose_lsu = 1'b1;
-            $display("TB verbose_lsu enabled");
-        end
-
-        if ($test$plusargs("VERBOSE_PIPE")) begin
-            verbose_pipe = 1'b1;
-            $display("TB verbose_pipe enabled");
-        end
+        void'($value$plusargs("MAX_CYCLES=%d", max_cycles));
+        pass_sseg_valid = $value$plusargs("PASS_SSEG=%d", pass_sseg);
+        fail_sseg_valid = $value$plusargs("FAIL_SSEG=%d", fail_sseg);
+        verbose_icache = $test$plusargs("VERBOSE_ICACHE");
+        verbose_lsu = $test$plusargs("VERBOSE_LSU");
+        verbose_pipe = $test$plusargs("VERBOSE_PIPE");
+        verbose_mmio = $test$plusargs("VERBOSE_MMIO");
+        print_stats = $test$plusargs("STATS");
 
         if ($value$plusargs("COMMIT_LOG=%s", commit_log_path)) begin
             commit_fd = $fopen(commit_log_path, "w");
@@ -128,6 +122,30 @@ module tb_core;
     function automatic logic [4:0] retired_rd(input logic reg_write, input logic [31:0] ir);
         return reg_write ? ir[11:7] : 5'd0;
     endfunction
+
+    always @(posedge clk) begin
+        if (!reset) begin
+            if (dut.hit)
+                fetch_count <= fetch_count + 1;
+            if (dut.dc_stall)
+                lsu_stall_cycles <= lsu_stall_cycles + 1;
+            if (!dut.dc_stall) begin
+                if (dut.mem_wb_pair.valid)
+                    pair_retire_count <= pair_retire_count + 1;
+                if (dut.is_branch_ex1 || dut.is_jal_ex1 || dut.is_jalr_ex1)
+                    control_count <= control_count + 1;
+                if (dut.ex_mem.valid && dut.ex_mem.memRead && !dut.ex_mem.atomic_valid && dut.dcache_cacheable)
+                    load_count <= load_count + 1;
+            end
+            // A refill starts in a stall cycle, so count it outside the gate.
+            if (dut.dcache_miss_start) begin
+                if (dut.l2_query_hit)
+                    l2_hit_count <= l2_hit_count + 1;
+                else
+                    l2_miss_count <= l2_miss_count + 1;
+            end
+        end
+    end
 
     always @(posedge clk) begin
         if (commit_fd != 0 && !reset) begin
@@ -374,21 +392,25 @@ module tb_core;
         if (dut.OTTER_MEMORY.IO_WR) begin
             if (dut.mem_addr2_dc == LEDS_ADDR) begin
                 last_leds <= dut.mem_din2_dc;
-                $display("MMIO LEDS cycle=%0d data=0x%08x", cycle_count, dut.mem_din2_dc);
+                if (verbose_mmio)
+                    $display("MMIO LEDS cycle=%0d data=0x%08x", cycle_count, dut.mem_din2_dc);
             end else if (dut.mem_addr2_dc == SSEG_ADDR) begin
                 last_sseg <= dut.mem_din2_dc;
-                $display("MMIO SSEG cycle=%0d data=0x%08x signed=%0d", cycle_count, dut.mem_din2_dc, $signed(dut.mem_din2_dc));
+                if (verbose_mmio)
+                    $display("MMIO SSEG cycle=%0d data=0x%08x signed=%0d", cycle_count, dut.mem_din2_dc, $signed(dut.mem_din2_dc));
 
                 if (fail_sseg_valid && ($signed(dut.mem_din2_dc) == fail_sseg)) begin
                     $display("TB FAIL matched fail_sseg=%0d at cycle=%0d", fail_sseg, cycle_count);
+                    run_status = "FAIL";
                     $fatal(1);
                 end
 
                 if (pass_sseg_valid && ($signed(dut.mem_din2_dc) == pass_sseg)) begin
                     $display("TB PASS matched pass_sseg=%0d at cycle=%0d", pass_sseg, cycle_count);
-                    $finish;
+                    run_status = "PASS";
+                    $finish(0);
                 end
-            end else begin
+            end else if (verbose_mmio) begin
                 $display("MMIO WRITE cycle=%0d addr=0x%08x data=0x%08x", cycle_count, dut.mem_addr2_dc, dut.mem_din2_dc);
             end
         end
@@ -396,27 +418,83 @@ module tb_core;
         if (cycle_count >= max_cycles) begin
             $display("TB TIMEOUT cycle=%0d last_sseg=0x%08x last_leds=0x%08x pc=0x%08x if2_ir=0x%08x id_ir=0x%08x ex1_ir=0x%08x ex2_ir=0x%08x mem_ir=0x%08x wb_ir=0x%08x dc_stall=%0b ic_stall=%0b",
                      cycle_count, last_sseg, last_leds, dut.pc_out, dut.if1_if2.ir, dut.if_id.ir, dut.id_ex.ir, dut.ex1_ex2.ir, dut.ex_mem.ir, dut.mem_wb.ir, dut.dc_stall, dut.ic_stall);
-            $finish;
+            run_status = "TIMEOUT";
+            $finish(0);
         end
     end
 
+    function automatic real percent(input longint part, input longint whole);
+        return (whole == 0) ? 0.0 : (100.0 * part) / whole;
+    endfunction
+
+
+    // Human-readable end-of-run report (machine-readable lines with +STATS).
+    // Cycle, retire, and event counts come from the core's own CSR performance
+    // counters (mcycle, minstret, mhpmcounter3..17), so they match what
+    // software would read.
     final begin
         if (commit_fd != 0)
             $fclose(commit_fd);
-        $display("TB FINAL cycle=%0d last_sseg=0x%08x signed=%0d last_leds=0x%08x",
-                 cycle_count, last_sseg, $signed(last_sseg), last_leds);
-        $display("TB STATS branch_redirects=%0d flush_id=%0d flush_ex=%0d ic_hit=%0d ic_miss=%0d ic_prefetch_only=%0d dc_hit=%0d dc_miss=%0d",
-                 branch_redirect_count, flush_id_count, flush_ex_count, icache_hit_count,
-                 icache_miss_count, icache_prefetch_only_hit_count, dcache_hit_count, dcache_miss_count);
-        $display("TB LSU sb_enq=%0d sb_fwd=%0d sb_drain=%0d sb_full_stall=%0d sb_conflict_stall=%0d fence_wait=%0d",
-                 storebuf_enqueue_count, storebuf_forward_count, storebuf_drain_count,
-                 storebuf_full_stall_cycles, storebuf_conflict_stall_cycles, fence_wait_cycles);
-        $display("TB ATOM commits=%0d writes=%0d sc_success=%0d sc_fail=%0d res_set=%0d res_clear=%0d",
-                 atomic_commit_count, atomic_write_count, atomic_sc_success_count,
-                 atomic_sc_fail_count, reservation_set_count, reservation_clear_count);
-        $display("TB COV hazard_load_use=%0d pair_issue=%0d branch_mispredict=%0d trap_commit=%0d mret_commit=%0d fence_complete=%0d atomic_wait=%0d lsu_busy=%0d",
-                 hazard_load_use_count, hazard_pair_issue_count, branch_mispredict_count,
-                 trap_commit_count, mret_commit_count, fence_complete_count,
-                 atomic_wait_count, lsu_busy_count);
+
+        if (print_stats) begin
+            $display("TB FINAL cycle=%0d last_sseg=0x%08x signed=%0d last_leds=0x%08x",
+                     cycle_count, last_sseg, $signed(last_sseg), last_leds);
+            $display("TB STATS branch_redirects=%0d flush_id=%0d flush_ex=%0d ic_hit=%0d ic_miss=%0d ic_prefetch_only=%0d dc_hit=%0d dc_miss=%0d",
+                     branch_redirect_count, flush_id_count, flush_ex_count, icache_hit_count,
+                     icache_miss_count, icache_prefetch_only_hit_count, dcache_hit_count, dcache_miss_count);
+            $display("TB LSU sb_enq=%0d sb_fwd=%0d sb_drain=%0d sb_full_stall=%0d sb_conflict_stall=%0d fence_wait=%0d",
+                     storebuf_enqueue_count, storebuf_forward_count, storebuf_drain_count,
+                     storebuf_full_stall_cycles, storebuf_conflict_stall_cycles, fence_wait_cycles);
+            $display("TB ATOM commits=%0d writes=%0d sc_success=%0d sc_fail=%0d res_set=%0d res_clear=%0d",
+                     atomic_commit_count, atomic_write_count, atomic_sc_success_count,
+                     atomic_sc_fail_count, reservation_set_count, reservation_clear_count);
+            $display("TB COV hazard_load_use=%0d pair_issue=%0d branch_mispredict=%0d trap_commit=%0d mret_commit=%0d fence_complete=%0d atomic_wait=%0d lsu_busy=%0d",
+                     hazard_load_use_count, hazard_pair_issue_count, branch_mispredict_count,
+                     trap_commit_count, mret_commit_count, fence_complete_count,
+                     atomic_wait_count, lsu_busy_count);
+        end else begin : report
+            longint cycles, retired, branch_flushes, load_use, ic_fills, dc_misses;
+            longint prefetch_hits, traps, sb_enq, sb_full, sb_fwd, sb_conflict, fence_wait;
+
+            cycles = dut.OTTER_CSR_FILE.counters[0];
+            retired = dut.OTTER_CSR_FILE.counters[2];
+            branch_flushes = dut.OTTER_CSR_FILE.counters[3];
+            load_use = dut.OTTER_CSR_FILE.counters[4];
+            ic_fills = dut.OTTER_CSR_FILE.counters[5];
+            dc_misses = dut.OTTER_CSR_FILE.counters[6];
+            prefetch_hits = dut.OTTER_CSR_FILE.counters[7];
+            traps = dut.OTTER_CSR_FILE.counters[9];
+            sb_enq = dut.OTTER_CSR_FILE.counters[12];
+            sb_full = dut.OTTER_CSR_FILE.counters[13];
+            sb_fwd = dut.OTTER_CSR_FILE.counters[14];
+            sb_conflict = dut.OTTER_CSR_FILE.counters[15];
+            fence_wait = dut.OTTER_CSR_FILE.counters[17];
+
+            $display("");
+            $display("==================== OTTER RV32IMAC run report ====================");
+            if (run_status == "PASS")
+                $display("Result        PASS (pass code %0d at cycle %0d)", pass_sseg, cycle_count);
+            else
+                $display("Result        %s (last SSEG value %0d at cycle %0d)", run_status, $signed(last_sseg), cycle_count);
+            $display("Core          %0d cycles, %0d instructions retired, IPC %0.3f (CPI %0.3f)",
+                     cycles, retired, (cycles == 0) ? 0.0 : real'(retired) / cycles,
+                     (retired == 0) ? 0.0 : real'(cycles) / retired);
+            $display("Dual issue    %0d instructions retired from slot 1 (%0.1f%% of retired)",
+                     pair_retire_count, percent(pair_retire_count, retired));
+            $display("Branches      %0d control-flow instructions, %0d mispredicted (%0.1f%% predicted correctly)",
+                     control_count, branch_flushes, 100.0 - percent(branch_flushes, control_count));
+            $display("Stalls        %0d load-use, %0d LSU/cache (%0.1f%% of cycles), %0d store-buffer full, %0d fence wait",
+                     load_use, lsu_stall_cycles, percent(lsu_stall_cycles, cycles), sb_full, fence_wait);
+            $display("I-cache       %0d fetches, %0d line fills (%0.1f%% hit), %0d next-line prefetch hits",
+                     fetch_count, ic_fills, 100.0 - percent(ic_fills, fetch_count), prefetch_hits);
+            $display("D-cache       %0d loads, %0d misses (%0.1f%% hit); misses served by L2: %0d, by memory: %0d",
+                     load_count, dc_misses, 100.0 - percent(dc_misses, load_count), l2_hit_count, l2_miss_count);
+            $display("Store buffer  %0d stores, %0d forwarded to loads, %0d overlap stalls",
+                     sb_enq, sb_fwd, sb_conflict);
+            $display("Atomics       %0d executed, SC %0d succeeded / %0d failed",
+                     atomic_commit_count, atomic_sc_success_count, atomic_sc_fail_count);
+            $display("Traps         %0d taken, %0d mret", traps, mret_commit_count);
+            $display("===================================================================");
+        end
     end
 endmodule

@@ -126,14 +126,11 @@ def main() -> int:
 
     args.out_json.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="ascii")
 
-    print(f"VERIF logs={len(log_files)}")
-    print(f"VERIF totals stats={dict(merged['stats'])}")
-    print(f"VERIF totals lsu={dict(merged['lsu'])}")
-    print(f"VERIF totals atom={dict(merged['atom'])}")
-    print(f"VERIF totals cov={dict(merged['cov'])}")
-    print(f"VERIF totals rand_cov={dict(merged['rand_cov'])}")
-    print(f"VERIF bins={json.dumps(bins, sort_keys=True)}")
-    print(f"VERIF summary_json={args.out_json}")
+    hit = sum(v for group in bins.values() for v in group.values())
+    total = sum(len(group) for group in bins.values())
+    missing = [f"{group}.{name}" for group, values in bins.items() for name, ok in values.items() if not ok]
+    print(f"Coverage: {hit}/{total} bins hit across {len(log_files)} logs" + (f"; missing: {', '.join(missing)}" if missing else ""))
+    print(f"Details: {args.out_json}")
 
     return 0
 

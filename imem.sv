@@ -75,9 +75,6 @@ module imem(
         end
 
         if (atomic_valid && (atomic_addr < 32'h0001_0000)) begin
-            if (atomic_addr[1:0] != 2'b00)
-                $fatal(1, "imem atomic mirror saw misaligned word address 0x%08x", atomic_addr);
-
             old_atomic_word = ram[atomic_word_addr];
             new_atomic_word = atomic_new_word(atomic_op, old_atomic_word, atomic_wdata);
             atomic_do_write = atomic_op_writes(atomic_op, atomic_sc_ok);
@@ -86,5 +83,13 @@ module imem(
                 ram[atomic_word_addr] <= new_atomic_word;
         end
     end
+
+    // Simulation-only check; misaligned atomics trap before reaching memory.
+    // synthesis translate_off
+    always @(negedge CLK) begin
+        if (atomic_valid && (atomic_addr < 32'h0001_0000) && (atomic_addr[1:0] != 2'b00))
+            $fatal(1, "imem atomic mirror saw misaligned word address 0x%08x", atomic_addr);
+    end
+    // synthesis translate_on
 endmodule
 // i love cpe333

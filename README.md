@@ -96,7 +96,32 @@ Other useful files:
   example
 
 Every flow compiles the RTL listed in `rtl.f` (`iverilog -c rtl.f`,
-`verilator -f rtl.f`).
+`verilator -f rtl.f`). `tools/build_sim.sh [out.vvp]` compiles the testbench
+and hides Icarus's two "sorry" notices about SystemVerilog features it has not
+implemented (constant selects in `always_*` blocks, `unique case`); they do not
+affect results, and any other warning or error is still printed.
+
+### Run The CPU On One Program
+
+```bash
+tools/build_sim.sh out/otter_tb.vvp
+mkdir -p out/run && cp test_files/generated/rv32m.mem out/run/Test_All.mem
+cd out/run && vvp -n ../otter_tb.vvp +PASS_SSEG=101
+```
+
+The testbench loads `Test_All.mem` from its working directory and ends with a
+run report: pass/fail, cycles, retired instructions and IPC (from the core's
+own `mcycle`/`minstret`), dual-issue share, branch prediction accuracy, stall
+breakdown, I-cache/D-cache/L2 behavior, store buffer, atomics, and traps.
+
+| Option | Effect |
+| --- | --- |
+| `+PASS_SSEG=N` / `+FAIL_SSEG=N` | stop when the program writes N to the seven-segment register |
+| `+MAX_CYCLES=N` | time out after N cycles |
+| `+VERBOSE_PIPE` / `+VERBOSE_LSU` / `+VERBOSE_ICACHE` | per-cycle pipeline, LSU, or I-cache trace |
+| `+VERBOSE_MMIO` | print every MMIO write (LEDs, seven-segment) |
+| `+COMMIT_LOG=file` | write the retirement trace used by `tools/lockstep.py` |
+| `+STATS` | print machine-readable `TB FINAL/STATS/LSU/ATOM/COV` lines instead of the report (used by the scripts) |
 
 The directed assembly tests use the repo's own assembler script
 `tools/assemble_tests.py`, so you do not need an external RISC-V assembler for
@@ -167,9 +192,10 @@ out/verification_logs/verification_summary.json
 bash tools/run_freertos_coremark.sh
 ```
 
-This builds the software image in `software/freertos_coremark/`, temporarily
-loads it into `Test_All.mem`, runs simulation, and restores your original
-memory image when it finishes.
+This builds the software image in `software/freertos_coremark/` (compiler
+output is shown only on failure, or always with `VERBOSE=1`), runs it in a
+scratch directory, and prints the run report. Extra testbench options can be
+appended, e.g. `tools/run_freertos_coremark.sh +VERBOSE_MMIO`.
 
 ## Latest Verification Run
 
@@ -277,6 +303,11 @@ retire through the pipe instead of being killed in EX1):
 | `system_workload` | `flush_ex` | 93 | 88 |
 | `system_workload_benchmark` | TB completion cycles | 999 | 993 |
 | `system_workload_benchmark` | `flush_ex` | 105 | 98 |
+
+FreeRTOS + CoreMark (10 iterations, GCC 16.1 `-O2`) on the same RTL:
+PASS at cycle 381,132; 332,588 instructions retired (IPC 0.873); 84.9% of
+control-flow instructions predicted correctly; I-cache 99.3% and D-cache
+98.2% hit rate; 4.4% of instructions retired from the second issue slot.
 
 ### FreeRTOS + CoreMark Smoke Snapshot
 

@@ -294,7 +294,7 @@ def compare(rtl: Trace, ref: Trace, rtl_output: str) -> tuple[bool, str]:
             return False, f"memory write #{idx} differs\n    spike: {want}\n    rtl:   {got}"
 
     if len(rtl.stores) < ref_sseg + 1:
-        tail = "\n".join(line for line in rtl_output.splitlines() if line.startswith(("TB", "ASSERT", "ATOMIC")))
+        tail = "\n".join(line for line in rtl_output.splitlines() if line.startswith(("TB", "ASSERT", "ATOMIC", "Result")))
         return False, (
             f"RTL stopped after {len(rtl.stores)} memory writes / {len(rtl.retires)} retires; "
             f"Spike needed {ref_sseg + 1} writes to reach SSEG\n{tail}"
@@ -328,6 +328,7 @@ def main() -> int:
     parser.add_argument("--no-directed", action="store_true", help="skip directed programs")
     parser.add_argument("--keep", type=pathlib.Path, help="keep per-program artifacts in this directory")
     parser.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4)
+    parser.add_argument("-v", "--verbose", action="store_true", help="also list every passing program")
     parser.add_argument("--require", action="store_true", help="fail instead of skipping when a tool is missing")
     args = parser.parse_args()
 
@@ -360,14 +361,16 @@ def main() -> int:
         for fut in concurrent.futures.as_completed(futures):
             res = fut.result()
             results.append(res)
-            status = "PASS" if res.ok else "FAIL"
-            print(f"LOCKSTEP {status} {res.name} retired={res.retired}", flush=True)
             if not res.ok:
-                print("  " + res.detail.replace("\n", "\n  "), flush=True)
+                print(f"  FAIL {res.name}", flush=True)
+                print("    " + res.detail.replace("\n", "\n    "), flush=True)
+            elif args.verbose:
+                print(f"  PASS {res.name} ({res.retired} instructions)", flush=True)
 
     failed = [r for r in results if not r.ok]
     total_retired = sum(r.retired for r in results)
-    print(f"LOCKSTEP summary pass={len(results) - len(failed)} fail={len(failed)} retired={total_retired}")
+    print(f"Lockstep: {len(results) - len(failed)} programs matched Spike, {len(failed)} mismatched "
+          f"({total_retired} instructions compared)")
     if not args.keep:
         shutil.rmtree(work_root, ignore_errors=True)
     else:

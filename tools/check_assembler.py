@@ -229,7 +229,7 @@ def main() -> int:
         lines = gen_compressed(rng, args.count)
         failures += compare("rvc", lines, assemble_repo(lines, workdir), assemble_gnu(lines, workdir, rvc=True), 2)
 
-    print(f"ASM_CHECK summary instructions={2 * args.count} mismatches={failures}")
+    print(f"Assembler check: {2 * args.count} random instructions, {failures} encoding mismatches vs GNU as")
     return 1 if failures else 0
 
 

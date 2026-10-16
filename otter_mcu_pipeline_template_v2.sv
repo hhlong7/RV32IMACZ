@@ -142,6 +142,7 @@ module OTTER_MCU(
     logic next_valid_raw;
     logic cache_update;
     logic prefetch_hit_event_raw;
+    logic prefetch_useless_event_raw;
     logic prefetch_hit_event;
     logic prefetch_useless_event;
 
@@ -519,7 +520,18 @@ module OTTER_MCU(
     assign ic_stall = fetch_request && (pc_stall_cache || fetch_crossword_wait);
     assign hit = fetch_request && fetch_slot0_ready;
     assign miss = fetch_request && miss_raw;
-    assign prefetch_hit_event = hit && prefetch_hit_event_raw;
+    // The I-cache updates on the negedge, and a prefetch hit promotes its line
+    // into the cache there, which clears these conditions mid-cycle. Capture
+    // them at that edge so the posedge-clocked HPM counters see each event.
+    always_ff @(negedge CLK) begin
+        if (RESET) begin
+            prefetch_hit_event <= 1'b0;
+            prefetch_useless_event <= 1'b0;
+        end else begin
+            prefetch_hit_event <= hit && prefetch_hit_event_raw;
+            prefetch_useless_event <= prefetch_useless_event_raw;
+        end
+    end
 
     always_comb begin
         if_id_next = if_id_after_issue;
@@ -667,7 +679,7 @@ module OTTER_MCU(
         .miss(miss_raw),
         .next_valid(next_valid_raw),
         .prefetch_hit_event(prefetch_hit_event_raw),
-        .prefetch_useless_event(prefetch_useless_event)
+        .prefetch_useless_event(prefetch_useless_event_raw)
     );
 
     CacheFSM OTTER_CACHE_FSM(

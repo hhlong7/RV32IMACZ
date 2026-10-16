@@ -174,13 +174,6 @@
         MEM_ATOMIC_COMMIT_SC_SUCCESS <= 1'b0;
 
         if (MEM_ATOMIC_VALID) begin
-          if (MEM_RDEN2 || MEM_WE2)
-            $fatal(1, "atomic request overlapped the normal data-memory port");
-          if (MEM_ATOMIC_ADDR[1:0] != 2'b00)
-            $fatal(1, "misaligned atomic word access at 0x%08x", MEM_ATOMIC_ADDR);
-          if (MEM_ATOMIC_ADDR >= 32'h00010000)
-            $fatal(1, "atomic access to unsupported MMIO address 0x%08x", MEM_ATOMIC_ADDR);
-
           oldAtomicWord = memory[atomicWordAddr];
           newAtomicWord = atomic_new_word(MEM_ATOMIC_OP, oldAtomicWord, MEM_ATOMIC_DIN);
           atomicDoWrite = atomic_op_writes(MEM_ATOMIC_OP, MEM_ATOMIC_SC_OK);
@@ -199,6 +192,21 @@
       end
     end
        
+    // Simulation-only interface checks; the core never issues these requests
+    // (misaligned atomics trap in EX1 before reaching memory).
+    // synthesis translate_off
+    always @(negedge MEM_CLK) begin
+      if (!MEM_RST && MEM_ATOMIC_VALID) begin
+        if (MEM_RDEN2 || MEM_WE2)
+          $fatal(1, "atomic request overlapped the normal data-memory port");
+        if (MEM_ATOMIC_ADDR[1:0] != 2'b00)
+          $fatal(1, "misaligned atomic word access at 0x%08x", MEM_ATOMIC_ADDR);
+        if (MEM_ATOMIC_ADDR >= 32'h00010000)
+          $fatal(1, "atomic access to unsupported MMIO address 0x%08x", MEM_ATOMIC_ADDR);
+      end
+    end
+    // synthesis translate_on
+
     // Change the data word into sized bytes and sign extend
     always_comb begin
       case({MEM_SIGN,MEM_SIZE,byteOffset})

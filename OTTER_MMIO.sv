@@ -70,9 +70,6 @@ module OTTER_MMIO(
                 ioBuffer <= IO_IN;
 
             if (timerWriteSel) begin
-                if ((SIZE != 2'd2) || (ADDR2[1:0] != 2'b00))
-                    $fatal(1, "timer MMIO requires aligned word writes at 0x%08x", ADDR2);
-
                 // Software updates the 64-bit registers as two aligned words.
                 unique case (ADDR2)
                     CLINT_MTIMECMP_LO: mtimecmp_reg[31:0] <= DIN2;
@@ -96,4 +93,12 @@ module OTTER_MMIO(
             end
         end
     end
+    // Simulation-only check: software must update the timer with aligned
+    // word stores.
+    // synthesis translate_off
+    always @(negedge CLK) begin
+        if (!RST && timerWriteSel && ((SIZE != 2'd2) || (ADDR2[1:0] != 2'b00)))
+            $fatal(1, "timer MMIO requires aligned word writes at 0x%08x", ADDR2);
+    end
+    // synthesis translate_on
 endmodule

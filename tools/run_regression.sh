@@ -16,12 +16,7 @@ fi
 # Rebuild generated memories from the assembly tests before every regression run.
 python3 tools/assemble_tests.py test_files/asm/*.s --out-dir test_files/generated
 
-compile_log="$WORK/compile.log"
-# Keep successful compiles quiet, but surface the full log immediately on failure.
-if ! iverilog -g2012 -o "$SIM" -c rtl.f tb_core.sv >"$compile_log" 2>&1; then
-  cat "$compile_log"
-  exit 1
-fi
+tools/build_sim.sh "$SIM"
 
 # name:expected-pass-seven-seg:memory-image
 tests=(
@@ -56,20 +51,23 @@ for spec in "${tests[@]}"; do
   # The testbench loads Test_All.mem from its working directory; run in the
   # scratch directory so the checked-in Test_All.mem is never overwritten.
   cp "$mem" "$WORK/Test_All.mem"
-  echo "== $name =="
-  sim_out="$(cd "$WORK" && vvp "$SIM" +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000 2>&1 || true)"
+  # +STATS keeps the machine-readable counters in the logs for
+  # tools/verification_report.py.
+  sim_out="$(cd "$WORK" && vvp -n "$SIM" +STATS +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000 2>&1 || true)"
   if [[ -n "$LOG_DIR" ]]; then
     printf '%s\n' "$sim_out" > "$LOG_DIR/${name}.log"
   fi
-  printf '%s\n' "$sim_out" | tail -n 5
-  if ! grep -q "^TB PASS" <<< "$sim_out"; then
-    echo "REGRESSION FAIL $name"
+  if pass_line="$(grep -m1 "^TB PASS" <<< "$sim_out")"; then
+    printf '  %-28s PASS  %6s cycles\n' "$name" "${pass_line##*cycle=}"
+  else
+    printf '  %-28s FAIL\n' "$name"
+    printf '%s\n' "$sim_out" | grep -v "^TB \(STATS\|LSU\|ATOM\|COV\)" | tail -n 8 | sed 's/^/      /'
     failed+=("$name")
   fi
 done
 
-echo "REGRESSION summary pass=$(( ${#tests[@]} - ${#failed[@]} )) fail=${#failed[@]}"
+echo "Regression: $(( ${#tests[@]} - ${#failed[@]} )) passed, ${#failed[@]} failed"
 if (( ${#failed[@]} > 0 )); then
-  echo "REGRESSION failed: ${failed[*]}"
+  echo "Failed: ${failed[*]}"
   exit 1
 fi

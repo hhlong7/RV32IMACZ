@@ -885,22 +885,9 @@ def extract_tb_line(sim_out: str, prefix: str) -> str:
 
 
 def emit_sim_summary(tag: str, seed: int, pass_code: int, sim_out: str) -> None:
-    final_line = extract_tb_line(sim_out, "TB FINAL")
-    stats_line = extract_tb_line(sim_out, "TB STATS")
-    lsu_line = extract_tb_line(sim_out, "TB LSU")
-    atom_line = extract_tb_line(sim_out, "TB ATOM")
-    cov_line = extract_tb_line(sim_out, "TB COV")
-
-    if final_line:
-        print(f"{tag}_seed={seed} pass_code={pass_code} {final_line}")
-    if stats_line:
-        print(f"{tag}_seed={seed} {stats_line}")
-    if lsu_line:
-        print(f"{tag}_seed={seed} {lsu_line}")
-    if atom_line:
-        print(f"{tag}_seed={seed} {atom_line}")
-    if cov_line:
-        print(f"{tag}_seed={seed} {cov_line}")
+    pass_line = extract_tb_line(sim_out, "TB PASS")
+    cycles = pass_line.rsplit("cycle=", 1)[-1] if pass_line else "?"
+    print(f"  {tag:<9} seed={seed:<3} PASS  {cycles:>6} cycles")
 
 
 def compile_sim() -> None:
@@ -928,7 +915,7 @@ def run_store_buffer_random_tb() -> None:
         sys.stderr.write(sim.stdout)
         sys.stderr.write(sim.stderr)
         raise SystemExit(1)
-    print(next(line for line in sim.stdout.splitlines() if line.startswith("TB_STORE_BUFFER PASS")))
+    print("  store-buffer unit test PASS")
 
 
 @dataclass(frozen=True)
@@ -969,9 +956,11 @@ def run_family(family: Family, tmp: pathlib.Path, cov: Counter[str]) -> bool:
         # full 64 KB image so initialized data and zeroed RAM are both present.
         (workdir / "program_full.mem").rename(workdir / "Test_All.mem")
 
-        sim = run(["vvp", str(SIM), f"+PASS_SSEG={pass_code}", "+FAIL_SSEG=-1",
+        # +STATS keeps the machine-readable counters for verification_report.py.
+        sim = run(["vvp", "-n", str(SIM), "+STATS", f"+PASS_SSEG={pass_code}", "+FAIL_SSEG=-1",
                    f"+MAX_CYCLES={family.max_cycles}"], workdir)
         if sim.returncode != 0 or f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
+            print(f"  {family.tag:<9} seed={seed:<3} FAIL")
             sys.stderr.write(sim.stdout + sim.stderr)
             return False
 
@@ -996,7 +985,11 @@ def main() -> int:
                 return 1
 
     rand_cov_line = " ".join(f"{name}={value}" for name, value in sorted(random_cov.items()))
-    print(f"RAND COV {rand_cov_line}")
+    total = sum(len(family.seeds) for family in FAMILIES)
+    print(f"Random tests: {total} passed, 0 failed ({len(random_cov)} instruction classes covered)")
+    # Machine-readable coverage for tools/verification_report.py.
+    if LOG_DIR is not None:
+        (LOG_DIR / "random_coverage.log").write_text(f"RAND COV {rand_cov_line}\n", encoding="ascii")
 
     return 0
 
