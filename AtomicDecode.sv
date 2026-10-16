@@ -16,7 +16,7 @@ module AtomicDecode(
     // can happen before the main decode path specializes operands.
     function automatic logic is_atomic_ir(input logic [31:0] ir);
         begin
-            is_atomic_ir = (ir[6:0] == 7'b0101111);
+            is_atomic_ir = (ir[6:0] == OPC_AMO);
         end
     endfunction
 

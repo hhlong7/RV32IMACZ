@@ -10,6 +10,8 @@ from collections import Counter
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
+from typing import Callable
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -35,39 +37,9 @@ ATOMIC_SCRATCH_WORDS = 8
 LOG_DIR_ENV = os.environ.get("VERIF_LOG_DIR", "").strip()
 LOG_DIR = pathlib.Path(LOG_DIR_ENV) if LOG_DIR_ENV else None
 
+# The RTL file list is shared by every flow; see rtl.f.
 SIM_SOURCES = [
-    "otter_defs_pkg.sv",
-    "ALU.sv",
-    "AtomicController.sv",
-    "AtomicDecode.sv",
-    "BAG.sv",
-    "BCG.sv",
-    "BranchPredictor.sv",
-    "BranchGenerator.sv",
-    "CSR_FILE.sv",
-    "CU_DCDR.sv",
-    "DualIssueInOrder.sv",
-    "FrontendPacketBuilder.sv",
-    "FourMux.sv",
-    "Hazard.sv",
-    "ImmediateGenerator.sv",
-    "OTTER_MMIO.sv",
-    "PC.sv",
-    "PC_MUX.sv",
-    "PC_REG.sv",
-    "REG_FILE.sv",
-    "RVCExpander.sv",
-    "StoreBuffer.sv",
-    "ThreeMux.sv",
-    "TwoMux.sv",
-    "cache.sv",
-    "cachefsm.sv",
-    "datacache.sv",
-    "datacachefsm.sv",
-    "imem.sv",
-    "l2cache.sv",
-    "otter_memory_v1_07.sv",
-    "otter_mcu_pipeline_template_v2.sv",
+    *(line.strip() for line in (ROOT / "rtl.f").read_text().splitlines() if line.strip()),
     "tb_core.sv",
 ]
 
@@ -959,6 +931,56 @@ def run_store_buffer_random_tb() -> None:
     print(next(line for line in sim.stdout.splitlines() if line.startswith("TB_STORE_BUFFER PASS")))
 
 
+@dataclass(frozen=True)
+class Family:
+    tag: str
+    builder: Callable[..., str]
+    seeds: list[int]
+    pass_base: int
+    fail_base: int
+    max_cycles: int
+
+
+FAMILIES = [
+    # Original random arithmetic/dataflow coverage.
+    Family("base", build_program, SEEDS, PASS_BASE, FAIL_BASE, 20000),
+    # Redirects, returns, and fence.i patch/refetch for the IF1/IF2 split.
+    Family("frontend", build_frontend_program, FRONTEND_SEEDS, FRONTEND_PASS_BASE, FRONTEND_FAIL_BASE, 25000),
+    # Independent simple-op pairs followed by younger control instructions:
+    # same-cycle pairing bugs and queue metadata leaks.
+    Family("dual", build_dual_issue_program, DUAL_ISSUE_SEEDS, DUAL_ISSUE_PASS_BASE, DUAL_ISSUE_FAIL_BASE, 25000),
+    Family("atomic", build_atomic_program, ATOMIC_SEEDS, ATOMIC_PASS_BASE, ATOMIC_FAIL_BASE, 25000),
+]
+
+
+def run_family(family: Family, tmp: pathlib.Path, cov: Counter[str]) -> bool:
+    for idx, seed in enumerate(family.seeds):
+        pass_code = family.pass_base + idx
+        workdir = tmp / f"{family.tag}_{seed}"
+        workdir.mkdir()
+        asm_path = workdir / "program.s"
+        asm_path.write_text(family.builder(seed, pass_code, family.fail_base + idx * 100, cov=cov), encoding="ascii")
+
+        assemble = run([sys.executable, "tools/assemble_tests.py", str(asm_path), "--out-dir", str(workdir)], ROOT)
+        if assemble.returncode != 0:
+            sys.stderr.write(assemble.stdout + assemble.stderr)
+            return False
+        # The testbench loads Test_All.mem from its working directory. Use the
+        # full 64 KB image so initialized data and zeroed RAM are both present.
+        (workdir / "program_full.mem").rename(workdir / "Test_All.mem")
+
+        sim = run(["vvp", str(SIM), f"+PASS_SSEG={pass_code}", "+FAIL_SSEG=-1",
+                   f"+MAX_CYCLES={family.max_cycles}"], workdir)
+        if sim.returncode != 0 or f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
+            sys.stderr.write(sim.stdout + sim.stderr)
+            return False
+
+        if LOG_DIR is not None:
+            (LOG_DIR / f"{family.tag}_{seed}.log").write_text(sim.stdout, encoding="ascii")
+        emit_sim_summary(family.tag, seed, pass_code, sim.stdout)
+    return True
+
+
 def main() -> int:
     if LOG_DIR is not None:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -969,233 +991,9 @@ def main() -> int:
     compile_sim()
 
     with tempfile.TemporaryDirectory(prefix="otter_random_") as tmpdir:
-        tmp = pathlib.Path(tmpdir)
-        # First keep the original random arithmetic/dataflow coverage so the
-        # deeper front end is still validated against the legacy test shape.
-        for idx, seed in enumerate(SEEDS):
-            pass_code = PASS_BASE + idx
-            fail_base = FAIL_BASE + idx * 100
-            asm_path = tmp / f"random_{seed}.s"
-            mem_path = tmp / f"random_{seed}.mem"
-            asm_path.write_text(build_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
-
-            assemble = run(
-                [
-                    sys.executable,
-                    "tools/assemble_tests.py",
-                    str(asm_path),
-                    "--out-dir",
-                    str(tmp),
-                ],
-                ROOT,
-            )
-            if assemble.returncode != 0:
-                sys.stderr.write(assemble.stdout)
-                sys.stderr.write(assemble.stderr)
-                return assemble.returncode
-
-            generated_mem = tmp / f"{asm_path.stem}.mem"
-            if not generated_mem.exists():
-                raise FileNotFoundError(generated_mem)
-            mem_path.write_text(generated_mem.read_text(encoding="ascii"), encoding="ascii")
-
-            test_all = ROOT / "Test_All.mem"
-            test_all.write_text(mem_path.read_text(encoding="ascii"), encoding="ascii")
-
-            sim = run(
-                [
-                    "vvp",
-                    str(SIM),
-                    f"+PASS_SSEG={pass_code}",
-                    "+FAIL_SSEG=-1",
-                    "+MAX_CYCLES=20000",
-                ],
-                ROOT,
-            )
-            if sim.returncode != 0:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return sim.returncode
-
-            if f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
+        for family in FAMILIES:
+            if not run_family(family, pathlib.Path(tmpdir), random_cov):
                 return 1
-
-            if LOG_DIR is not None:
-                (LOG_DIR / f"random_{seed}.log").write_text(sim.stdout, encoding="ascii")
-            emit_sim_summary("base", seed, pass_code, sim.stdout)
-
-        # Then run a front-end-focused stream that stresses redirects, returns,
-        # and fence.i patch/refetch behavior specific to the IF1/IF2 split.
-        for idx, seed in enumerate(FRONTEND_SEEDS):
-            pass_code = FRONTEND_PASS_BASE + idx
-            fail_base = FRONTEND_FAIL_BASE + idx * 100
-            asm_path = tmp / f"frontend_random_{seed}.s"
-            mem_path = tmp / f"frontend_random_{seed}.mem"
-            asm_path.write_text(build_frontend_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
-
-            assemble = run(
-                [
-                    sys.executable,
-                    "tools/assemble_tests.py",
-                    str(asm_path),
-                    "--out-dir",
-                    str(tmp),
-                ],
-                ROOT,
-            )
-            if assemble.returncode != 0:
-                sys.stderr.write(assemble.stdout)
-                sys.stderr.write(assemble.stderr)
-                return assemble.returncode
-
-            generated_mem = tmp / f"{asm_path.stem}.mem"
-            if not generated_mem.exists():
-                raise FileNotFoundError(generated_mem)
-            mem_path.write_text(generated_mem.read_text(encoding="ascii"), encoding="ascii")
-
-            test_all = ROOT / "Test_All.mem"
-            test_all.write_text(mem_path.read_text(encoding="ascii"), encoding="ascii")
-
-            sim = run(
-                [
-                    "vvp",
-                    str(SIM),
-                    f"+PASS_SSEG={pass_code}",
-                    "+FAIL_SSEG=-1",
-                    "+MAX_CYCLES=25000",
-                ],
-                ROOT,
-            )
-            if sim.returncode != 0:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return sim.returncode
-
-            if f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return 1
-
-            if LOG_DIR is not None:
-                (LOG_DIR / f"frontend_{seed}.log").write_text(sim.stdout, encoding="ascii")
-            emit_sim_summary("frontend", seed, pass_code, sim.stdout)
-
-        # Finally, target the new in-order dual-issue queue directly. These
-        # programs emit independent simple-op pairs followed by younger control
-        # instructions, which catches both same-cycle pairing bugs and queue
-        # metadata leaks that the legacy random streams rarely exercised.
-        for idx, seed in enumerate(DUAL_ISSUE_SEEDS):
-            pass_code = DUAL_ISSUE_PASS_BASE + idx
-            fail_base = DUAL_ISSUE_FAIL_BASE + idx * 100
-            asm_path = tmp / f"dual_issue_random_{seed}.s"
-            mem_path = tmp / f"dual_issue_random_{seed}.mem"
-            asm_path.write_text(build_dual_issue_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
-
-            assemble = run(
-                [
-                    sys.executable,
-                    "tools/assemble_tests.py",
-                    str(asm_path),
-                    "--out-dir",
-                    str(tmp),
-                ],
-                ROOT,
-            )
-            if assemble.returncode != 0:
-                sys.stderr.write(assemble.stdout)
-                sys.stderr.write(assemble.stderr)
-                return assemble.returncode
-
-            generated_mem = tmp / f"{asm_path.stem}.mem"
-            if not generated_mem.exists():
-                raise FileNotFoundError(generated_mem)
-            mem_path.write_text(generated_mem.read_text(encoding="ascii"), encoding="ascii")
-
-            test_all = ROOT / "Test_All.mem"
-            test_all.write_text(mem_path.read_text(encoding="ascii"), encoding="ascii")
-
-            sim = run(
-                [
-                    "vvp",
-                    str(SIM),
-                    f"+PASS_SSEG={pass_code}",
-                    "+FAIL_SSEG=-1",
-                    "+MAX_CYCLES=25000",
-                ],
-                ROOT,
-            )
-            if sim.returncode != 0:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return sim.returncode
-
-            if f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return 1
-
-            if LOG_DIR is not None:
-                (LOG_DIR / f"dual_{seed}.log").write_text(sim.stdout, encoding="ascii")
-            emit_sim_summary("dual", seed, pass_code, sim.stdout)
-
-        # Finally, randomize LR/SC reservation flow, AMO results, and the
-        # stronger fence path so the new A-extension plumbing keeps old and new
-        # memory ordering rules aligned.
-        for idx, seed in enumerate(ATOMIC_SEEDS):
-            pass_code = ATOMIC_PASS_BASE + idx
-            fail_base = ATOMIC_FAIL_BASE + idx * 100
-            asm_path = tmp / f"atomic_random_{seed}.s"
-            mem_path = tmp / f"atomic_random_{seed}.mem"
-            asm_path.write_text(build_atomic_program(seed, pass_code, fail_base, cov=random_cov), encoding="ascii")
-
-            assemble = run(
-                [
-                    sys.executable,
-                    "tools/assemble_tests.py",
-                    str(asm_path),
-                    "--out-dir",
-                    str(tmp),
-                ],
-                ROOT,
-            )
-            if assemble.returncode != 0:
-                sys.stderr.write(assemble.stdout)
-                sys.stderr.write(assemble.stderr)
-                return assemble.returncode
-
-            generated_mem = tmp / f"{asm_path.stem}_full.mem"
-            if not generated_mem.exists():
-                raise FileNotFoundError(generated_mem)
-            mem_path.write_text(generated_mem.read_text(encoding="ascii"), encoding="ascii")
-
-            test_all = ROOT / "Test_All.mem"
-            test_all.write_text(mem_path.read_text(encoding="ascii"), encoding="ascii")
-
-            sim = run(
-                [
-                    "vvp",
-                    str(SIM),
-                    f"+PASS_SSEG={pass_code}",
-                    "+FAIL_SSEG=-1",
-                    "+MAX_CYCLES=25000",
-                ],
-                ROOT,
-            )
-            if sim.returncode != 0:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return sim.returncode
-
-            if f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
-                sys.stderr.write(sim.stdout)
-                sys.stderr.write(sim.stderr)
-                return 1
-
-            if LOG_DIR is not None:
-                (LOG_DIR / f"atomic_{seed}.log").write_text(sim.stdout, encoding="ascii")
-            emit_sim_summary("atomic", seed, pass_code, sim.stdout)
 
     rand_cov_line = " ".join(f"{name}={value}" for name, value in sorted(random_cov.items()))
     print(f"RAND COV {rand_cov_line}")

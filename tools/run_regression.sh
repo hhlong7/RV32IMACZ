@@ -2,8 +2,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SIM="/tmp/otter_sim"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/otter_regression.XXXXXX")"
+SIM="$WORK/otter_tb.vvp"
 LOG_DIR="${VERIF_LOG_DIR:-}"
+trap 'rm -rf "$WORK"' EXIT
 
 cd "$ROOT"
 
@@ -14,47 +16,12 @@ fi
 # Rebuild generated memories from the assembly tests before every regression run.
 python3 tools/assemble_tests.py test_files/asm/*.s --out-dir test_files/generated
 
-compile_log="$(mktemp)"
+compile_log="$WORK/compile.log"
 # Keep successful compiles quiet, but surface the full log immediately on failure.
-if ! iverilog -g2012 -o "$SIM" \
-  otter_defs_pkg.sv \
-  ALU.sv \
-  AtomicController.sv \
-  AtomicDecode.sv \
-  BAG.sv \
-  BCG.sv \
-  BranchPredictor.sv \
-  BranchGenerator.sv \
-  CSR_FILE.sv \
-  CU_DCDR.sv \
-  DualIssueInOrder.sv \
-  FrontendPacketBuilder.sv \
-  FourMux.sv \
-  Hazard.sv \
-  ImmediateGenerator.sv \
-  OTTER_MMIO.sv \
-  PC.sv \
-  PC_MUX.sv \
-  PC_REG.sv \
-  REG_FILE.sv \
-  RVCExpander.sv \
-  StoreBuffer.sv \
-  ThreeMux.sv \
-  TwoMux.sv \
-  cache.sv \
-  cachefsm.sv \
-  datacache.sv \
-  datacachefsm.sv \
-  l2cache.sv \
-  imem.sv \
-  otter_memory_v1_07.sv \
-  otter_mcu_pipeline_template_v2.sv \
-  tb_core.sv >"$compile_log" 2>&1; then
+if ! iverilog -g2012 -o "$SIM" -c rtl.f tb_core.sv >"$compile_log" 2>&1; then
   cat "$compile_log"
-  rm -f "$compile_log"
   exit 1
 fi
-rm -f "$compile_log"
 
 # name:expected-pass-seven-seg:memory-image
 tests=(
@@ -83,13 +50,26 @@ tests=(
   "system_workload_benchmark:119:test_files/generated/system_workload_benchmark_full.mem"
 )
 
+failed=()
 for spec in "${tests[@]}"; do
   IFS=: read -r name pass mem <<< "$spec"
-  cp "$mem" Test_All.mem
+  # The testbench loads Test_All.mem from its working directory; run in the
+  # scratch directory so the checked-in Test_All.mem is never overwritten.
+  cp "$mem" "$WORK/Test_All.mem"
   echo "== $name =="
-  sim_out="$(vvp "$SIM" +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000)"
+  sim_out="$(cd "$WORK" && vvp "$SIM" +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000 2>&1 || true)"
   if [[ -n "$LOG_DIR" ]]; then
     printf '%s\n' "$sim_out" > "$LOG_DIR/${name}.log"
   fi
   printf '%s\n' "$sim_out" | tail -n 5
+  if ! grep -q "^TB PASS" <<< "$sim_out"; then
+    echo "REGRESSION FAIL $name"
+    failed+=("$name")
+  fi
 done
+
+echo "REGRESSION summary pass=$(( ${#tests[@]} - ${#failed[@]} )) fail=${#failed[@]}"
+if (( ${#failed[@]} > 0 )); then
+  echo "REGRESSION failed: ${failed[*]}"
+  exit 1
+fi

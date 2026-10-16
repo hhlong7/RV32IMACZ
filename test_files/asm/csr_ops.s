@@ -12,16 +12,19 @@ main:
     csrrs t2, 0x340, x0
     bne t2, t0, fail_672
 
+    # mstatus.MPP is hardwired to M (0x1800) on this M-only hart.
     csrrw x0, 0x300, x0
     csrrsi t3, 0x300, 8
-    bne t3, x0, fail_673
+    li t5, 0x1800
+    bne t3, t5, fail_673
     csrrs t4, 0x300, x0
-    li t5, 8
+    li t5, 0x1808
     bne t4, t5, fail_674
     csrrci t6, 0x300, 8
     bne t6, t5, fail_675
     csrrs t4, 0x300, x0
-    bne t4, x0, fail_676
+    li t5, 0x1800
+    bne t4, t5, fail_676
 
     li t0, 7
     csrrw x0, 0xB0B, t0
@@ -29,7 +32,7 @@ main:
     bne t1, t0, fail_677
 
     csrrs t2, 0x301, x0
-    li t3, 0x40001100
+    li t3, 0x40001105
     bne t2, t3, fail_678
 
     csrrs t4, 0xC00, x0

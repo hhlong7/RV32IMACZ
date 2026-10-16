@@ -72,6 +72,8 @@ module Hazard(
     output logic issuePair
 );
 
+    import otter_defs_pkg::*;
+
     logic uses_rs1_if_id;
     logic uses_rs2_if_id;
     logic uses_rs1_if_pair;
@@ -90,14 +92,14 @@ module Hazard(
         begin
             opcode_uses_rs1 = 1'b0;
             unique case (opcode)
-                7'b0110011: opcode_uses_rs1 = 1'b1; // R-type
-                7'b0010011, // I-type ALU
-                7'b0000011, // loads
-                7'b0101111, // atomics
-                7'b0100011, // stores
-                7'b1100011, // branches
-                7'b1100111: opcode_uses_rs1 = 1'b1; // JALR
-                7'b1110011: opcode_uses_rs1 = (funct3 != 3'b000) && ~funct3[2];
+                OPC_OP: opcode_uses_rs1 = 1'b1; // R-type
+                OPC_OP_IMM, // I-type ALU
+                OPC_LOAD, // loads
+                OPC_AMO, // atomics
+                OPC_STORE, // stores
+                OPC_BRANCH, // branches
+                OPC_JALR: opcode_uses_rs1 = 1'b1; // JALR
+                OPC_SYSTEM: opcode_uses_rs1 = (funct3 != 3'b000) && ~funct3[2];
                 default: opcode_uses_rs1 = 1'b0;
             endcase
         end
@@ -109,107 +111,89 @@ module Hazard(
         begin
             opcode_uses_rs2 = 1'b0;
             unique case (opcode)
-                7'b0110011, // R-type
-                7'b0101111, // atomics (LR encodes rs2=x0, which is harmless here)
-                7'b0100011, // stores
-                7'b1100011: opcode_uses_rs2 = 1'b1; // branches
+                OPC_OP, // R-type
+                OPC_AMO, // atomics (LR encodes rs2=x0, which is harmless here)
+                OPC_STORE, // stores
+                OPC_BRANCH: opcode_uses_rs2 = 1'b1; // branches
                 default: opcode_uses_rs2 = 1'b0;
             endcase
         end
     endfunction
 
-    always_comb begin
-        uses_rs1_if_id = opcode_uses_rs1(opcode_if_id, funct3_if_id);
-        uses_rs2_if_id = opcode_uses_rs2(opcode_if_id);
-        uses_rs1_if_pair = opcode_uses_rs1(opcode_if_pair, funct3_if_pair);
-        uses_rs2_if_pair = opcode_uses_rs2(opcode_if_pair);
+    // CSRs that trap entry or MRET read (mstatus, mtvec, mepc) or write
+    // (mstatus, mepc, mcause, mtval) directly, bypassing the WB write port.
+    function automatic logic is_trap_csr(input logic [11:0] addr);
+        is_trap_csr = (addr == 12'h300) || (addr == 12'h305) || (addr == 12'h341) ||
+                      (addr == 12'h342) || (addr == 12'h343);
+    endfunction
 
-        load_block_if_id = 1'b0;
-        load_block_if_pair = 1'b0;
+    // True when a consumer of (rs1, rs2) needs the result of an in-flight load
+    // to rd that will not be ready in time for EX1.
+    function automatic logic needs_load(input logic uses_rs1, input logic [4:0] rs1,
+                                        input logic uses_rs2, input logic [4:0] rs2,
+                                        input logic load_valid, input logic [4:0] load_rd);
+        needs_load = load_valid && (load_rd != 5'd0) &&
+                     ((uses_rs1 && (rs1 == load_rd)) || (uses_rs2 && (rs2 == load_rd)));
+    endfunction
+
+    // Older CSR writers in either lane, from ID/EX through MEM/WB.
+    localparam int CSR_STAGES = 8;
+    logic [CSR_STAGES-1:0] older_csr_write;
+    logic [CSR_STAGES-1:0][11:0] older_csr_addr;
+
+    assign older_csr_write = {valid_id_ex && csrWrite_id_ex,       valid_id_ex_pair && csrWrite_id_ex_pair,
+                              valid_ex1_ex2 && csrWrite_ex1_ex2,   valid_ex1_ex2_pair && csrWrite_ex1_ex2_pair,
+                              valid_ex_mem && csrWrite_ex_mem,     valid_ex_mem_pair && csrWrite_ex_mem_pair,
+                              valid_mem_wb && csrWrite_mem_wb,     valid_mem_wb_pair && csrWrite_mem_wb_pair};
+    assign older_csr_addr = {csrAddr_id_ex,   csrAddr_id_ex_pair,
+                             csrAddr_ex1_ex2, csrAddr_ex1_ex2_pair,
+                             csrAddr_ex_mem,  csrAddr_ex_mem_pair,
+                             csrAddr_mem_wb,  csrAddr_mem_wb_pair};
+
+    assign uses_rs1_if_id = opcode_uses_rs1(opcode_if_id, funct3_if_id);
+    assign uses_rs2_if_id = opcode_uses_rs2(opcode_if_id);
+    assign uses_rs1_if_pair = opcode_uses_rs1(opcode_if_pair, funct3_if_pair);
+    assign uses_rs2_if_pair = opcode_uses_rs2(opcode_if_pair);
+
+    // A load in EX1 (either lane) has no data until MEM: one bubble.
+    assign load_block_if_id = valid_if_id &&
+        (needs_load(uses_rs1_if_id, rs1_if_id, uses_rs2_if_id, rs2_if_id, valid_id_ex && memRead_id_ex, rd_id_ex) ||
+         needs_load(uses_rs1_if_id, rs1_if_id, uses_rs2_if_id, rs2_if_id, valid_id_ex_pair && memRead_id_ex_pair, rd_id_ex_pair));
+    assign load_block_if_pair = valid_if_pair &&
+        (needs_load(uses_rs1_if_pair, rs1_if_pair, uses_rs2_if_pair, rs2_if_pair, valid_id_ex && memRead_id_ex, rd_id_ex) ||
+         needs_load(uses_rs1_if_pair, rs1_if_pair, uses_rs2_if_pair, rs2_if_pair, valid_id_ex_pair && memRead_id_ex_pair, rd_id_ex_pair));
+
+    // CSRs are read in ID but written in WB, so a CSR read waits for older
+    // writes to the same CSR; anything that may trap or MRET waits for older
+    // writes to the trap CSRs.
+    always_comb begin
         csr_block_if_id = 1'b0;
         machine_block_if_id = 1'b0;
-        same_bundle_dep = 1'b0;
-
-        stallIF = 1'b0;
-        stallID = 1'b0;
-        flushEX = 1'b0;
-        loadUseStall = 1'b0;
-        issuePair = 1'b0;
-
-        // Either older EX-bound slot can hold a load whose result is not ready
-        // for the current decode bundle yet.
-        if (valid_if_id && valid_id_ex && memRead_id_ex && (rd_id_ex != 5'd0) &&
-            ((uses_rs1_if_id && (rs1_if_id == rd_id_ex)) ||
-             (uses_rs2_if_id && (rs2_if_id == rd_id_ex))))
-            load_block_if_id = 1'b1;
-
-        if (valid_if_id && valid_id_ex_pair && memRead_id_ex_pair && (rd_id_ex_pair != 5'd0) &&
-            ((uses_rs1_if_id && (rs1_if_id == rd_id_ex_pair)) ||
-             (uses_rs2_if_id && (rs2_if_id == rd_id_ex_pair))))
-            load_block_if_id = 1'b1;
-
-        if (valid_if_pair && valid_id_ex && memRead_id_ex && (rd_id_ex != 5'd0) &&
-            ((uses_rs1_if_pair && (rs1_if_pair == rd_id_ex)) ||
-             (uses_rs2_if_pair && (rs2_if_pair == rd_id_ex))))
-            load_block_if_pair = 1'b1;
-
-        if (valid_if_pair && valid_id_ex_pair && memRead_id_ex_pair && (rd_id_ex_pair != 5'd0) &&
-            ((uses_rs1_if_pair && (rs1_if_pair == rd_id_ex_pair)) ||
-             (uses_rs2_if_pair && (rs2_if_pair == rd_id_ex_pair))))
-            load_block_if_pair = 1'b1;
-
-        if (valid_if_id && csrRead_if_id &&
-            ((valid_id_ex && csrWrite_id_ex && (csrAddr_if_id == csrAddr_id_ex)) ||
-             (valid_id_ex_pair && csrWrite_id_ex_pair && (csrAddr_if_id == csrAddr_id_ex_pair)) ||
-             (valid_ex1_ex2 && csrWrite_ex1_ex2 && (csrAddr_if_id == csrAddr_ex1_ex2)) ||
-             (valid_ex1_ex2_pair && csrWrite_ex1_ex2_pair && (csrAddr_if_id == csrAddr_ex1_ex2_pair)) ||
-             (valid_ex_mem && csrWrite_ex_mem && (csrAddr_if_id == csrAddr_ex_mem)) ||
-             (valid_ex_mem_pair && csrWrite_ex_mem_pair && (csrAddr_if_id == csrAddr_ex_mem_pair)) ||
-             (valid_mem_wb && csrWrite_mem_wb && (csrAddr_if_id == csrAddr_mem_wb)) ||
-             (valid_mem_wb_pair && csrWrite_mem_wb_pair && (csrAddr_if_id == csrAddr_mem_wb_pair))))
-            csr_block_if_id = 1'b1;
-
-        if (valid_if_id && machineCtrl_if_id &&
-            ((valid_id_ex && csrWrite_id_ex &&
-              ((csrAddr_id_ex == 12'h300) || (csrAddr_id_ex == 12'h305) || (csrAddr_id_ex == 12'h341))) ||
-             (valid_id_ex_pair && csrWrite_id_ex_pair &&
-              ((csrAddr_id_ex_pair == 12'h300) || (csrAddr_id_ex_pair == 12'h305) || (csrAddr_id_ex_pair == 12'h341))) ||
-             (valid_ex1_ex2 && csrWrite_ex1_ex2 &&
-              ((csrAddr_ex1_ex2 == 12'h300) || (csrAddr_ex1_ex2 == 12'h305) || (csrAddr_ex1_ex2 == 12'h341))) ||
-             (valid_ex1_ex2_pair && csrWrite_ex1_ex2_pair &&
-              ((csrAddr_ex1_ex2_pair == 12'h300) || (csrAddr_ex1_ex2_pair == 12'h305) || (csrAddr_ex1_ex2_pair == 12'h341))) ||
-             (valid_ex_mem && csrWrite_ex_mem &&
-              ((csrAddr_ex_mem == 12'h300) || (csrAddr_ex_mem == 12'h305) || (csrAddr_ex_mem == 12'h341))) ||
-             (valid_ex_mem_pair && csrWrite_ex_mem_pair &&
-              ((csrAddr_ex_mem_pair == 12'h300) || (csrAddr_ex_mem_pair == 12'h305) || (csrAddr_ex_mem_pair == 12'h341))) ||
-             (valid_mem_wb && csrWrite_mem_wb &&
-              ((csrAddr_mem_wb == 12'h300) || (csrAddr_mem_wb == 12'h305) || (csrAddr_mem_wb == 12'h341))) ||
-             (valid_mem_wb_pair && csrWrite_mem_wb_pair &&
-              ((csrAddr_mem_wb_pair == 12'h300) || (csrAddr_mem_wb_pair == 12'h305) || (csrAddr_mem_wb_pair == 12'h341)))))
-            machine_block_if_id = 1'b1;
-
-        // Slot 1 cannot consume or overwrite a destination that slot 0 is
-        // still producing inside the same issue bundle.
-        if (valid_if_pair && regWrite_if_id && (rd_if_id != 5'd0) &&
-            (((uses_rs1_if_pair && (rs1_if_pair == rd_if_id)) ||
-              (uses_rs2_if_pair && (rs2_if_pair == rd_if_id))) ||
-             (regWrite_if_pair && (rd_if_pair == rd_if_id))))
-            same_bundle_dep = 1'b1;
-
-        if (load_block_if_id || csr_block_if_id || machine_block_if_id) begin
-            stallIF = 1'b1;
-            stallID = 1'b1;
-            flushEX = 1'b1;
-            loadUseStall = load_block_if_id;
+        for (int i = 0; i < CSR_STAGES; i++) begin
+            if (older_csr_write[i]) begin
+                csr_block_if_id |= (older_csr_addr[i] == csrAddr_if_id);
+                machine_block_if_id |= is_trap_csr(older_csr_addr[i]);
+            end
         end
-
-        // Younger issue is intentionally conservative: only pair a prequalified
-        // simple instruction when it is independent of the older slot and not
-        // blocked by a one-cycle-ahead load.
-        if (valid_if_id && valid_if_pair && pairCandidate_if_pair &&
-            ~blocksPair_if_id && ~same_bundle_dep && ~load_block_if_pair &&
-            ~(csr_block_if_id || machine_block_if_id || load_block_if_id))
-            issuePair = 1'b1;
+        csr_block_if_id &= valid_if_id && csrRead_if_id;
+        machine_block_if_id &= valid_if_id && machineCtrl_if_id;
     end
+
+    // Slot 1 cannot consume or overwrite a destination that slot 0 is still
+    // producing inside the same issue bundle.
+    assign same_bundle_dep = valid_if_pair && regWrite_if_id && (rd_if_id != 5'd0) &&
+                             ((uses_rs1_if_pair && (rs1_if_pair == rd_if_id)) ||
+                              (uses_rs2_if_pair && (rs2_if_pair == rd_if_id)) ||
+                              (regWrite_if_pair && (rd_if_pair == rd_if_id)));
+
+    assign loadUseStall = load_block_if_id;
+    assign stallIF = load_block_if_id || csr_block_if_id || machine_block_if_id;
+    assign stallID = stallIF;
+    assign flushEX = stallIF;
+
+    // Pair only a prequalified simple instruction that is independent of the
+    // older slot and not waiting on a load.
+    assign issuePair = valid_if_id && valid_if_pair && pairCandidate_if_pair &&
+                       ~blocksPair_if_id && ~same_bundle_dep && ~load_block_if_pair && ~stallIF;
 endmodule
 // i love cpe333

@@ -428,15 +428,16 @@ stage_csr:
     bne t2, t0, fail_914          # Fail if mscratch did not hold the written value.
 
     csrrs t3, 0x301, x0           # Read misa.
-    li t4, 0x40001100             # Expected ISA bits for RV32IM + Zicsr + Zifencei.
+    li t4, 0x40001105             # Expected misa: RV32IMAC.
     bne t3, t4, fail_915          # Fail if misa does not match the implemented ISA.
 
     csrrw x0, 0x300, x0           # Clear mstatus to zero.
     csrrsi t5, 0x300, 8           # Set the MIE bit and read the old value.
-    bne t5, x0, fail_916          # The old value should still be zero.
+    li a0, 0x1800                # MPP reads as M; MIE was clear.
+    bne t5, a0, fail_916
 
     csrrci t6, 0x300, 8           # Clear the MIE bit and read the old value.
-    li a0, 8                      # The old value should have had MIE set.
+    li a0, 0x1808                      # The old value should have had MIE set.
     bne t6, a0, fail_917          # Fail if the old value from csrrci is wrong.
 
     csrrsi x0, 0x300, 8           # Re-enable MIE so later trap tests start from the expected state.
@@ -482,7 +483,7 @@ stage_ebreak:
     li s5, 0                      # Clear the trap-completed flag.
     la s3, ebreak_site            # Tell the handler which PC should be captured in mepc.
     li s4, 3                      # Expected mcause for ebreak.
-    li s6, 0                      # ebreak should also report mtval = 0.
+    addi s6, s3, 0                # ebreak reports its own PC in mtval.
 
 ebreak_site:
     ebreak                        # Trigger the breakpoint trap.

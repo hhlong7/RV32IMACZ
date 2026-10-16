@@ -37,7 +37,9 @@ Implemented ISA pieces:
 
 Related system support included in the core:
 
-- machine-mode CSR, trap, and `mret` handling
+- machine-mode CSR, trap, and `mret` handling (M-only hart: `mstatus.MPP`
+  reads as M, `mtvec` is direct mode, `wfi` is a no-op)
+- precise address-misaligned exceptions for loads, stores, and atomics
 - timer interrupt support
 - MMIO-backed software-visible I/O path
 - verification workloads covering arithmetic, control flow, cache behavior,
@@ -65,8 +67,8 @@ Deeper module hierarchy view extracted from the RTL:
    Main testbench, pass/fail behavior, and verification checks.
 3. `test_files/asm/`
    Directed assembly tests used by the regression flow.
-4. `tools/run_regression.sh` and `tools/run_random_tests.py`
-   The fastest way to understand how the project is tested.
+4. `tools/lockstep.py`, `tools/run_regression.sh`, `tools/run_random_tests.py`
+   How the project is tested; `lockstep.py` compares the core against Spike.
 5. `software/freertos_coremark/`
    A small software workload that boots FreeRTOS and runs CoreMark in
    simulation.
@@ -87,8 +89,14 @@ Other useful files:
 - `python3`
 - `iverilog` and `vvp`
 - Optional: `verilator` for lint
+- Optional: `spike` and GNU binutils (`riscv64-unknown-elf-as/ld/objcopy`)
+  for the lockstep comparison and the assembler cross-check; both tools
+  report `status=skipped` when these are missing
 - Optional: `riscv64-unknown-elf-gcc` toolchain for the FreeRTOS + CoreMark
   example
+
+Every flow compiles the RTL listed in `rtl.f` (`iverilog -c rtl.f`,
+`verilator -f rtl.f`).
 
 The directed assembly tests use the repo's own assembler script
 `tools/assemble_tests.py`, so you do not need an external RISC-V assembler for
@@ -102,6 +110,26 @@ bash tools/run_regression.sh
 
 This rebuilds memory images from `test_files/asm/*.s`, runs the directed test
 suite, and prints the last lines of each simulation run.
+
+### Run The Lockstep Comparison Against Spike
+
+```bash
+python3 tools/lockstep.py --random 200
+```
+
+Each program in `test_files/lockstep/` (plus N seeded random programs from
+`tools/lockstep_random.py`) is assembled with GNU `as` and run on both Spike
+and the RTL. The testbench's `+COMMIT_LOG` trace is compared against Spike's
+commit log: every retired instruction's PC, destination register and value,
+and every memory write's address, data and size. The directed programs cover
+every RV32IMAC/Zicsr/Zifencei instruction with edge operands, traps, CSRs,
+misaligned accesses, and self-modifying code; the random programs stress
+forwarding, dual issue, mixed 16/32-bit streams, store-buffer forwarding and
+overflow, atomics, branch prediction, and traps in arbitrary pipeline states.
+
+The checker was validated by mutation: planted bugs in the ALU, the bypass
+priority, the load-use stall, the RVC expander, and store-buffer conflict
+detection are all reported, and a performance-only predictor change is not.
 
 ### Run The Randomized Tests
 
@@ -118,8 +146,10 @@ control flow, dual issue, store-buffer behavior, and atomic operations.
 bash tools/run_verification_quality.sh
 ```
 
-This runs the directed suite, randomized tests, report aggregation, and the
-optional Spike scoreboard hook. Logs and summary files are written to:
+This runs the directed suite, randomized tests, report aggregation, the
+assembler cross-check (`tools/check_assembler.py`: the repo's small assembler
+against GNU `as`), and the Spike lockstep comparison. Logs and summary files
+are written to:
 
 ```text
 out/verification_logs/
@@ -143,47 +173,41 @@ memory image when it finishes.
 
 ## Latest Verification Run
 
-The final verification flow was run on June 10, 2026 using the repo's real scripts,
-not just listed as an example.
+Run on October 15, 2026 with `bash tools/run_verification_quality.sh`:
 
-Commands run:
+- Directed regression suite: `23 / 23` passed
+- Legacy randomized tests: store-buffer unit test plus `16 / 16` seeded programs
+- Assembler cross-check: 6,000 random instructions, 0 encoding mismatches
+- Lockstep vs Spike: 8 directed + 200 random programs, ~115k retired
+  instructions, 0 mismatches (an additional 1,000-seed run also passed)
+- Verilator lint: no RTL warnings (only `PROCASSINIT` style warnings in
+  `tb_core.sv`)
 
-```bash
-bash tools/run_verification_quality.sh
-verilator --lint-only --timing -Wall -Wno-fatal --top-module tb_core ...
-bash tools/run_freertos_coremark.sh
-```
+### Bugs found by the lockstep flow (fixed October 2026)
 
-Results:
-
-- Directed regression suite: `23 / 23` workloads passed
-- Randomized verification: standalone `TB_STORE_BUFFER` test passed
-- Seeded randomized RTL runs: `16 / 16` passed
-- Aggregate verification summary written to
-  `out/verification_logs/verification_summary.json`
-- Spike scoreboard hook completed and detected local Spike successfully
-- Verilator lint exited with code `0`
-- FreeRTOS + CoreMark smoke run passed with `pass_sseg=201` at cycle `373191`
-
-The June 10, 2026 aggregate summary reported:
-
-- all defined summary bins hit for hazard, cache, branch recovery, CSR/trap,
-  memory-ordering, atomic, and randomized instruction-class coverage
-- `branch_redirects=1272`
-- `ic_hit=3178`, `ic_miss=204`
-- `dc_hit=574`, `dc_miss=326`
-- `sb_enq=682`, `sb_fwd=150`, `fence_wait=380`
-- `atomic commits=244`, `sc_success=50`, `sc_fail=46`
-
-Lint note:
-
-- Verilator reported existing `PROCASSINIT` warnings in `tb_core.sv`, but the
-  lint command still completed successfully with exit code `0`
+- D-cache refill wrote zero into word 7 of the line (in L1 and L2) when the
+  missing load was a sub-word load at a non-zero byte offset
+- Atomics stalled in EX1 lost their forwarded operands once the producer
+  retired, so LR/SC/AMO could use a stale address or data value
+- `jalr` did not clear bit 0 of a target computed from an odd register
+- `mepc` dropped bit 1, so a trap from a 2-byte-aligned PC returned to the
+  wrong address under RV32C
+- Misaligned loads/stores silently returned 0 or dropped the write, and
+  misaligned atomics stopped the simulation; they now trap precisely
+- `misa` omitted A and C; `mret` cleared `mstatus.MPP` instead of keeping M;
+  writing `misa` and executing `wfi` raised illegal-instruction exceptions
+- Reserved `SYSTEM` encodings (funct3=100, non-zero rs1/rd on
+  ecall/ebreak/mret) executed instead of trapping
+- `mret` and `fence.i` were not counted in `minstret`
+- A trap could overtake an older in-flight `csrw` to `mcause`/`mtval`
+- `tools/run_regression.sh` printed results but never failed on a failing test
 
 ## Project Layout
 
 - Root `*.sv` files: core RTL, caches, MMIO, predictor, and testbenches
+- `rtl.f`: the RTL file list shared by every simulation and lint flow
 - `test_files/asm/`: hand-written directed assembly tests
+- `test_files/lockstep/`: directed programs for the Spike lockstep flow
 - `test_files/generated/`: generated `.mem` images used in simulation
 - `tools/`: build, test, reporting, and helper scripts
 - `software/freertos_coremark/`: FreeRTOS + CoreMark software example
@@ -241,6 +265,18 @@ Rerun on April 15, 2026:
 | `system_workload_benchmark` | benchmark-window cycle delta (`last_leds`) | 713 |
 | `system_workload_benchmark` | `flush_id` | 37 |
 | `system_workload_benchmark` | `flush_ex` | 105 |
+
+### Post-Verification Snapshot
+
+Rerun on October 15, 2026 after the bug fixes above (MRET and FENCE.I now
+retire through the pipe instead of being killed in EX1):
+
+| Workload | Metric | Before | After |
+| --- | --- | ---: | ---: |
+| `system_workload` | TB completion cycles | 914 | 910 |
+| `system_workload` | `flush_ex` | 93 | 88 |
+| `system_workload_benchmark` | TB completion cycles | 999 | 993 |
+| `system_workload_benchmark` | `flush_ex` | 105 | 98 |
 
 ### FreeRTOS + CoreMark Smoke Snapshot
 

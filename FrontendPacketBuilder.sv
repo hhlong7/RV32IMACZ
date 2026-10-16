@@ -20,16 +20,15 @@ module FrontendPacketBuilder(
 
         packet_o.valid = valid_i;
         packet_o.pc = pc_i;
-        // The struct field keeps its historical name, but it now carries the
-        // architectural fall-through PC for either a 16-bit or 32-bit instruction.
-        packet_o.pc_4 = pc_i + (instr_is_compressed_i ? 32'd2 : 32'd4);
+        // Fall-through PC for either a 16-bit or a 32-bit instruction.
+        packet_o.pc_next = pc_i + (instr_is_compressed_i ? 32'd2 : 32'd4);
         packet_o.ir = ir_i;
 
         // Classify the instruction once here so the fetch stages can carry a
         // fully annotated packet instead of re-decoding branch intent later.
-        packet_o.is_branch = (ir_i[6:0] == 7'b1100011);
-        packet_o.is_jal = (ir_i[6:0] == 7'b1101111);
-        packet_o.is_jalr = (ir_i[6:0] == 7'b1100111) && (ir_i[14:12] == 3'b000);
+        packet_o.is_branch = (ir_i[6:0] == OPC_BRANCH);
+        packet_o.is_jal = (ir_i[6:0] == OPC_JAL);
+        packet_o.is_jalr = (ir_i[6:0] == OPC_JALR) && (ir_i[14:12] == 3'b000);
         packet_o.rd_is_link = (ir_i[11:7] == 5'd1) || (ir_i[11:7] == 5'd5);
         packet_o.rs1_is_link = (ir_i[19:15] == 5'd1) || (ir_i[19:15] == 5'd5);
         packet_o.jal_offset = {{12{ir_i[31]}}, ir_i[19:12], ir_i[20], ir_i[30:21], 1'b0};
@@ -38,7 +37,7 @@ module FrontendPacketBuilder(
                              packet_o.rs1_is_link &&
                              (ir_i[31:20] == 12'd0);
         packet_o.predicted_taken = 1'b0;
-        packet_o.predicted_target = packet_o.pc_4;
+        packet_o.predicted_target = packet_o.pc_next;
 
         if (valid_i) begin
             if (packet_o.is_jal) begin

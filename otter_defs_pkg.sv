@@ -8,9 +8,9 @@ package otter_defs_pkg;
         logic [31:0] predicted_target;
 
         logic [31:0] pc;
-        // Historical name kept to minimize churn. This is now the architectural
-        // fall-through PC: pc+2 for compressed instructions, pc+4 otherwise.
-        logic [31:0] pc_4;
+        // Architectural fall-through PC: pc+2 for compressed instructions,
+        // pc+4 otherwise.
+        logic [31:0] pc_next;
         logic [31:0] ir;
 
         logic is_branch;
@@ -21,6 +21,35 @@ package otter_defs_pkg;
         logic rs1_is_link;
         logic [31:0] jal_offset;
     } frontend_t;
+
+    // RV32 major opcodes (instruction bits [6:0]).
+    localparam logic [6:0] OPC_LOAD     = 7'b0000011;
+    localparam logic [6:0] OPC_MISC_MEM = 7'b0001111;
+    localparam logic [6:0] OPC_OP_IMM   = 7'b0010011;
+    localparam logic [6:0] OPC_AUIPC    = 7'b0010111;
+    localparam logic [6:0] OPC_STORE    = 7'b0100011;
+    localparam logic [6:0] OPC_AMO      = 7'b0101111;
+    localparam logic [6:0] OPC_OP       = 7'b0110011;
+    localparam logic [6:0] OPC_LUI      = 7'b0110111;
+    localparam logic [6:0] OPC_BRANCH   = 7'b1100011;
+    localparam logic [6:0] OPC_JALR     = 7'b1100111;
+    localparam logic [6:0] OPC_JAL      = 7'b1101111;
+    localparam logic [6:0] OPC_SYSTEM   = 7'b1110011;
+
+    // Branch, JAL, or JALR.
+    function automatic logic is_control_ir(input logic [31:0] ir);
+        is_control_ir = (ir[6:0] == OPC_BRANCH) ||
+                        (ir[6:0] == OPC_JAL) ||
+                        ((ir[6:0] == OPC_JALR) && (ir[14:12] == 3'b000));
+    endfunction
+
+    // Control flow plus SYSTEM and MISC-MEM: the front end never buffers a
+    // younger instruction behind one of these, and slot 1 never issues one.
+    function automatic logic is_front_barrier_ir(input logic [31:0] ir);
+        is_front_barrier_ir = is_control_ir(ir) ||
+                              (ir[6:0] == OPC_SYSTEM) ||
+                              (ir[6:0] == OPC_MISC_MEM);
+    endfunction
 
     // Keep all atomic op encodings centralized so decode, controller, memory,
     // and writeback logic share one consistent internal enumeration.

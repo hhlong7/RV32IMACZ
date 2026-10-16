@@ -12,9 +12,6 @@ module CU_DCDR(
     // IR_FUNCT3 is the 3-bit funct3 field in the instruction, which is used to further specify the operation for certain opcodes.
     input logic [6:0] IR_FUNCT7,
     // IR_FUNCT7 is the 7-bit funct7 field in the instruction, which is used to further specify the operation for certain opcodes, especially R-type instructions.
-    input rst, clk, 
-    
-    output logic reset,
 
     output logic [4:0] ALU_FUN,
     output logic ALU_SRCA,
@@ -31,8 +28,8 @@ module CU_DCDR(
     output logic LEGAL_INSTR // 1 if the instruction is legal and was successfully decoded
                              // 0 if the instruction is illegal or unsupported
     );
-    
-    always_ff @(posedge clk) reset <= rst ? 1 : 0;
+
+    import otter_defs_pkg::*;
     
     always_comb begin
         // Instantiate all outputs to 0 so as to avoid
@@ -57,7 +54,7 @@ module CU_DCDR(
         // Case statement depending on the opcode for the 
         // instruction, or the last seven bits of each instruction
         case(IR_OPCODE)
-            7'b0110011: begin //R-type
+            OPC_OP: begin //R-type
                 ALU_SRCA = 1'b0; //Select RS1 for ALU source A
                 ALU_SRCB = 2'b00; //Select RS2 for ALU source B
                 RF_WR_SEL = 2'b11; //Select ALU output for register file write data
@@ -86,7 +83,7 @@ module CU_DCDR(
                 end
             end
 
-            7'b0010011: begin // I-type ALU operations
+            OPC_OP_IMM: begin // I-type ALU operations
                 ALU_SRCA = 1'b0; // Select RS1 for ALU source A
                 ALU_SRCB = 2'b01; // Select immediate for ALU source B
                 RF_WR_SEL = 2'b11; // Select ALU output for register file write data
@@ -121,7 +118,7 @@ module CU_DCDR(
                 endcase
             end
 
-            7'b0000011: begin // I-type load instructions
+            OPC_LOAD: begin // I-type load instructions
                 ALU_SRCA = 1'b0; // Select RS1 for ALU source A
                 ALU_SRCB = 2'b01; // Select immediate for ALU source B
                 RF_WR_SEL = 2'b10; // Select memory output for register file write data
@@ -136,7 +133,7 @@ module CU_DCDR(
                 end
             end
 
-            7'b0100011: begin // S-type store instructions
+            OPC_STORE: begin // S-type store instructions
                 ALU_SRCA = 1'b0; // Select RS1 for ALU source A
                 ALU_SRCB = 2'b10; // Select immediate for ALU source B
                 MEM_WR_EN2 = 1'b1; // Enable memory write
@@ -149,7 +146,7 @@ module CU_DCDR(
                 end
             end
 
-            7'b1100011: begin // B-type branch instructions
+            OPC_BRANCH: begin // B-type branch instructions
                 ALU_SRCA = 1'b0; // Select RS1 for ALU source A
                 ALU_SRCB = 2'b00; // Select RS2 for ALU source B
                 RF_WR_SEL = 2'b11; // Select ALU output for register file write data (though it won't be written)
@@ -161,11 +158,11 @@ module CU_DCDR(
                     LEGAL_INSTR = 1'b0;
             end
 
-            7'b1101111: begin // J-type JAL instruction
+            OPC_JAL: begin // J-type JAL instruction
                 RF_WR_SEL = 2'b00; // Select PC+4 for register file write data
             end
 
-            7'b1100111: begin // I-type JALR instruction
+            OPC_JALR: begin // I-type JALR instruction
                 RF_WR_SEL = 2'b00; // Select PC+4 for register file write data
                 if (IR_FUNCT != 3'b000) begin
                     LEGAL_INSTR = 1'b0;
@@ -173,20 +170,20 @@ module CU_DCDR(
                 end
             end
 
-            7'b0110111: begin //U-type LUI instruction
+            OPC_LUI: begin //U-type LUI instruction
                 ALU_SRCA = 1'b1; //Select PC for ALU source A (though it won't actually be used)
                 RF_WR_SEL = 2'b11; //Select ALU output for register file write data
                 ALU_FUN = 5'b01001; //Use ALU to pass through the immediate value (since LUI just loads the immediate into the register)
             end
 
-            7'b0010111: begin //U-type AUIPC instruction
+            OPC_AUIPC: begin //U-type AUIPC instruction
                 ALU_SRCA = 1'b1; //Select PC for ALU source A
                 ALU_SRCB = 2'b11; //Select U-type immediate for ALU source B
                 RF_WR_SEL = 2'b11; //Select ALU output for register file write data
                 ALU_FUN = 5'b00000; //Use ALU to calculate address (PC + immediate)
             end
 
-            7'b0001111: begin // FENCE / FENCE.I
+            OPC_MISC_MEM: begin // FENCE / FENCE.I
                 REGWRITE = 1'b0;
                 // Plain FENCE is a no-op here, but FENCE.I must still decode cleanly
                 // so the top level can drain memory traffic and invalidate the I$.
@@ -194,8 +191,11 @@ module CU_DCDR(
                     LEGAL_INSTR = 1'b0;
             end
 
-            7'b1110011: begin // SYSTEM / CSR
-                if (IR_FUNCT != 3'b000) begin
+            OPC_SYSTEM: begin // SYSTEM / CSR
+                if (IR_FUNCT == 3'b100) begin
+                    LEGAL_INSTR = 1'b0; // reserved (hypervisor loads/stores)
+                    REGWRITE = 1'b0;
+                end else if (IR_FUNCT != 3'b000) begin
                     // CSR instructions return the old CSR value via the normal "ALU result" writeback path.
                     RF_WR_SEL = 2'b11;
                     REGWRITE = 1'b1;
@@ -203,8 +203,8 @@ module CU_DCDR(
                     CSR_USE_IMM = IR_FUNCT[2]; // The CSRRWI instruction uses the I-type immediate encoding for the CSR address, while CSRRW, CSRRS, and CSRRC use the standard rs1 encoding, so we can directly use funct3 bit 2 to determine this.
                     CSR_CMD = IR_FUNCT[1:0]; // The four CSR commands (read, write, set bits, clear bits) are encoded in funct3 bits 1:0, so we can directly assign those to the CSR_CMD output.
                 end else begin
-                    // ECALL/EBREAK/MRET stay in ID because they redirect control and/or
-                    // update trap CSRs before the instruction would reach WB.
+                    // ECALL/EBREAK/MRET/WFI: the top level matches the exact
+                    // encodings and raises illegal-instruction for the rest.
                     REGWRITE = 1'b0;
                 end
             end

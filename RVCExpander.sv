@@ -158,10 +158,11 @@ module RVCExpander(
                 default: illegal_c = 1'b1;
             endcase
 
-            // Unsupported compressed encodings collapse to zero so the normal
-            // decode legality checks raise an illegal-instruction trap.
+            // Reserved compressed encodings pass through as the raw halfword.
+            // Bits [1:0] != 2'b11 match no 32-bit opcode, so decode raises an
+            // illegal-instruction trap and mtval reports the faulting bits.
             if (illegal_c)
-                expanded_ir_o = 32'b0;
+                expanded_ir_o = {16'b0, cinst};
         end
     end
 

@@ -550,15 +550,16 @@ stage_csr:
     bne t2, t0, fail_914
 
     csrrs t3, 0x301, x0
-    li t4, 0x40001100
+    li t4, 0x40001105
     bne t3, t4, fail_915
 
     csrrw x0, 0x300, x0
     csrrsi t5, 0x300, 8
-    bne t5, x0, fail_916
+    li a0, 0x1800                # MPP reads as M; MIE was clear.
+    bne t5, a0, fail_916
 
     csrrci t6, 0x300, 8
-    li a0, 8
+    li a0, 0x1808
     bne t6, a0, fail_917
 
     csrrsi x0, 0x300, 8
@@ -604,7 +605,7 @@ stage_ebreak:
     li s5, 0
     la s3, ebreak_site
     li s4, 3
-    li s6, 0
+    addi s6, s3, 0                # ebreak reports its own PC in mtval.
 
 ebreak_site:
     ebreak

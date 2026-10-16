@@ -7,3 +7,7 @@ out/
 # Python cache
 __pycache__/
 *.pyc
+
+# Simulator build products
+simv
+*.vvp

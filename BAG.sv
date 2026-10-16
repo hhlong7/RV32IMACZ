@@ -19,7 +19,8 @@ module BAG(
     
     //Assign each branch address.
     assign JAL = FROM_PC + J_TYPE;
-    assign JALR = I_TYPE + RS1;
+    // JALR clears bit 0 of the computed target (RISC-V unprivileged spec 2.5).
+    assign JALR = (I_TYPE + RS1) & ~32'd1;
     assign BRANCH = FROM_PC + B_TYPE;
     
 endmodule

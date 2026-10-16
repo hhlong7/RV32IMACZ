@@ -63,6 +63,13 @@ module tb_core;
     logic [31:0] last_sseg = 32'b0;
     logic [31:0] last_leds = 32'b0;
 
+    // Optional retirement trace for lockstep comparison against Spike
+    // (tools/lockstep.py). One "R pc rd value" line per retired instruction in
+    // program order, and one "S addr data size" line per architectural memory
+    // write (store-buffer enqueue or atomic commit), in LSU order.
+    int commit_fd = 0;
+    string commit_log_path;
+
     OTTER_MCU dut (
         .CLK(clk),
         .INTR(1'b0),
@@ -104,8 +111,42 @@ module tb_core;
             $display("TB verbose_pipe enabled");
         end
 
+        if ($value$plusargs("COMMIT_LOG=%s", commit_log_path)) begin
+            commit_fd = $fopen(commit_log_path, "w");
+            if (commit_fd == 0)
+                $fatal(1, "TB could not open COMMIT_LOG=%s", commit_log_path);
+        end
+
         repeat (8) @(posedge clk);
         reset = 1'b0;
+    end
+
+    // Sample at the posedge before the pipeline registers update: a WB slot
+    // retires on this edge exactly when it is valid and the LSU is not
+    // stalling, the same condition minstret uses. The register file writes on
+    // the preceding negedge, so reading it back also proves the write landed.
+    function automatic logic [4:0] retired_rd(input logic reg_write, input logic [31:0] ir);
+        return reg_write ? ir[11:7] : 5'd0;
+    endfunction
+
+    always @(posedge clk) begin
+        if (commit_fd != 0 && !reset) begin
+            if (!dut.dc_stall) begin
+                if (dut.mem_wb.valid)
+                    $fdisplay(commit_fd, "R %08x %0d %08x", dut.mem_wb.pc,
+                              retired_rd(dut.mem_wb.regWrite, dut.mem_wb.ir),
+                              dut.OTTER_REG_FILE.ram[retired_rd(dut.mem_wb.regWrite, dut.mem_wb.ir)]);
+                if (dut.mem_wb_pair.valid)
+                    $fdisplay(commit_fd, "R %08x %0d %08x", dut.mem_wb_pair.pc,
+                              retired_rd(dut.mem_wb_pair.regWrite, dut.mem_wb_pair.ir),
+                              dut.OTTER_REG_FILE.ram[retired_rd(dut.mem_wb_pair.regWrite, dut.mem_wb_pair.ir)]);
+            end
+
+            if (dut.atomic_commit_valid && dut.atomic_commit_write)
+                $fdisplay(commit_fd, "S %08x %08x 2", dut.atomic_commit_addr, dut.atomic_commit_new_word);
+            if (dut.storebuf_enqueue_event)
+                $fdisplay(commit_fd, "S %08x %08x %0d", dut.ex_mem.alu_result, dut.ex_mem.rs2, dut.mem_size);
+        end
     end
 
     always @(posedge clk) begin
@@ -360,6 +401,8 @@ module tb_core;
     end
 
     final begin
+        if (commit_fd != 0)
+            $fclose(commit_fd);
         $display("TB FINAL cycle=%0d last_sseg=0x%08x signed=%0d last_leds=0x%08x",
                  cycle_count, last_sseg, $signed(last_sseg), last_leds);
         $display("TB STATS branch_redirects=%0d flush_id=%0d flush_ex=%0d ic_hit=%0d ic_miss=%0d ic_prefetch_only=%0d dc_hit=%0d dc_miss=%0d",

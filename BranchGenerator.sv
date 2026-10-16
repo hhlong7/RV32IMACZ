@@ -16,6 +16,8 @@ module BranchGenerator(
     output logic [2:0] pcsource
     );
 
+    import otter_defs_pkg::*;
+
     logic beq, blt, bltu;
 
     BCG branch_comp(
@@ -39,9 +41,9 @@ module BranchGenerator(
 
     always_comb begin
         case (IR_OPCODE)
-            7'b1101111: pcsource = 3'b011; // JAL
-            7'b1100111: pcsource = 3'b001; // JALR
-            7'b1100011: begin // Branches
+            OPC_JAL: pcsource = 3'b011; // JAL
+            OPC_JALR: pcsource = 3'b001; // JALR
+            OPC_BRANCH: begin // Branches
                 case (IR_FUNCT)
                     3'b000: pcsource = beq ? 3'b010 : 3'b000; // BEQ
                     3'b001: pcsource = ~beq ? 3'b010 : 3'b000; // BNE

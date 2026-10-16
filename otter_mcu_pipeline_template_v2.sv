@@ -31,9 +31,8 @@ module OTTER_MCU(
         logic [31:0] predicted_target;
 
         logic [31:0] pc;
-        // Historical field name kept for compatibility with the existing
-        // pipeline code. It now carries the architectural fall-through PC.
-        logic [31:0] pc_4;
+        // Architectural fall-through PC (pc+2 or pc+4).
+        logic [31:0] pc_next;
         logic [31:0] ir;
 
         logic regWrite;
@@ -74,7 +73,6 @@ module OTTER_MCU(
     // the next sequential slot buffered behind it.
     frontend_t if_id, if1_if2;
     frontend_t fetch_slot0, fetch_slot1;
-    frontend_t fetch_slot0_as_slot1;
     frontend_t if_id_after_issue, if1_if2_after_issue;
     frontend_t if_id_next, if1_if2_next;
 
@@ -97,7 +95,6 @@ module OTTER_MCU(
     logic dc_ctrl_stall;
     logic ic_stall;
     logic pc_stall_cache;
-    logic RESETf;
 
     logic stallIF, stallID, stallIF2, stallEX1;
     logic flushIF2, flushID, flushID_pipe, flushEX;
@@ -221,7 +218,7 @@ module OTTER_MCU(
     logic interrupt_accept_id;
     logic csr_read_if_id;
     logic csr_access_illegal_id;
-    logic trap_taken_id, mret_id, illegal_instr_id, ecall_id, ebreak_id;
+    logic trap_taken_id, mret_id, illegal_instr_id, ecall_id, ebreak_id, wfi_id;
     logic fence_id;
     logic fence_i_id;
     logic atomic_valid_id;
@@ -290,16 +287,7 @@ module OTTER_MCU(
     logic reg_wr_pair_de;
     logic pair_candidate_id;
     logic pair_issue_valid_id;
-    logic [31:0] pair_pc_id;
-    logic [31:0] pair_pc_4_id;
-    logic [31:0] pair_ir_id;
-    logic [31:0] pair_rs1_id;
-    logic [31:0] pair_rs2_id;
-    logic pair_alu_src_a_id;
-    logic [1:0] pair_alu_src_b_id;
-    logic [4:0] pair_alu_fun_id;
-    logic [1:0] pair_rf_wr_sel_id;
-    logic pair_reg_write_id;
+    pipe_t id_slot0, id_slot1;
 
 //////////////////////////////////////////////////////////////////
     // EX1 / EX2 signals
@@ -326,6 +314,8 @@ module OTTER_MCU(
     logic branch_mispredict_ex1;
 
     logic trap_commit_ex1, mret_commit_ex1;
+    logic mem_misaligned_ex1;
+    logic [31:0] trap_cause_ex1, trap_tval_ex1;
     logic lsu_ordering_busy_ex1;
     logic fence_wait_ex1;
     logic fence_complete_ex1;
@@ -338,6 +328,8 @@ module OTTER_MCU(
     localparam int STOREBUF_DEPTH = 4;
     localparam logic [31:0] MCAUSE_ILLEGAL_INSTR = 32'd2;
     localparam logic [31:0] MCAUSE_BREAKPOINT = 32'd3;
+    localparam logic [31:0] MCAUSE_LOAD_MISALIGNED = 32'd4;
+    localparam logic [31:0] MCAUSE_STORE_MISALIGNED = 32'd6;
     localparam logic [31:0] MCAUSE_ECALL_MMODE = 32'd11;
 
     function automatic logic [3:0] byte_mask_for_req(
@@ -392,23 +384,6 @@ module OTTER_MCU(
                 2'd2: format_load_word = raw_word;
                 default: format_load_word = 32'b0;
             endcase
-        end
-    endfunction
-
-    function automatic logic is_control_ir(input logic [31:0] ir);
-        begin
-            is_control_ir = (ir[6:0] == 7'b1100011) || // branch
-                            (ir[6:0] == 7'b1101111) || // jal
-                            ((ir[6:0] == 7'b1100111) && (ir[14:12] == 3'b000)); // jalr
-        end
-    endfunction
-
-    function automatic logic is_front_barrier_ir(input logic [31:0] ir);
-        begin
-            // Do not buffer younger instructions behind control/system traffic.
-            is_front_barrier_ir = is_control_ir(ir) ||
-                                  (ir[6:0] == 7'b1110011) ||
-                                  (ir[6:0] == 7'b0001111);
         end
     endfunction
 
@@ -471,7 +446,7 @@ module OTTER_MCU(
         .btb_update_target(branch_redirect_target_ex1),
         .ras_pop(is_return_ex1),
         .ras_push(is_call_ex1),
-        .ras_push_addr(id_ex.pc_4)
+        .ras_push_addr(id_ex.pc_next)
     );
 
     FrontendPacketBuilder FETCH_SLOT0_BUILDER(
@@ -500,10 +475,6 @@ module OTTER_MCU(
         .packet_o(fetch_slot1)
     );
 
-    // Preserve the fetched prediction state when the instruction enters as
-    // the younger slot so the front-end does not force a guaranteed cold
-    // miss once it slides up to become the oldest queued instruction.
-    assign fetch_slot0_as_slot1 = fetch_slot0;
 
 //////////////////////////////////////////////////////////////////
     // Front-end queue control
@@ -560,19 +531,21 @@ module OTTER_MCU(
             if (~if_id_after_issue.valid && fetch_slot0.valid) begin
                 if_id_next = fetch_slot0;
                 pc_write_fill = 1'b1;
-                pc_next_fill = fetch_slot0.predicted_taken ? fetch_slot0.predicted_target : fetch_slot0.pc_4;
+                pc_next_fill = fetch_slot0.predicted_taken ? fetch_slot0.predicted_target : fetch_slot0.pc_next;
 
                 if (~is_front_barrier_ir(fetch_slot0.ir) && ~if1_if2_after_issue.valid && fetch_slot1.valid) begin
                     if1_if2_next = fetch_slot1;
                     pc_next_fill = fetch_slot1.predicted_taken ? fetch_slot1.predicted_target
-                                                               : fetch_slot1.pc_4;
+                                                               : fetch_slot1.pc_next;
                 end
             end else if (if_id_after_issue.valid && ~if1_if2_after_issue.valid &&
                          ~is_front_barrier_ir(if_id_after_issue.ir) && fetch_slot0.valid) begin
-                if1_if2_next = fetch_slot0_as_slot1;
+                // The fetched packet keeps its prediction state when it enters
+                // as the younger slot, so it is not cold once it becomes oldest.
+                if1_if2_next = fetch_slot0;
                 pc_write_fill = 1'b1;
-                pc_next_fill = fetch_slot0_as_slot1.predicted_taken ? fetch_slot0_as_slot1.predicted_target
-                                                                    : fetch_slot0_as_slot1.pc_4;
+                pc_next_fill = fetch_slot0.predicted_taken ? fetch_slot0.predicted_target
+                                                           : fetch_slot0.pc_next;
             end
         end
     end
@@ -900,7 +873,7 @@ module OTTER_MCU(
         .dc_stall_i(dc_stall),
         .storebuf_enqueue_event_i(storebuf_enqueue_event),
         .id_ex_valid_i(id_ex.valid),
-        .id_ex_atomic_valid_i(id_ex.atomic_valid),
+        .id_ex_atomic_valid_i(id_ex.atomic_valid && ~mem_misaligned_ex1),
         .ex1_ex2_valid_i(ex1_ex2.valid),
         .ex1_ex2_atomic_valid_i(ex1_ex2.atomic_valid),
         .atomic_preview_word_i(atomic_preview_word_mem),
@@ -935,8 +908,8 @@ module OTTER_MCU(
         .write_data(mem_wb.csr_wdata),
         .trap_en(trap_commit_ex1),
         .trap_pc(id_ex.pc),
-        .trap_cause(id_ex.trap_cause),
-        .trap_tval(id_ex.trap_tval),
+        .trap_cause(trap_cause_ex1),
+        .trap_tval(trap_tval_ex1),
         .mret_en(mret_commit_ex1),
         .timer_interrupt_pending(timer_interrupt_pending),
         .external_interrupt_pending(INTR),
@@ -984,13 +957,10 @@ module OTTER_MCU(
     );
 
     CU_DCDR OTTER_CU_DCDR(
-        .clk(CLK),
         .IR_30(if_id.ir[30]),
         .IR_OPCODE(if_id.ir[6:0]),
         .IR_FUNCT(if_id.ir[14:12]),
         .IR_FUNCT7(if_id.ir[31:25]),
-        .rst(RESET),
-        .reset(RESETf),
         .ALU_SRCA(alu_src_a_base),
         .ALU_SRCB(alu_src_b_base),
         .ALU_FUN(alu_fun_base),
@@ -1005,13 +975,10 @@ module OTTER_MCU(
     );
 
     CU_DCDR OTTER_CU_DCDR_PAIR(
-        .clk(CLK),
         .IR_30(if1_if2.ir[30]),
         .IR_OPCODE(if1_if2.ir[6:0]),
         .IR_FUNCT(if1_if2.ir[14:12]),
         .IR_FUNCT7(if1_if2.ir[31:25]),
-        .rst(RESET),
-        .reset(),
         .ALU_SRCA(alu_src_a_pair_base),
         .ALU_SRCB(alu_src_b_pair_base),
         .ALU_FUN(alu_fun_pair_base),
@@ -1027,22 +994,17 @@ module OTTER_MCU(
 
     assign instr_present_id = if_id.valid;
     assign fence_id = instr_present_id &&
-                      (if_id.ir[6:0] == 7'b0001111) &&
+                      (if_id.ir[6:0] == OPC_MISC_MEM) &&
                       (if_id.ir[14:12] == 3'b000);
-    assign ecall_id = instr_present_id &&
-                      (if_id.ir[6:0] == 7'b1110011) &&
-                      (if_id.ir[14:12] == 3'b000) &&
-                      (if_id.ir[31:20] == 12'h000);
-    assign ebreak_id = instr_present_id &&
-                       (if_id.ir[6:0] == 7'b1110011) &&
-                       (if_id.ir[14:12] == 3'b000) &&
-                       (if_id.ir[31:20] == 12'h001);
-    assign mret_id = instr_present_id &&
-                     (if_id.ir[6:0] == 7'b1110011) &&
-                     (if_id.ir[14:12] == 3'b000) &&
-                     (if_id.ir[31:20] == 12'h302);
+    // Privileged SYSTEM instructions are fully specified encodings: funct12
+    // plus rs1 = funct3 = rd = 0. WFI is implemented as a no-op, which the
+    // privileged spec allows.
+    assign ecall_id = instr_present_id && (if_id.ir == 32'h0000_0073);
+    assign ebreak_id = instr_present_id && (if_id.ir == 32'h0010_0073);
+    assign mret_id = instr_present_id && (if_id.ir == 32'h3020_0073);
+    assign wfi_id = instr_present_id && (if_id.ir == 32'h1050_0073);
     assign fence_i_id = instr_present_id &&
-                        (if_id.ir[6:0] == 7'b0001111) &&
+                        (if_id.ir[6:0] == OPC_MISC_MEM) &&
                         (if_id.ir[14:12] == 3'b001);
     AtomicDecode ATOMIC_DECODE_SLOT0(
         .instr_valid_i(instr_present_id),
@@ -1092,51 +1054,48 @@ module OTTER_MCU(
     assign illegal_instr_id = instr_present_id &&
                               (~legal_instr_de ||
                                (csr_en_de && csr_access_illegal_id) ||
-                               ((if_id.ir[6:0] == 7'b1110011) &&
+                               ((if_id.ir[6:0] == OPC_SYSTEM) &&
                                 (if_id.ir[14:12] == 3'b000) &&
-                                ~(ecall_id || ebreak_id || mret_id)));
+                                ~(ecall_id || ebreak_id || mret_id || wfi_id)));
 
-    // Take asynchronous interrupts only at a clean instruction boundary so
-    // the trap save path snapshots architected register state rather than a
-    // partially retired call/return sequence.
-        // In practice this means no older stage may still own state updates when
-        // the interrupt is accepted in ID.
-        assign interrupt_accept_id = instr_present_id &&
-                                                                 csr_interrupt_pending &&
-                                                                 ~((id_ex.valid &&
-                                                                        (id_ex.regWrite || id_ex.memRead || id_ex.memWrite ||
-                                                                         id_ex.csr_en || id_ex.atomic_valid ||
-                                                                         id_ex.trap_taken || id_ex.mret)) ||
-                                                                     (id_ex_pair.valid && id_ex_pair.regWrite) ||
-                                                                     (ex1_ex2.valid &&
-                                                                        (ex1_ex2.regWrite || ex1_ex2.memRead || ex1_ex2.memWrite ||
-                                                                         ex1_ex2.csr_write || ex1_ex2.atomic_valid)) ||
-                                                                     (ex1_ex2_pair.valid && ex1_ex2_pair.regWrite) ||
-                                                                     (ex_mem.valid &&
-                                                                        (ex_mem.regWrite || ex_mem.memRead || ex_mem.memWrite ||
-                                                                         ex_mem.csr_write || ex_mem.atomic_valid)) ||
-                                                                     (ex_mem_pair.valid && ex_mem_pair.regWrite) ||
-                                                                     (mem_wb.valid && (mem_wb.regWrite || mem_wb.csr_write)) ||
-                                                                     (mem_wb_pair.valid && mem_wb_pair.regWrite));
+    // Take asynchronous interrupts only at a clean instruction boundary: no
+    // older stage may still own an architectural update, so the trap path
+    // snapshots fully retired state. Once accepted, an interrupt uses the same
+    // trap path as a synchronous exception.
+    function automatic logic stage_has_side_effects(input pipe_t stage);
+        stage_has_side_effects = stage.valid &&
+                                 (stage.regWrite || stage.memRead || stage.memWrite || stage.csr_en ||
+                                  stage.csr_write || stage.atomic_valid || stage.trap_taken || stage.mret);
+    endfunction
 
-        // Once accepted, the interrupt uses the same trap path as synchronous
-        // exceptions so the back end does not need special retirement logic.
+    assign interrupt_accept_id = instr_present_id && csr_interrupt_pending &&
+                                 ~(stage_has_side_effects(id_ex) || stage_has_side_effects(id_ex_pair) ||
+                                   stage_has_side_effects(ex1_ex2) || stage_has_side_effects(ex1_ex2_pair) ||
+                                   stage_has_side_effects(ex_mem) || stage_has_side_effects(ex_mem_pair) ||
+                                   stage_has_side_effects(mem_wb) || stage_has_side_effects(mem_wb_pair));
+
     assign trap_taken_id = interrupt_accept_id ||
                            illegal_instr_id || ecall_id || ebreak_id;
     assign trap_cause_id = interrupt_accept_id ? csr_interrupt_cause :
                            illegal_instr_id ? MCAUSE_ILLEGAL_INSTR :
                            ebreak_id ? MCAUSE_BREAKPOINT :
                            MCAUSE_ECALL_MMODE;
-    assign trap_tval_id = illegal_instr_id ? if_id.ir : 32'b0;
+    // mtval: the instruction bits for illegal instructions, the PC for
+    // breakpoints (both optional in the spec), zero otherwise.
+    assign trap_tval_id = interrupt_accept_id ? 32'b0 :
+                          illegal_instr_id ? if_id.ir :
+                          ebreak_id ? if_id.pc :
+                          32'b0;
 
     assign csr_read_if_id = instr_present_id && csr_en_de;
     assign csr_addr_hazard_id = if_id.ir[31:20];
-    assign machine_ctrl_hazard_id = trap_taken_id || mret_id;
+    // Anything that may trap or MRET must not pass an older in-flight write to
+    // a trap CSR. Memory operations count: misaligned addresses trap in EX1.
+    assign machine_ctrl_hazard_id = trap_taken_id || mret_id || mem_rden2 || mem_we2;
 
     // Keep the pairing policy isolated from the main decode path so future
     // widening experiments only need to touch one module.
     DualIssueInOrder OTTER_DUAL_ISSUE(
-        .slot0_valid_i(if_id.valid),
         .slot0_ir_i(if_id.ir),
         .slot0_trap_taken_i(trap_taken_id),
         .slot0_mret_i(mret_id),
@@ -1149,36 +1108,17 @@ module OTTER_MCU(
         .slot0_reg_write_i(reg_wr_wb),
         .slot0_legal_i(legal_instr_de),
         .slot1_valid_i(if1_if2.valid),
-        .slot1_pc_i(if1_if2.pc),
-        .slot1_pc_4_i(if1_if2.pc_4),
         .slot1_ir_i(if1_if2.ir),
-        .slot1_rs1_i(rs1_pair_val),
-        .slot1_rs2_i(rs2_pair_val),
         .slot1_legal_i(legal_instr_pair_de),
         .slot1_reg_write_i(reg_wr_pair_de),
         .slot1_mem_write_i(mem_we2_pair),
         .slot1_mem_read_i(mem_rden2_pair),
         .slot1_csr_en_i(csr_en_pair_de),
-        .slot1_alu_src_a_i(alu_src_a_pair_de),
-        .slot1_alu_src_b_i(alu_src_b_pair_de),
-        .slot1_alu_fun_i(alu_fun_pair_de),
-        .slot1_rf_wr_sel_i(rf_wr_sel_pair_de),
-        .issue_lane0_i(issue_lane0),
-        .issue_pair_i(issuePair),
         .blocks_pair_o(blocks_pair_id),
-        .pair_candidate_o(pair_candidate_id),
-        .pair_issue_valid_o(pair_issue_valid_id),
-        .pair_pc_o(pair_pc_id),
-        .pair_pc_4_o(pair_pc_4_id),
-        .pair_ir_o(pair_ir_id),
-        .pair_rs1_o(pair_rs1_id),
-        .pair_rs2_o(pair_rs2_id),
-        .pair_alu_src_a_o(pair_alu_src_a_id),
-        .pair_alu_src_b_o(pair_alu_src_b_id),
-        .pair_alu_fun_o(pair_alu_fun_id),
-        .pair_rf_wr_sel_o(pair_rf_wr_sel_id),
-        .pair_reg_write_o(pair_reg_write_id)
+        .pair_candidate_o(pair_candidate_id)
     );
+
+    assign pair_issue_valid_id = issue_lane0 && issuePair;
 
 //////////////////////////////////////////////////////////////////
     // Hazard / pairing rules
@@ -1248,104 +1188,77 @@ module OTTER_MCU(
 //////////////////////////////////////////////////////////////////
     // ID/EX register
 
+    // Decoded slot-0 bundle: the full architectural lane.
+    always_comb begin
+        id_slot0 = '0;
+        id_slot0.valid = 1'b1;
+        id_slot0.predicted_taken = if_id.predicted_taken;
+        id_slot0.predicted_target = if_id.predicted_target;
+        id_slot0.pc = if_id.pc;
+        id_slot0.pc_next = if_id.pc_next;
+        id_slot0.ir = if_id.ir;
+        id_slot0.rs1 = rs1_val;
+        id_slot0.rs2 = rs2_val;
+        id_slot0.alu_src_a = alu_src_a_de;
+        id_slot0.alu_src_b = alu_src_b_de;
+        id_slot0.alu_fun = alu_fun_de;
+        id_slot0.rf_wr_sel = rf_wr_sel_de;
+        id_slot0.memWrite = mem_we2;
+        id_slot0.memRead = mem_rden2;
+        id_slot0.regWrite = reg_wr_wb;
+        id_slot0.csr_en = csr_en_de;
+        id_slot0.csr_use_imm = csr_use_imm_de;
+        id_slot0.csr_cmd = csr_cmd_de;
+        id_slot0.csr_addr = if_id.ir[31:20];
+        id_slot0.csr_rdata = csr_rdata_id;
+        id_slot0.trap_taken = trap_taken_id;
+        id_slot0.mret = mret_id;
+        id_slot0.fence = fence_id;
+        id_slot0.fence_i = fence_i_id;
+        id_slot0.atomic_valid = atomic_valid_id && atomic_legal_id;
+        id_slot0.atomic_op = atomic_valid_id ? atomic_op_id : ATOMIC_NONE;
+        id_slot0.atomic_aq = atomic_valid_id && atomic_aq_id;
+        id_slot0.atomic_rl = atomic_valid_id && atomic_rl_id;
+        id_slot0.trap_cause = trap_cause_id;
+        id_slot0.trap_tval = trap_tval_id;
+    end
+
+    // Decoded slot-1 bundle: pure integer execution with no prediction, LSU,
+    // CSR, or control side effects (DualIssueInOrder guarantees this).
+    always_comb begin
+        id_slot1 = '0;
+        id_slot1.valid = 1'b1;
+        id_slot1.predicted_target = if1_if2.pc_next;
+        id_slot1.pc = if1_if2.pc;
+        id_slot1.pc_next = if1_if2.pc_next;
+        id_slot1.ir = if1_if2.ir;
+        id_slot1.rs1 = rs1_pair_val;
+        id_slot1.rs2 = rs2_pair_val;
+        id_slot1.alu_src_a = alu_src_a_pair_de;
+        id_slot1.alu_src_b = alu_src_b_pair_de;
+        id_slot1.alu_fun = alu_fun_pair_de;
+        id_slot1.rf_wr_sel = rf_wr_sel_pair_de;
+        id_slot1.regWrite = reg_wr_pair_de;
+        id_slot1.atomic_op = ATOMIC_NONE;
+    end
+
     always_ff @(posedge CLK) begin
         if (RESET) begin
             id_ex <= '0;
             id_ex_pair <= '0;
         end else if (dc_stall) begin
-            id_ex <= id_ex;
-            id_ex_pair <= id_ex_pair;
+            // The whole pipe freezes while the LSU stalls.
         end else if (stallEX1) begin
-            id_ex <= id_ex;
-            id_ex_pair <= id_ex_pair;
-        end else if (flushEX) begin
-            id_ex <= '0;
-            id_ex_pair <= '0;
+            // Hold EX1, but capture the bypassed operands: while EX1 waits, its
+            // producers keep retiring and drop out of the forwarding window, so
+            // the register values read back in ID would otherwise go stale.
+            id_ex.rs1 <= rs1f;
+            id_ex.rs2 <= rs2f;
+            id_ex_pair.rs1 <= rs1f_pair;
+            id_ex_pair.rs2 <= rs2f_pair;
         end else begin
-            id_ex <= '0;
-            id_ex_pair <= '0;
-
-            if (issue_lane0) begin
-                id_ex.valid <= 1'b1;
-                id_ex.predicted_taken <= if_id.predicted_taken;
-                id_ex.predicted_target <= if_id.predicted_target;
-                id_ex.pc <= if_id.pc;
-                id_ex.pc_4 <= if_id.pc_4;
-                id_ex.ir <= if_id.ir;
-
-                id_ex.rs1 <= rs1_val;
-                id_ex.rs2 <= rs2_val;
-
-                id_ex.alu_src_a <= alu_src_a_de;
-                id_ex.alu_src_b <= alu_src_b_de;
-                id_ex.alu_fun <= alu_fun_de;
-
-                id_ex.rf_wr_sel <= rf_wr_sel_de;
-                id_ex.memWrite <= mem_we2;
-                id_ex.memRead <= mem_rden2;
-                id_ex.regWrite <= reg_wr_wb;
-
-                id_ex.csr_en <= csr_en_de;
-                id_ex.csr_use_imm <= csr_use_imm_de;
-                id_ex.csr_cmd <= csr_cmd_de;
-                id_ex.csr_addr <= if_id.ir[31:20];
-                id_ex.csr_rdata <= csr_rdata_id;
-                id_ex.csr_write <= 1'b0;
-                id_ex.csr_wdata <= 32'b0;
-
-                id_ex.trap_taken <= trap_taken_id;
-                id_ex.mret <= mret_id;
-                id_ex.fence <= fence_id;
-                id_ex.fence_i <= fence_i_id;
-                id_ex.atomic_valid <= atomic_valid_id && atomic_legal_id;
-                id_ex.atomic_op <= atomic_valid_id ? atomic_op_id : ATOMIC_NONE;
-                id_ex.atomic_aq <= atomic_valid_id && atomic_aq_id;
-                id_ex.atomic_rl <= atomic_valid_id && atomic_rl_id;
-                id_ex.trap_cause <= trap_cause_id;
-                id_ex.trap_tval <= trap_tval_id;
-            end
-
-            if (pair_issue_valid_id) begin
-                // The younger lane is stripped down to pure integer execution:
-                // no prediction, no LSU, no CSR writes, and no control side effects.
-                id_ex_pair.valid <= 1'b1;
-                id_ex_pair.predicted_taken <= 1'b0;
-                id_ex_pair.predicted_target <= pair_pc_4_id;
-                id_ex_pair.pc <= pair_pc_id;
-                id_ex_pair.pc_4 <= pair_pc_4_id;
-                id_ex_pair.ir <= pair_ir_id;
-
-                id_ex_pair.rs1 <= pair_rs1_id;
-                id_ex_pair.rs2 <= pair_rs2_id;
-
-                id_ex_pair.alu_src_a <= pair_alu_src_a_id;
-                id_ex_pair.alu_src_b <= pair_alu_src_b_id;
-                id_ex_pair.alu_fun <= pair_alu_fun_id;
-
-                id_ex_pair.rf_wr_sel <= pair_rf_wr_sel_id;
-                id_ex_pair.memWrite <= 1'b0;
-                id_ex_pair.memRead <= 1'b0;
-                id_ex_pair.regWrite <= pair_reg_write_id;
-
-                id_ex_pair.csr_en <= 1'b0;
-                id_ex_pair.csr_use_imm <= 1'b0;
-                id_ex_pair.csr_cmd <= 2'b00;
-                id_ex_pair.csr_addr <= 12'b0;
-                id_ex_pair.csr_rdata <= 32'b0;
-                id_ex_pair.csr_write <= 1'b0;
-                id_ex_pair.csr_wdata <= 32'b0;
-
-                id_ex_pair.trap_taken <= 1'b0;
-                id_ex_pair.mret <= 1'b0;
-                id_ex_pair.fence <= 1'b0;
-                id_ex_pair.fence_i <= 1'b0;
-                id_ex_pair.atomic_valid <= 1'b0;
-                id_ex_pair.atomic_op <= ATOMIC_NONE;
-                id_ex_pair.atomic_aq <= 1'b0;
-                id_ex_pair.atomic_rl <= 1'b0;
-                id_ex_pair.trap_cause <= 32'b0;
-                id_ex_pair.trap_tval <= 32'b0;
-            end
+            id_ex <= (issue_lane0 && ~flushEX) ? id_slot0 : '0;
+            id_ex_pair <= (pair_issue_valid_id && ~flushEX) ? id_slot1 : '0;
         end
     end
 
@@ -1370,108 +1283,55 @@ module OTTER_MCU(
         .J_TYPE(Jtype_pair)
     );
 
-    assign ex1_ex2_fwd_data = (ex1_ex2.rf_wr_sel == 2'b00) ? ex1_ex2.pc_4 : ex1_ex2.alu_result;
-    assign ex1_ex2_pair_fwd_data = (ex1_ex2_pair.rf_wr_sel == 2'b00) ? ex1_ex2_pair.pc_4 : ex1_ex2_pair.alu_result;
-    assign ex_mem_fwd_data = (ex_mem.rf_wr_sel == 2'b00) ? ex_mem.pc_4 :
+    assign ex1_ex2_fwd_data = (ex1_ex2.rf_wr_sel == 2'b00) ? ex1_ex2.pc_next : ex1_ex2.alu_result;
+    assign ex1_ex2_pair_fwd_data = (ex1_ex2_pair.rf_wr_sel == 2'b00) ? ex1_ex2_pair.pc_next : ex1_ex2_pair.alu_result;
+    assign ex_mem_fwd_data = (ex_mem.rf_wr_sel == 2'b00) ? ex_mem.pc_next :
                              (ex_mem.rf_wr_sel == 2'b10) ? mem_dout2 :
                              ex_mem.alu_result;
-    assign ex_mem_pair_fwd_data = (ex_mem_pair.rf_wr_sel == 2'b00) ? ex_mem_pair.pc_4 :
+    assign ex_mem_pair_fwd_data = (ex_mem_pair.rf_wr_sel == 2'b00) ? ex_mem_pair.pc_next :
                                   (ex_mem_pair.rf_wr_sel == 2'b10) ? ex_mem_pair.mem_data :
                                   ex_mem_pair.alu_result;
 
-    // Search both lanes of older bundles for bypass data. Within a stage, the
-    // pair pipe is checked first because it is younger than the matching slot-0
-    // pipe and therefore carries the architecturally latest value.
-    always_comb begin
-        rs1f = id_ex.rs1;
-        rs2f = id_ex.rs2;
-        rs1f_pair = id_ex_pair.rs1;
-        rs2f_pair = id_ex_pair.rs2;
+    // Bypass network. bypass_srcs[0] is the oldest in-flight write (WB slot 0)
+    // and [5] the newest (EX2 pair lane; within a stage the pair lane is the
+    // younger instruction). bypass() scans oldest to newest so the newest
+    // matching write wins. A load still in EX2 has no data yet; the load-use
+    // stall guarantees nothing in EX1 needs it.
+    typedef struct packed {
+        logic hit;
+        logic [4:0] rd;
+        logic [31:0] data;
+    } bypass_t;
 
-        if (id_ex.valid && (id_ex.ir[19:15] != 5'd0)) begin
-            if (ex1_ex2_pair.valid && ex1_ex2_pair.regWrite && ~ex1_ex2_pair.memRead &&
-                (ex1_ex2_pair.ir[11:7] == id_ex.ir[19:15]))
-                rs1f = ex1_ex2_pair_fwd_data;
-            else if (ex1_ex2.valid && ex1_ex2.regWrite && ~ex1_ex2.memRead &&
-                     (ex1_ex2.ir[11:7] == id_ex.ir[19:15]))
-                rs1f = ex1_ex2_fwd_data;
-            else if (ex_mem_pair.valid && ex_mem_pair.regWrite &&
-                     (ex_mem_pair.ir[11:7] == id_ex.ir[19:15]))
-                rs1f = ex_mem_pair_fwd_data;
-            else if (ex_mem.valid && ex_mem.regWrite &&
-                     (ex_mem.ir[11:7] == id_ex.ir[19:15]))
-                rs1f = ex_mem_fwd_data;
-            else if (mem_wb_pair.valid && mem_wb_pair.regWrite &&
-                     (mem_wb_pair.ir[11:7] == id_ex.ir[19:15]))
-                rs1f = wd_pair;
-            else if (mem_wb.valid && mem_wb.regWrite &&
-                     (mem_wb.ir[11:7] == id_ex.ir[19:15]))
-                rs1f = wd;
-        end
+    localparam int BYPASS_SOURCES = 6;
+    bypass_t [BYPASS_SOURCES-1:0] bypass_srcs;
 
-        if (id_ex.valid && (id_ex.ir[24:20] != 5'd0)) begin
-            if (ex1_ex2_pair.valid && ex1_ex2_pair.regWrite && ~ex1_ex2_pair.memRead &&
-                (ex1_ex2_pair.ir[11:7] == id_ex.ir[24:20]))
-                rs2f = ex1_ex2_pair_fwd_data;
-            else if (ex1_ex2.valid && ex1_ex2.regWrite && ~ex1_ex2.memRead &&
-                     (ex1_ex2.ir[11:7] == id_ex.ir[24:20]))
-                rs2f = ex1_ex2_fwd_data;
-            else if (ex_mem_pair.valid && ex_mem_pair.regWrite &&
-                     (ex_mem_pair.ir[11:7] == id_ex.ir[24:20]))
-                rs2f = ex_mem_pair_fwd_data;
-            else if (ex_mem.valid && ex_mem.regWrite &&
-                     (ex_mem.ir[11:7] == id_ex.ir[24:20]))
-                rs2f = ex_mem_fwd_data;
-            else if (mem_wb_pair.valid && mem_wb_pair.regWrite &&
-                     (mem_wb_pair.ir[11:7] == id_ex.ir[24:20]))
-                rs2f = wd_pair;
-            else if (mem_wb.valid && mem_wb.regWrite &&
-                     (mem_wb.ir[11:7] == id_ex.ir[24:20]))
-                rs2f = wd;
-        end
+    function automatic bypass_t bypass_from(input pipe_t stage, input logic [31:0] data, input logic data_ready);
+        bypass_from.hit = stage.valid && stage.regWrite && data_ready;
+        bypass_from.rd = stage.ir[11:7];
+        bypass_from.data = data;
+    endfunction
 
-        if (id_ex_pair.valid && (id_ex_pair.ir[19:15] != 5'd0)) begin
-            if (ex1_ex2_pair.valid && ex1_ex2_pair.regWrite && ~ex1_ex2_pair.memRead &&
-                (ex1_ex2_pair.ir[11:7] == id_ex_pair.ir[19:15]))
-                rs1f_pair = ex1_ex2_pair_fwd_data;
-            else if (ex1_ex2.valid && ex1_ex2.regWrite && ~ex1_ex2.memRead &&
-                     (ex1_ex2.ir[11:7] == id_ex_pair.ir[19:15]))
-                rs1f_pair = ex1_ex2_fwd_data;
-            else if (ex_mem_pair.valid && ex_mem_pair.regWrite &&
-                     (ex_mem_pair.ir[11:7] == id_ex_pair.ir[19:15]))
-                rs1f_pair = ex_mem_pair_fwd_data;
-            else if (ex_mem.valid && ex_mem.regWrite &&
-                     (ex_mem.ir[11:7] == id_ex_pair.ir[19:15]))
-                rs1f_pair = ex_mem_fwd_data;
-            else if (mem_wb_pair.valid && mem_wb_pair.regWrite &&
-                     (mem_wb_pair.ir[11:7] == id_ex_pair.ir[19:15]))
-                rs1f_pair = wd_pair;
-            else if (mem_wb.valid && mem_wb.regWrite &&
-                     (mem_wb.ir[11:7] == id_ex_pair.ir[19:15]))
-                rs1f_pair = wd;
-        end
+    assign bypass_srcs = {bypass_from(ex1_ex2_pair, ex1_ex2_pair_fwd_data, ~ex1_ex2_pair.memRead),
+                          bypass_from(ex1_ex2, ex1_ex2_fwd_data, ~ex1_ex2.memRead),
+                          bypass_from(ex_mem_pair, ex_mem_pair_fwd_data, 1'b1),
+                          bypass_from(ex_mem, ex_mem_fwd_data, 1'b1),
+                          bypass_from(mem_wb_pair, wd_pair, 1'b1),
+                          bypass_from(mem_wb, wd, 1'b1)};
 
-        if (id_ex_pair.valid && (id_ex_pair.ir[24:20] != 5'd0)) begin
-            if (ex1_ex2_pair.valid && ex1_ex2_pair.regWrite && ~ex1_ex2_pair.memRead &&
-                (ex1_ex2_pair.ir[11:7] == id_ex_pair.ir[24:20]))
-                rs2f_pair = ex1_ex2_pair_fwd_data;
-            else if (ex1_ex2.valid && ex1_ex2.regWrite && ~ex1_ex2.memRead &&
-                     (ex1_ex2.ir[11:7] == id_ex_pair.ir[24:20]))
-                rs2f_pair = ex1_ex2_fwd_data;
-            else if (ex_mem_pair.valid && ex_mem_pair.regWrite &&
-                     (ex_mem_pair.ir[11:7] == id_ex_pair.ir[24:20]))
-                rs2f_pair = ex_mem_pair_fwd_data;
-            else if (ex_mem.valid && ex_mem.regWrite &&
-                     (ex_mem.ir[11:7] == id_ex_pair.ir[24:20]))
-                rs2f_pair = ex_mem_fwd_data;
-            else if (mem_wb_pair.valid && mem_wb_pair.regWrite &&
-                     (mem_wb_pair.ir[11:7] == id_ex_pair.ir[24:20]))
-                rs2f_pair = wd_pair;
-            else if (mem_wb.valid && mem_wb.regWrite &&
-                     (mem_wb.ir[11:7] == id_ex_pair.ir[24:20]))
-                rs2f_pair = wd;
-        end
-    end
+    function automatic logic [31:0] bypass(input logic [4:0] src, input logic [31:0] reg_value,
+                                           input bypass_t [BYPASS_SOURCES-1:0] srcs);
+        bypass = reg_value;
+        if (src != 5'd0)
+            for (int i = 0; i < BYPASS_SOURCES; i++)
+                if (srcs[i].hit && (srcs[i].rd == src))
+                    bypass = srcs[i].data;
+    endfunction
+
+    assign rs1f = bypass(id_ex.ir[19:15], id_ex.rs1, bypass_srcs);
+    assign rs2f = bypass(id_ex.ir[24:20], id_ex.rs2, bypass_srcs);
+    assign rs1f_pair = bypass(id_ex_pair.ir[19:15], id_ex_pair.rs1, bypass_srcs);
+    assign rs2f_pair = bypass(id_ex_pair.ir[24:20], id_ex_pair.rs2, bypass_srcs);
 
     assign aluA = id_ex.alu_src_a ? Utype : rs1f;
     assign aluB = (id_ex.alu_src_b == 2'b00) ? rs2f :
@@ -1523,10 +1383,10 @@ module OTTER_MCU(
                            ((id_ex.csr_cmd == 2'b01) || (csr_src_ex1 != 32'b0));
     assign exec_result_ex1 = id_ex.csr_en ? id_ex.csr_rdata : alu_result_ex1;
 
-    assign is_branch_ex1 = id_ex.valid && (id_ex.ir[6:0] == 7'b1100011);
-    assign is_jal_ex1 = id_ex.valid && (id_ex.ir[6:0] == 7'b1101111);
+    assign is_branch_ex1 = id_ex.valid && (id_ex.ir[6:0] == OPC_BRANCH);
+    assign is_jal_ex1 = id_ex.valid && (id_ex.ir[6:0] == OPC_JAL);
     assign is_jalr_ex1 = id_ex.valid &&
-                         (id_ex.ir[6:0] == 7'b1100111) &&
+                         (id_ex.ir[6:0] == OPC_JALR) &&
                          (id_ex.ir[14:12] == 3'b000);
     assign ex1_rd_is_link = (id_ex.ir[11:7] == 5'd1) || (id_ex.ir[11:7] == 5'd5);
     assign ex1_rs1_is_link = (id_ex.ir[19:15] == 5'd1) || (id_ex.ir[19:15] == 5'd5);
@@ -1542,7 +1402,7 @@ module OTTER_MCU(
     assign branch_redirect_target_ex1 = (pc_source_branch_ex1 == 3'b001) ? jalr_tgt_ex1 :
                                         (pc_source_branch_ex1 == 3'b010) ? branch_tgt_ex1 :
                                         (pc_source_branch_ex1 == 3'b011) ? jal_tgt_ex1 :
-                                        id_ex.pc_4;
+                                        id_ex.pc_next;
 
     assign branch_mispredict_ex1 = id_ex.valid && ~dc_stall &&
                                    (is_branch_ex1 || is_jal_ex1 || is_jalr_ex1) &&
@@ -1550,7 +1410,17 @@ module OTTER_MCU(
                                     (branch_redirect_ex1 &&
                                      (id_ex.predicted_target != branch_redirect_target_ex1)));
 
-    assign trap_commit_ex1 = id_ex.valid && id_ex.trap_taken && ~dc_stall;
+    // Misaligned data accesses trap precisely in EX1, where the address is
+    // first known. LR reports a load fault; SC and AMOs report store faults.
+    assign mem_misaligned_ex1 = id_ex.valid && (id_ex.memRead || id_ex.memWrite) &&
+                                (((id_ex.ir[13:12] == 2'd1) && alu_result_ex1[0]) ||
+                                 ((id_ex.ir[13:12] == 2'd2) && (alu_result_ex1[1:0] != 2'b00)));
+    assign trap_cause_ex1 = id_ex.trap_taken ? id_ex.trap_cause :
+                            (id_ex.memRead && (~id_ex.atomic_valid || (id_ex.atomic_op == ATOMIC_LR))) ?
+                                MCAUSE_LOAD_MISALIGNED : MCAUSE_STORE_MISALIGNED;
+    assign trap_tval_ex1 = id_ex.trap_taken ? id_ex.trap_tval : alu_result_ex1;
+
+    assign trap_commit_ex1 = id_ex.valid && (id_ex.trap_taken || mem_misaligned_ex1) && ~dc_stall;
     assign mret_commit_ex1 = id_ex.valid && id_ex.mret && ~dc_stall;
 
     // Fences and atomics all serialize the single LSU so the store buffer,
@@ -1568,14 +1438,17 @@ module OTTER_MCU(
                                   ~fence_i_wait_ex1 && ~dc_stall;
     assign fence_i_invalidate = fence_i_complete_ex1;
 
-    assign control_kill_ex1 = trap_commit_ex1 || mret_commit_ex1 || fence_i_complete_ex1;
+    // A trapping instruction never retires. MRET and FENCE.I do retire (they
+    // count in minstret), so they continue down the pipe as no-op bubbles
+    // after redirecting the front end.
+    assign control_kill_ex1 = trap_commit_ex1;
     assign redirect_valid_ex1 = trap_commit_ex1 || mret_commit_ex1 ||
                                 fence_i_complete_ex1 || branch_mispredict_ex1;
     assign redirect_target_ex1 = trap_commit_ex1 ? mtvec_csr :
                                  mret_commit_ex1 ? mepc_csr :
-                                 fence_i_complete_ex1 ? id_ex.pc_4 :
+                                 fence_i_complete_ex1 ? id_ex.pc_next :
                                  branch_redirect_ex1 ? branch_redirect_target_ex1 :
-                                 id_ex.pc_4;
+                                 id_ex.pc_next;
 
     assign pc_source_id = dc_stall ? 3'b000 :
                           trap_commit_ex1 ? 3'b100 :
@@ -1585,161 +1458,49 @@ module OTTER_MCU(
 
     assign branch_flush_event_ex1 = branch_mispredict_ex1 && ~dc_stall;
 
-    assign mext_busy_event = ~dc_stall &&
-                             (((id_ex.valid &&
-                                (id_ex.ir[6:0] == 7'b0110011) &&
-                                (id_ex.ir[31:25] == 7'b0000001))) ||
-                              ((id_ex_pair.valid &&
-                                (id_ex_pair.ir[6:0] == 7'b0110011) &&
-                                (id_ex_pair.ir[31:25] == 7'b0000001))));
+    function automatic logic is_muldiv(input pipe_t stage);
+        is_muldiv = stage.valid && (stage.ir[6:0] == OPC_OP) && (stage.ir[31:25] == 7'b0000001);
+    endfunction
+
+    assign mext_busy_event = ~dc_stall && (is_muldiv(id_ex) || is_muldiv(id_ex_pair));
 
 //////////////////////////////////////////////////////////////////
-    // EX1/EX2 register
+    // EX1/EX2, EX2/MEM, MEM/WB registers
+    //
+    // Each stage register copies the bundle from the stage before it; an
+    // empty slot is all zeros. Everything holds while the LSU stalls.
 
     always_ff @(posedge CLK) begin
         if (RESET) begin
             ex1_ex2 <= '0;
             ex1_ex2_pair <= '0;
-        end else if (dc_stall) begin
-            ex1_ex2 <= ex1_ex2;
-            ex1_ex2_pair <= ex1_ex2_pair;
-        end else begin
+        end else if (~dc_stall) begin
             ex1_ex2 <= '0;
             ex1_ex2_pair <= '0;
 
             if (id_ex.valid && ~stallEX1 && ~control_kill_ex1) begin
-                ex1_ex2.valid <= 1'b1;
-                ex1_ex2.pc <= id_ex.pc;
-                ex1_ex2.pc_4 <= id_ex.pc_4;
-                ex1_ex2.ir <= id_ex.ir;
+                ex1_ex2 <= id_ex;
                 ex1_ex2.rs2 <= rs2f;
                 ex1_ex2.alu_result <= exec_result_ex1;
-
-                ex1_ex2.rf_wr_sel <= id_ex.rf_wr_sel;
-                ex1_ex2.regWrite <= id_ex.regWrite;
-                ex1_ex2.memRead <= id_ex.memRead;
-                ex1_ex2.memWrite <= id_ex.memWrite;
-
-                ex1_ex2.csr_en <= id_ex.csr_en;
-                ex1_ex2.csr_use_imm <= id_ex.csr_use_imm;
-                ex1_ex2.csr_cmd <= id_ex.csr_cmd;
-                ex1_ex2.csr_addr <= id_ex.csr_addr;
-                ex1_ex2.csr_rdata <= id_ex.csr_rdata;
                 ex1_ex2.csr_write <= csr_write_ex1;
                 ex1_ex2.csr_wdata <= csr_wdata_ex1;
-
-                ex1_ex2.fence <= id_ex.fence;
-                ex1_ex2.fence_i <= id_ex.fence_i;
-                ex1_ex2.atomic_valid <= id_ex.atomic_valid;
-                ex1_ex2.atomic_op <= id_ex.atomic_op;
-                ex1_ex2.atomic_aq <= id_ex.atomic_aq;
-                ex1_ex2.atomic_rl <= id_ex.atomic_rl;
             end
 
             if (id_ex_pair.valid && ~stallEX1) begin
-                // Slot 1 continues as an ALU-only shadow pipe; slot 0 remains
-                // the sole owner of memory, CSR, trap, and redirect behavior.
-                ex1_ex2_pair.valid <= 1'b1;
-                ex1_ex2_pair.pc <= id_ex_pair.pc;
-                ex1_ex2_pair.pc_4 <= id_ex_pair.pc_4;
-                ex1_ex2_pair.ir <= id_ex_pair.ir;
+                ex1_ex2_pair <= id_ex_pair;
                 ex1_ex2_pair.rs2 <= rs2f_pair;
                 ex1_ex2_pair.alu_result <= alu_result_pair_ex1;
-
-                ex1_ex2_pair.rf_wr_sel <= id_ex_pair.rf_wr_sel;
-                ex1_ex2_pair.regWrite <= id_ex_pair.regWrite;
-                ex1_ex2_pair.memRead <= 1'b0;
-                ex1_ex2_pair.memWrite <= 1'b0;
-
-                ex1_ex2_pair.csr_en <= 1'b0;
-                ex1_ex2_pair.csr_use_imm <= 1'b0;
-                ex1_ex2_pair.csr_cmd <= 2'b00;
-                ex1_ex2_pair.csr_addr <= 12'b0;
-                ex1_ex2_pair.csr_rdata <= 32'b0;
-                ex1_ex2_pair.csr_write <= 1'b0;
-                ex1_ex2_pair.csr_wdata <= 32'b0;
-
-                ex1_ex2_pair.fence <= 1'b0;
-                ex1_ex2_pair.fence_i <= 1'b0;
-                ex1_ex2_pair.atomic_valid <= 1'b0;
-                ex1_ex2_pair.atomic_op <= ATOMIC_NONE;
-                ex1_ex2_pair.atomic_aq <= 1'b0;
-                ex1_ex2_pair.atomic_rl <= 1'b0;
             end
         end
     end
-
-//////////////////////////////////////////////////////////////////
-    // EX2/MEM register
 
     always_ff @(posedge CLK) begin
         if (RESET) begin
             ex_mem <= '0;
             ex_mem_pair <= '0;
-        end else if (dc_stall) begin
-            ex_mem <= ex_mem;
-            ex_mem_pair <= ex_mem_pair;
-        end else begin
-            ex_mem <= '0;
-            ex_mem_pair <= '0;
-
-            if (ex1_ex2.valid) begin
-                ex_mem.valid <= 1'b1;
-                ex_mem.pc <= ex1_ex2.pc;
-                ex_mem.pc_4 <= ex1_ex2.pc_4;
-                ex_mem.ir <= ex1_ex2.ir;
-                ex_mem.rs2 <= ex1_ex2.rs2;
-                ex_mem.alu_result <= ex1_ex2.alu_result;
-
-                ex_mem.rf_wr_sel <= ex1_ex2.rf_wr_sel;
-                ex_mem.regWrite <= ex1_ex2.regWrite;
-                ex_mem.memRead <= ex1_ex2.memRead;
-                ex_mem.memWrite <= ex1_ex2.memWrite;
-
-                ex_mem.csr_en <= ex1_ex2.csr_en;
-                ex_mem.csr_use_imm <= ex1_ex2.csr_use_imm;
-                ex_mem.csr_cmd <= ex1_ex2.csr_cmd;
-                ex_mem.csr_addr <= ex1_ex2.csr_addr;
-                ex_mem.csr_rdata <= ex1_ex2.csr_rdata;
-                ex_mem.csr_write <= ex1_ex2.csr_write;
-                ex_mem.csr_wdata <= ex1_ex2.csr_wdata;
-
-                ex_mem.fence <= ex1_ex2.fence;
-                ex_mem.fence_i <= ex1_ex2.fence_i;
-                ex_mem.atomic_valid <= ex1_ex2.atomic_valid;
-                ex_mem.atomic_op <= ex1_ex2.atomic_op;
-                ex_mem.atomic_aq <= ex1_ex2.atomic_aq;
-                ex_mem.atomic_rl <= ex1_ex2.atomic_rl;
-            end
-
-            if (ex1_ex2_pair.valid) begin
-                ex_mem_pair.valid <= 1'b1;
-                ex_mem_pair.pc <= ex1_ex2_pair.pc;
-                ex_mem_pair.pc_4 <= ex1_ex2_pair.pc_4;
-                ex_mem_pair.ir <= ex1_ex2_pair.ir;
-                ex_mem_pair.rs2 <= ex1_ex2_pair.rs2;
-                ex_mem_pair.alu_result <= ex1_ex2_pair.alu_result;
-
-                ex_mem_pair.rf_wr_sel <= ex1_ex2_pair.rf_wr_sel;
-                ex_mem_pair.regWrite <= ex1_ex2_pair.regWrite;
-                ex_mem_pair.memRead <= 1'b0;
-                ex_mem_pair.memWrite <= 1'b0;
-
-                ex_mem_pair.csr_en <= 1'b0;
-                ex_mem_pair.csr_use_imm <= 1'b0;
-                ex_mem_pair.csr_cmd <= 2'b00;
-                ex_mem_pair.csr_addr <= 12'b0;
-                ex_mem_pair.csr_rdata <= 32'b0;
-                ex_mem_pair.csr_write <= 1'b0;
-                ex_mem_pair.csr_wdata <= 32'b0;
-
-                ex_mem_pair.fence <= 1'b0;
-                ex_mem_pair.fence_i <= 1'b0;
-                ex_mem_pair.atomic_valid <= 1'b0;
-                ex_mem_pair.atomic_op <= ATOMIC_NONE;
-                ex_mem_pair.atomic_aq <= 1'b0;
-                ex_mem_pair.atomic_rl <= 1'b0;
-            end
+        end else if (~dc_stall) begin
+            ex_mem <= ex1_ex2;
+            ex_mem_pair <= ex1_ex2_pair;
         end
     end
 
@@ -1760,79 +1521,23 @@ module OTTER_MCU(
         if (RESET) begin
             mem_wb <= '0;
             mem_wb_pair <= '0;
-        end else if (dc_stall) begin
-            mem_wb <= mem_wb;
-            mem_wb_pair <= mem_wb_pair;
-        end else begin
-            mem_wb <= '0;
-            mem_wb_pair <= '0;
-
-            if (ex_mem.valid) begin
-                mem_wb.valid <= 1'b1;
-                mem_wb.pc <= ex_mem.pc;
-                mem_wb.pc_4 <= ex_mem.pc_4;
-                mem_wb.ir <= ex_mem.ir;
-                mem_wb.alu_result <= ex_mem.alu_result;
-                mem_wb.mem_data <= mem_dout2;
-
-                mem_wb.rf_wr_sel <= ex_mem.rf_wr_sel;
-                mem_wb.regWrite <= ex_mem.regWrite;
-
-                mem_wb.csr_en <= ex_mem.csr_en;
-                mem_wb.csr_use_imm <= ex_mem.csr_use_imm;
-                mem_wb.csr_cmd <= ex_mem.csr_cmd;
-                mem_wb.csr_addr <= ex_mem.csr_addr;
-                mem_wb.csr_rdata <= ex_mem.csr_rdata;
-                mem_wb.csr_write <= ex_mem.csr_write;
-                mem_wb.csr_wdata <= ex_mem.csr_wdata;
-
-                mem_wb.fence <= ex_mem.fence;
-                mem_wb.fence_i <= ex_mem.fence_i;
-                mem_wb.atomic_valid <= ex_mem.atomic_valid;
-                mem_wb.atomic_op <= ex_mem.atomic_op;
-                mem_wb.atomic_aq <= ex_mem.atomic_aq;
-                mem_wb.atomic_rl <= ex_mem.atomic_rl;
-            end
-
-            if (ex_mem_pair.valid) begin
-                // The younger lane bypasses MEM side effects and simply waits
-                // for ordered WB/retirement beside the older lane.
-                mem_wb_pair.valid <= 1'b1;
-                mem_wb_pair.pc <= ex_mem_pair.pc;
-                mem_wb_pair.pc_4 <= ex_mem_pair.pc_4;
-                mem_wb_pair.ir <= ex_mem_pair.ir;
-                mem_wb_pair.alu_result <= ex_mem_pair.alu_result;
-                mem_wb_pair.mem_data <= ex_mem_pair.mem_data;
-
-                mem_wb_pair.rf_wr_sel <= ex_mem_pair.rf_wr_sel;
-                mem_wb_pair.regWrite <= ex_mem_pair.regWrite;
-
-                mem_wb_pair.csr_en <= 1'b0;
-                mem_wb_pair.csr_use_imm <= 1'b0;
-                mem_wb_pair.csr_cmd <= 2'b00;
-                mem_wb_pair.csr_addr <= 12'b0;
-                mem_wb_pair.csr_rdata <= 32'b0;
-                mem_wb_pair.csr_write <= 1'b0;
-                mem_wb_pair.csr_wdata <= 32'b0;
-
-                mem_wb_pair.fence <= 1'b0;
-                mem_wb_pair.fence_i <= 1'b0;
-                mem_wb_pair.atomic_valid <= 1'b0;
-                mem_wb_pair.atomic_op <= ATOMIC_NONE;
-                mem_wb_pair.atomic_aq <= 1'b0;
-                mem_wb_pair.atomic_rl <= 1'b0;
-            end
+        end else if (~dc_stall) begin
+            // The pair lane has no MEM side effects; it simply waits for
+            // ordered retirement beside slot 0.
+            mem_wb <= ex_mem;
+            mem_wb.mem_data <= ex_mem.valid ? mem_dout2 : 32'b0;
+            mem_wb_pair <= ex_mem_pair;
         end
     end
 
 //////////////////////////////////////////////////////////////////
     // WB stage / ordered dual commit
 
-    assign wd = (mem_wb.rf_wr_sel == 2'b00) ? mem_wb.pc_4 :
+    assign wd = (mem_wb.rf_wr_sel == 2'b00) ? mem_wb.pc_next :
                 (mem_wb.rf_wr_sel == 2'b10) ? mem_wb.mem_data :
                 mem_wb.alu_result;
 
-    assign wd_pair = (mem_wb_pair.rf_wr_sel == 2'b00) ? mem_wb_pair.pc_4 :
+    assign wd_pair = (mem_wb_pair.rf_wr_sel == 2'b00) ? mem_wb_pair.pc_next :
                      (mem_wb_pair.rf_wr_sel == 2'b10) ? mem_wb_pair.mem_data :
                      mem_wb_pair.alu_result;
 

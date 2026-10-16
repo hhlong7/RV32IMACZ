@@ -17,7 +17,10 @@ VERIF_LOG_DIR="$LOG_DIR" python3 tools/run_random_tests.py | tee "$LOG_DIR/rando
 echo "[verify] aggregate report"
 python3 tools/verification_report.py --logs "$LOG_DIR" --out-json "$LOG_DIR/verification_summary.json" | tee "$LOG_DIR/summary.log"
 
-echo "[verify] spike scoreboard hook"
-python3 tools/spike_scoreboard.py | tee "$LOG_DIR/spike_scoreboard.log"
+echo "[verify] assembler cross-check (repo assembler vs GNU as)"
+python3 tools/check_assembler.py | tee "$LOG_DIR/assembler_check.txt"
+
+echo "[verify] lockstep against Spike (directed + ${LOCKSTEP_RANDOM:-200} random programs)"
+python3 tools/lockstep.py --random "${LOCKSTEP_RANDOM:-200}" | tee "$LOG_DIR/lockstep.txt"
 
 echo "[verify] done logs=$LOG_DIR"

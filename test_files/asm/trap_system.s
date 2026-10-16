@@ -82,7 +82,7 @@ handle_ecall:
     mret
 
 handle_ebreak:
-    bne t2, x0, fail_691
+    bne t2, t1, fail_691      # mtval = PC of the ebreak
     li s2, 2
     addi t1, t1, 4
     csrrw x0, 0x341, t1

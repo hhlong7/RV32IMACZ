@@ -205,6 +205,11 @@ module datacachefsm(
                     mem_sign = exmemSign;
                 end else begin
                     // The last beat also marks the L2 fill line as complete.
+                    // Its data is the word requested on the previous beat;
+                    // keep the port address word-aligned so the memory's
+                    // byte-lane formatter returns that word unmodified (the
+                    // load's own sub-word offset would select a zero lane).
+                    mem_addr2 = block_addr + 32'd28;
                     mem_size = 2'd2;
                     mem_sign = 1'b0;
                     l2_fill_write = 1'b1;
