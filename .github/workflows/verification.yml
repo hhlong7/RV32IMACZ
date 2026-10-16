@@ -5,10 +5,14 @@ on:
     branches: [main]
   pull_request:
 
+env:
+  # riscv-isa-sim master as of 2026-10-16.
+  SPIKE_REV: 5a760667bf0d0ab893173b9eeff9c109c8d7dd9a
+
 jobs:
   regress:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -17,7 +21,35 @@ jobs:
       - name: Install simulators
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog verilator python3 gcc-riscv64-unknown-elf
+          sudo apt-get install -y iverilog verilator python3 gcc-riscv64-unknown-elf \
+            device-tree-compiler
+
+      # Spike (the RISC-V reference simulator) has no Ubuntu package. Build a
+      # pinned revision once and restore it from the cache afterwards; bump
+      # SPIKE_REV to upgrade. Spike needs dtc at run time, so it is installed
+      # above even on a cache hit.
+      - name: Restore Spike
+        id: spike-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/spike
+          key: spike-${{ runner.os }}-${{ env.SPIKE_REV }}
+
+      - name: Build Spike
+        if: steps.spike-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/riscv-software-src/riscv-isa-sim.git "$RUNNER_TEMP/spike-src"
+          cd "$RUNNER_TEMP/spike-src"
+          git checkout "$SPIKE_REV"
+          mkdir build && cd build
+          ../configure --prefix="$HOME/spike"
+          make -j"$(nproc)"
+          make install
+
+      - name: Add Spike to PATH
+        run: |
+          echo "$HOME/spike/bin" >> "$GITHUB_PATH"
+          "$HOME/spike/bin/spike" --help 2>&1 | head -n 1
 
       - name: Verilator lint
         run: |
@@ -36,9 +68,8 @@ jobs:
             -f rtl.f \
             tb_core.sv
 
-      # Spike has no Ubuntu package, so tools/lockstep.py reports
-      # "status=skipped" here unless a Spike build step is added. Run it
-      # locally (or add the step) for the reference-model comparison.
+      # CI is set on GitHub runners, so the flow requires Spike and GNU
+      # binutils here instead of skipping the lockstep and assembler checks.
       - name: Run verification suite
         run: |
           bash tools/run_verification_quality.sh out/verification_logs
