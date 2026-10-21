@@ -214,11 +214,11 @@ module tb_core;
                     rec_fp_squash <= rec_fp_squash + 1;
                 if (dut.fdiv_kill) rec_fdiv_kill <= rec_fdiv_kill + 1;
                 memq = 1'b0;
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < $size(dut.OTTER_LSU.MEMQ.slots); i++)
                     if (dut.OTTER_LSU.MEMQ.slots[i].valid && tag_younger(dut.OTTER_LSU.MEMQ.slots[i].tag, rt, hd)) memq = 1'b1;
                 if (memq) rec_memq_squash <= rec_memq_squash + 1;
                 rs = 1'b0;
-                for (int i = 0; i < 8; i++)          // RS_ALU entries
+                for (int i = 0; i < $size(dut.RS_ALU.slots); i++)
                     if (dut.RS_ALU.slots[i].valid && tag_younger(dut.RS_ALU.slots[i].tag, rt, hd)) rs = 1'b1;
                 if (rs) rec_rs_squash <= rec_rs_squash + 1;
                 nested = 1'b0;
@@ -304,6 +304,116 @@ module tb_core;
     // ---- End of run ------------------------------------------------------------
     // Cycle, retire, and HPM event counts come from the core's own CSR counters
     // (mcycle, minstret, mhpmcounter3..17), so they match what software reads.
+    // ---- Microarchitectural invariants (every cycle) -----------------------
+    // Spike only sees architectural results; these catch bookkeeping bugs that
+    // lucky timing would hide: a stale rename, a lost wake-up, a leaked
+    // checkpoint or store-queue entry. Failures print ASSERT_FAIL (the
+    // regression and lockstep flows fail on it); the first 20 are reported.
+    int inv_fail_count = 0;
+
+    function automatic bit rob_live(ooo_pkg::tag_t t);
+        // t names an allocated ROB entry (inside [head, head + used)).
+        rob_live = (ooo_pkg::tag_t'(t - dut.OTTER_ROB.head) < dut.OTTER_ROB.used) &&
+                   dut.OTTER_ROB.entries[t].valid;
+    endfunction
+
+    task automatic inv_fail(input string what);
+        if (inv_fail_count < 20)
+            $display("ASSERT_FAIL invariant %s cycle=%0d", what, cycle_count);
+        inv_fail_count++;
+    endtask
+
+    // A reservation-station entry must belong to a live, unfinished ROB entry;
+    // a source still waiting must name a live, unfinished, older producer.
+    `define CHECK_RS(rs, name) \
+        for (int i = 0; i < $size(rs.slots); i++) begin \
+            if (rs.slots[i].valid) begin \
+                if (!rob_live(rs.slots[i].tag) || dut.OTTER_ROB.entries[rs.slots[i].tag].done) \
+                    inv_fail($sformatf("%s[%0d] tag %0d not a live unfinished ROB entry", name, i, rs.slots[i].tag)); \
+                if (!rs.slots[i].src1_ready && (!rob_live(rs.slots[i].src1_tag) || \
+                    dut.OTTER_ROB.entries[rs.slots[i].src1_tag].done || \
+                    ooo_pkg::tag_age(rs.slots[i].src1_tag, dut.rob_head) >= ooo_pkg::tag_age(rs.slots[i].tag, dut.rob_head))) \
+                    inv_fail($sformatf("%s[%0d] waits on src1 tag %0d that will never broadcast", name, i, rs.slots[i].src1_tag)); \
+                if (!rs.slots[i].src2_ready && (!rob_live(rs.slots[i].src2_tag) || \
+                    dut.OTTER_ROB.entries[rs.slots[i].src2_tag].done || \
+                    ooo_pkg::tag_age(rs.slots[i].src2_tag, dut.rob_head) >= ooo_pkg::tag_age(rs.slots[i].tag, dut.rob_head))) \
+                    inv_fail($sformatf("%s[%0d] waits on src2 tag %0d that will never broadcast", name, i, rs.slots[i].src2_tag)); \
+            end \
+        end
+
+    always @(posedge clk) begin
+        if (!reset) begin : invariants
+            int live;
+            ooo_pkg::tag_t t;
+            // ROB: occupancy matches the valid entries, all inside the window.
+            live = 0;
+            for (int i = 0; i < ooo_pkg::ROB_SIZE; i++) begin
+                bit in_window;
+                in_window = ooo_pkg::tag_t'(ooo_pkg::tag_t'(i) - dut.OTTER_ROB.head) < dut.OTTER_ROB.used;
+                if (dut.OTTER_ROB.entries[i].valid) live++;
+                if (dut.OTTER_ROB.entries[i].valid != in_window)
+                    inv_fail($sformatf("ROB entry %0d valid=%0d but in-window=%0d", i, dut.OTTER_ROB.entries[i].valid, in_window));
+            end
+            if (live != dut.OTTER_ROB.used)
+                inv_fail($sformatf("ROB used=%0d but %0d valid entries", dut.OTTER_ROB.used, live));
+
+            // Rename table: a busy register names a live entry that writes it.
+            for (int r = 1; r < 64; r++) begin
+                if (dut.OTTER_RAT.busy[r]) begin
+                    t = dut.OTTER_RAT.tags[r];
+                    if (!rob_live(t) || dut.OTTER_ROB.entries[t].rd != r[4:0] ||
+                        (r >= 32 ? !dut.OTTER_ROB.entries[t].wr_fp : !dut.OTTER_ROB.entries[t].wr_int))
+                        inv_fail($sformatf("RAT reg %0d busy on tag %0d which does not write it", r, t));
+                end
+            end
+            if (dut.OTTER_RAT.busy[0])
+                inv_fail("RAT x0 busy");
+
+            `CHECK_RS(dut.RS_ALU, "RS_ALU")
+            `CHECK_RS(dut.RS_BR, "RS_BR")
+            `CHECK_RS(dut.RS_FADD, "RS_FADD")
+            `CHECK_RS(dut.RS_FMUL, "RS_FMUL")
+            `CHECK_RS(dut.RS_FDIV, "RS_FDIV")
+            `CHECK_RS(dut.OTTER_LSU.MEMQ, "MEMQ")
+
+            // Store queue: live stores, oldest first.
+            for (int i = 0; i < dut.OTTER_LSU.sq_count; i++) begin
+                ooo_pkg::tag_t st;
+                st = dut.OTTER_LSU.sq[(int'(dut.OTTER_LSU.sq_head) + i) % $size(dut.OTTER_LSU.sq)].tag;
+                if (!rob_live(st) || !dut.OTTER_ROB.entries[st].is_store)
+                    inv_fail($sformatf("store queue entry %0d tag %0d is not a live store", i, st));
+                if (i > 0 && ooo_pkg::tag_age(st, dut.rob_head) <=
+                    ooo_pkg::tag_age(dut.OTTER_LSU.sq[(int'(dut.OTTER_LSU.sq_head) + i - 1) % $size(dut.OTTER_LSU.sq)].tag, dut.rob_head))
+                    inv_fail($sformatf("store queue out of program order at entry %0d", i));
+            end
+
+            // Load in flight (unless squashed) belongs to a live, unfinished load.
+            if (dut.OTTER_LSU.ld.valid && !dut.OTTER_LSU.ld.squashed &&
+                (!rob_live(dut.OTTER_LSU.ld.tag) || dut.OTTER_ROB.entries[dut.OTTER_LSU.ld.tag].done))
+                inv_fail($sformatf("load stage tag %0d not a live unfinished load", dut.OTTER_LSU.ld.tag));
+
+            // Checkpoints: held only by live, unresolved control instructions.
+            for (int k = 0; k < ooo_pkg::CKPTS; k++) begin
+                if (dut.ckpt_used[k] && (!rob_live(dut.ckpt_owner[k]) ||
+                    !dut.OTTER_ROB.entries[dut.ckpt_owner[k]].is_control ||
+                    dut.OTTER_ROB.entries[dut.ckpt_owner[k]].done))
+                    inv_fail($sformatf("checkpoint %0d held by tag %0d, not a live unresolved branch", k, dut.ckpt_owner[k]));
+            end
+
+            // CDBs: distinct tags, each a live unfinished entry.
+            if (dut.cdb0.valid && (!rob_live(dut.cdb0.tag) || dut.OTTER_ROB.entries[dut.cdb0.tag].done))
+                inv_fail($sformatf("CDB0 broadcasts tag %0d, not live and unfinished", dut.cdb0.tag));
+            if (dut.cdb1.valid && (!rob_live(dut.cdb1.tag) || dut.OTTER_ROB.entries[dut.cdb1.tag].done))
+                inv_fail($sformatf("CDB1 broadcasts tag %0d, not live and unfinished", dut.cdb1.tag));
+            if (dut.cdb2.valid && (!rob_live(dut.cdb2.tag) || dut.OTTER_ROB.entries[dut.cdb2.tag].done))
+                inv_fail($sformatf("CDB2 broadcasts tag %0d, not live and unfinished", dut.cdb2.tag));
+            if ((dut.cdb0.valid && dut.cdb1.valid && dut.cdb0.tag == dut.cdb1.tag) ||
+                (dut.cdb0.valid && dut.cdb2.valid && dut.cdb0.tag == dut.cdb2.tag) ||
+                (dut.cdb1.valid && dut.cdb2.valid && dut.cdb1.tag == dut.cdb2.tag))
+                inv_fail("two CDBs broadcast the same tag");
+        end
+    end
+
     final begin
         if (commit_fd != 0)
             $fclose(commit_fd);

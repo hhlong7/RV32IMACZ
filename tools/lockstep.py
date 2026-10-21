@@ -339,6 +339,9 @@ def main() -> int:
     parser.add_argument("programs", nargs="*", type=pathlib.Path, help="lockstep .s programs (default: all directed)")
     parser.add_argument("--random", type=int, default=0, metavar="N", help="also run N random programs")
     parser.add_argument("--seed-base", type=int, default=1, help="first random seed")
+    parser.add_argument("--profile", default="default", choices=["default", "ooo"],
+                        help="random program mix (ooo: late branches, deep wrong paths, chains)")
+    parser.add_argument("--length", type=int, default=400, help="instructions per random program")
     parser.add_argument("--no-directed", action="store_true", help="skip directed programs")
     parser.add_argument("--keep", type=pathlib.Path, help="keep per-program artifacts in this directory")
     parser.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4)
@@ -366,7 +369,7 @@ def main() -> int:
     random_dir.mkdir(exist_ok=True)
     for seed in range(args.seed_base, args.seed_base + args.random):
         src = random_dir / f"random_{seed}.s"
-        src.write_text(lockstep_random.generate(seed))
+        src.write_text(lockstep_random.generate(seed, args.profile, args.length))
         jobs.append((f"random_{seed}", src))
 
     results: list[Result] = []

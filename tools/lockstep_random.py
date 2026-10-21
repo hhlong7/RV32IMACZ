@@ -413,9 +413,112 @@ class Generator:
         else:
             self.gen_store()
 
+    # -- out-of-order stress (profile "ooo") ------------------------------
+
+    def gen_wrong_path_op(self) -> None:
+        """One instruction for a path that a late branch may squash."""
+        r = self.rng.random()
+        if r < 0.20:
+            self.gen_store()
+        elif r < 0.35:
+            self.gen_load()
+        elif r < 0.50:
+            self.gen_fp()
+        elif r < 0.60:
+            self.gen_store_load_pair()
+        elif r < 0.68:
+            rd = self.dst()
+            self.emit32(f"csrrw x{rd}, fflags, x0")
+            self.wrote(rd)
+        elif r < 0.76:
+            self.gen_forward_branch()
+        elif r < 0.84:
+            rd = self.dst()
+            self.emit32(f"{self.rng.choice(M_OPS)} x{rd}, x{self.src()}, x{self.src()}")
+            self.wrote(rd)
+        else:
+            self.gen_simple()
+
+    def gen_late_branch(self) -> None:
+        """if/else on a bit of a (likely missing) load: the branch resolves
+        late, with both paths full of squashable work behind it."""
+        val, bit = self.dst(), self.dst()
+        self.emit32(f"lw x{val}, {self.rng.randrange(-2048, 2044) & ~3}(gp)")
+        self.wrote(val)
+        for _ in range(self.rng.randrange(0, 3)):
+            self.emit32(f"addi x{val}, x{val}, 0")
+        self.emit32(f"andi x{bit}, x{val}, {1 << self.rng.randrange(8)}")
+        self.wrote(bit)
+        other, end = self.label(), self.label()
+        self.emit32(f"{self.rng.choice(['beq', 'bne'])} x{bit}, x0, {other}")
+        for _ in range(self.rng.randrange(2, 9)):
+            self.gen_wrong_path_op()
+        self.emit32(f"jal x0, {end}")
+        self.lines.append(f"{other}:")
+        for _ in range(self.rng.randrange(1, 8)):
+            self.gen_wrong_path_op()
+        self.lines.append(f"{end}:")
+
+    def gen_fp_branch(self) -> None:
+        """A branch fed by an FP divide through a store and a load: it resolves
+        about 30 cycles late, behind a full window of younger work."""
+        fd, rd, bit = self.rng.randrange(32), self.dst(), self.dst()
+        off = self.data_offset(4)
+        self.emit32(f"fdiv.s f{fd}, f{self.fsrc()}, f{self.fsrc()}")
+        self.fwrote(fd)
+        self.emit32(f"fsw f{fd}, {off}(gp)")
+        self.emit32(f"lw x{rd}, {off}(gp)")
+        self.wrote(rd)
+        self.emit32(f"andi x{bit}, x{rd}, {1 << self.rng.randrange(4)}")
+        self.wrote(bit)
+        target = self.label()
+        self.emit32(f"bne x{bit}, x0, {target}")
+        for _ in range(self.rng.randrange(3, 12)):
+            self.gen_wrong_path_op()
+        self.lines.append(f"{target}:")
+
+    def gen_dep_chain(self) -> None:
+        """A serial dependency chain through ALU, M-extension, and loads."""
+        r = self.dst()
+        self.emit32(f"addi x{r}, x{self.src()}, {self.imm12()}")
+        for _ in range(self.rng.randrange(4, 11)):
+            k = self.rng.random()
+            if k < 0.35:
+                self.emit32(f"{self.rng.choice(M_OPS)} x{r}, x{r}, x{self.src()}")
+            elif k < 0.70:
+                self.emit32(f"{self.rng.choice(R_OPS)} x{r}, x{r}, x{self.src()}")
+            else:
+                tmp = self.dst()
+                self.emit32(f"andi x{tmp}, x{r}, 0x3fc")
+                self.emit32(f"add x{tmp}, x{tmp}, gp")
+                self.emit32(f"lw x{r}, -1024(x{tmp})")
+                self.wrote(tmp)
+        self.wrote(r)
+
     # -- program ---------------------------------------------------------
 
-    def generate(self, length: int = 400) -> str:
+    def generate(self, length: int = 400, profile: str = "default") -> str:
+        if profile == "ooo":
+            weighted = [
+                (self.gen_simple, 18),
+                (self.gen_li, 3),
+                (self.gen_late_branch, 14),
+                (self.gen_fp_branch, 5),
+                (self.gen_dep_chain, 6),
+                (self.gen_store_load_pair, 8),
+                (self.gen_store_burst, 3),
+                (self.gen_compressed_mem, 4),
+                (self.gen_atomic, 2),
+                (self.gen_csr, 1),
+                (self.gen_fence, 1),
+                (self.gen_forward_branch, 6),
+                (self.gen_jump, 2),
+                (self.gen_loop, 2),
+                (self.gen_call, 3),
+                (self.gen_trap, 2),
+                (self.gen_fp, 12),
+            ]
+            return self._generate(length, weighted)
         weighted = [
             (self.gen_simple, 40),
             (self.gen_li, 4),
@@ -432,6 +535,9 @@ class Generator:
             (self.gen_trap, 2),
             (self.gen_fp, 10),
         ]
+        return self._generate(length, weighted)
+
+    def _generate(self, length: int, weighted: list) -> str:
         funcs, weights = zip(*weighted)
 
         # Seed every free register so early reads are interesting.
@@ -483,8 +589,8 @@ class Generator:
         )
 
 
-def generate(seed: int) -> str:
-    return Generator(seed).generate()
+def generate(seed: int, profile: str = "default", length: int = 400) -> str:
+    return Generator(seed).generate(length, profile)
 
 
 if __name__ == "__main__":

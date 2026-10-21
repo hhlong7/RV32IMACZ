@@ -967,7 +967,8 @@ def run_family(family: Family, tmp: pathlib.Path, cov: Counter[str]) -> bool:
         # +STATS keeps the machine-readable counters for verification_report.py.
         sim = run(["vvp", "-n", str(SIM), "+STATS", f"+PASS_SSEG={pass_code}", "+FAIL_SSEG=-1",
                    f"+MAX_CYCLES={family.max_cycles}"], workdir)
-        if sim.returncode != 0 or f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout:
+        if (sim.returncode != 0 or f"TB PASS matched pass_sseg={pass_code}" not in sim.stdout
+                or "ASSERT_FAIL" in sim.stdout):
             print(f"  {family.tag:<9} seed={seed:<3} FAIL")
             sys.stderr.write(sim.stdout + sim.stderr)
             return False

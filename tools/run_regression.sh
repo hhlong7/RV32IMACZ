@@ -65,7 +65,13 @@ for spec in "${tests[@]}"; do
   if [[ -n "$LOG_DIR" ]]; then
     printf '%s\n' "$sim_out" > "$LOG_DIR/${name}.log"
   fi
-  if pass_line="$(grep -m1 "^TB PASS" <<< "$sim_out")"; then
+  # A testbench assertion (including the per-cycle invariants) fails the test
+  # even if the program itself reported PASS.
+  if grep -q "^ASSERT_FAIL" <<< "$sim_out"; then
+    printf '  %-28s FAIL (assertion)\n' "$name"
+    grep -m5 "^ASSERT_FAIL" <<< "$sim_out" | sed 's/^/      /'
+    failed+=("$name")
+  elif pass_line="$(grep -m1 "^TB PASS" <<< "$sim_out")"; then
     printf '  %-28s PASS  %6s cycles\n' "$name" "${pass_line##*cycle=}"
   else
     printf '  %-28s FAIL\n' "$name"

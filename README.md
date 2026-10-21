@@ -14,14 +14,20 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
   [Out-of-Order Core](#out-of-order-core))
 - Execution units: two integer ALUs, branch unit, load/store unit, pipelined
   FP adder, pipelined FP multiplier, iterative FP divider
-- ISA support: RV32I, RV32M, RV32A, RV32C, `Zicsr`, `Zifencei`
+- ISA support: RV32I, RV32M, RV32A, RV32C, `Zicsr`, `Zifencei`, and a
+  single-precision F subset (`fadd/fsub/fmul/fdiv.s`, FP loads/stores, `fcsr`)
 - Branch prediction: 512-entry gshare (8-bit global history) with backward-taken defaults for cold branches, a 16-entry BTB for indirect jumps, and a 4-entry RAS
 - Fully associative caches with tree pseudo-LRU replacement: 16-line L1
   I-cache with next-line prefetch, 16-line L1 D-cache, 32-line L2 (32-byte
   lines), plus a store buffer
 - Trap, CSR, timer-interrupt, and MMIO support
-- Verification flows for directed regressions, constrained-random testing, and
-  report aggregation
+- Verification: every retired instruction compared against Spike (the
+  reference RISC-V simulator) in lockstep, directed and constrained-random
+  programs including an out-of-order stress mix, per-cycle checks of the
+  out-of-order bookkeeping, unit tests, coverage aggregation, and GitHub
+  Actions CI (see [Trying To Break The Out-Of-Order Core](#trying-to-break-the-out-of-order-core))
+- Performance tracking: every core version measured on the same seven
+  workloads in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
 
 ## Supported ISA
 
@@ -83,8 +89,11 @@ Deeper module hierarchy view extracted from the RTL:
 3. `test_files/asm/`
    Directed assembly tests used by the regression flow.
 4. `tools/lockstep.py`, `tools/run_regression.sh`, `tools/run_random_tests.py`
-   How the project is tested; `lockstep.py` compares the core against Spike.
-5. `software/freertos_coremark/`
+   How the project is tested; `lockstep.py` compares the core against Spike,
+   with programs from `test_files/lockstep/` and `tools/lockstep_random.py`.
+5. `tools/perf_snapshot.py` and `docs/PERFORMANCE.md`
+   How performance is measured and the history of every core version.
+6. `software/freertos_coremark/`
    A small software workload that boots FreeRTOS and runs CoreMark in
    simulation.
 
@@ -175,6 +184,23 @@ The checker was validated by mutation: planted bugs in the ALU, the bypass
 priority, the load-use stall, the RVC expander, and store-buffer conflict
 detection are all reported, and a performance-only predictor change is not.
 
+`--profile ooo` switches the random programs to an out-of-order stress mix:
+branches that resolve late (behind cache misses or FP divides) with both
+paths full of squashable stores, loads, FP ops, and `fflags` accesses, plus
+long dependency chains; `--length N` sets the program length:
+
+```bash
+python3 tools/lockstep.py --no-directed --profile ooo --length 1500 --random 500
+```
+
+The testbench also checks the out-of-order bookkeeping every cycle, so a bug
+that happens not to change an architectural result still fails the run: ROB
+occupancy, every busy rename-table entry against the ROB, every reservation
+station operand still waiting (it must have a live, older, unfinished
+producer), store-queue order, the load in flight, checkpoint owners, and the
+three CDBs. A planted rename-table bug is caught on its first recovery. Any
+`ASSERT_FAIL` fails the regression, random, and lockstep flows.
+
 ### Run The Randomized Tests
 
 ```bash
@@ -182,7 +208,10 @@ python3 tools/run_random_tests.py
 ```
 
 This generates deterministic randomized programs that stress ALU behavior,
-control flow, dual issue, store-buffer behavior, and atomic operations.
+control flow, two-wide dispatch, store-buffer behavior, and atomic
+operations, and runs the store-buffer, cache-tag, and FP-unit unit tests
+(`tb_fpu_units.sv` checks the FP units against an exact-rational reference
+model, `tools/fp_ref.py`).
 
 ### Run The Full Verification Flow
 
@@ -216,6 +245,33 @@ output is shown only on failure, or always with `VERBOSE=1`), runs it in a
 scratch directory, and prints the run report. Extra testbench options can be
 appended, e.g. `tools/run_freertos_coremark.sh +VERBOSE_MMIO`.
 
+### Continuous Integration
+
+`.github/workflows/verification.yml` runs on every push to `main` and on pull
+requests: Verilator lint, then `tools/run_verification_quality.sh` with Spike
+(built once at a pinned revision and cached). The runner is pinned to
+`ubuntu-24.04`, whose packages provide Icarus Verilog 12.0 and Verilator
+5.020, older than a typical local install, so the RTL avoids constructs those
+versions reject or mis-simulate (see the bug list below). Every simulation has
+a wall-clock limit, so a hang fails in minutes instead of using up the job's
+hour. The CI environment can be reproduced locally with Docker:
+
+```bash
+docker run --rm -v "$PWD":/src:ro ubuntu:24.04 bash -c 'apt-get update && apt-get install -y iverilog verilator python3 gcc-riscv64-unknown-elf && cp -r /src /work && cd /work && bash tools/run_regression.sh'
+```
+
+### Record A Performance Snapshot
+
+```bash
+python3 tools/perf_snapshot.py --label "my change" --notes "what changed"
+```
+
+This runs FreeRTOS + CoreMark, the two system workloads, and four lockstep
+kernels (integer, control, cache, FP) on the current RTL, records the run
+reports in `docs/perf_history.json`, and regenerates `docs/PERFORMANCE.md`
+(one column per snapshot, including dispatch-stall causes and mispredict
+types). `--rtl-root DIR` measures another checkout on the same program images.
+
 ## Latest Verification Run
 
 Run on October 21, 2026 on the out-of-order core (milestone 4) with
@@ -228,13 +284,14 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 - Assembler cross-check: 6,000 random instructions, 0 encoding mismatches
 - Lockstep vs Spike: 14 directed + 200 random programs, ~144k retired
   instructions, 0 mismatches; across M4, an additional ~21,500 random
-  programs (~12M instructions) also passed
+  programs (~12M instructions) also passed, plus the break-the-core
+  campaigns below (~6,000 programs, ~5.4M instructions, invariants on)
 - The same flow under CI's Icarus 12.0 (Ubuntu 24.04 container): all passed
 - FreeRTOS + CoreMark: PASS
 - Verilator lint: no RTL warnings (only `PROCASSINIT` style warnings in
   `tb_core.sv`)
 
-### Bugs found by the lockstep flow (fixed October 2026)
+### Bugs found in the in-order core by the lockstep flow (fixed October 2026)
 
 - D-cache refill wrote zero into word 7 of the line (in L1 and L2) when the
   missing load was a sub-word load at a non-zero byte offset
@@ -253,6 +310,76 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 - A trap could overtake an older in-flight `csrw` to `mcause`/`mtval`
 - `tools/run_regression.sh` printed results but never failed on a failing test
 
+## Trying To Break The Out-Of-Order Core
+
+After the out-of-order core was finished (milestones 1-4), it was attacked on
+purpose, looking for bugs the normal flows might miss. No bug in the shipped
+core was found.
+
+| Attack | What it targets | Scale | Result |
+| --- | --- | --- | --- |
+| Per-cycle invariant checker (in `tb_core.sv`) | Bookkeeping bugs that happen not to change an architectural result | Every cycle of every run below | No violations |
+| Random lockstep programs, default mix | Everything, compared against Spike instruction by instruction | 3,000 programs, 1.7M instructions | All match Spike |
+| `--profile ooo` stress mix, 1,500-instruction programs | Branches that resolve late (behind D-cache misses or FP divides) with both paths full of stores, loads, FP ops, `fflags` accesses, and nested branches; long ALU/M/load dependency chains | 2,000 programs, 2.7M instructions | All match Spike |
+| Shrunk hardware: ROB 8, branch RS 2, ALU RS 2, memory queue 2, store queue 2, store buffer 2 | Full, stall, and wrap-around corners that the shipped sizes reach only rarely | 14 directed + 1,000 stress programs, 0.96M instructions | All match Spike |
+| CI toolchain (Icarus 12, Verilator 5.020) with the checker on | Simulator-version differences | Full verification flow | All pass, lint clean |
+
+The invariant checker verifies, every cycle:
+
+- ROB: the occupancy count matches the valid entries, all inside the window
+- Rename table: every busy register names a live ROB entry that writes it
+- Reservation stations and the memory queue: every entry belongs to a live,
+  unfinished ROB entry, and every operand still waiting names a live,
+  unfinished, older producer, so no wake-up can be lost
+- Store queue: live stores only, in program order
+- The load in flight, unless squashed, belongs to a live, unfinished load
+- Checkpoints: held only by live, unresolved branches
+- CDBs: each broadcasts a live, unfinished entry, never two the same tag
+
+It was validated by mutation: with the rename-table restore on a mispredict
+disabled, it reports stale mappings on the very first recovery. Any
+`ASSERT_FAIL` now fails the regression, random, and lockstep flows (before,
+the regression only looked for `TB PASS`).
+
+One limitation turned up: a reservation station with a single entry does not
+simulate (its valid bit is never reset in Icarus), so 2 is the minimum
+station size. The shipped design uses 2 or more everywhere.
+
+Reproduce the campaigns with:
+
+```bash
+python3 tools/lockstep.py --no-directed --random 3000 --seed-base 900000
+python3 tools/lockstep.py --no-directed --profile ooo --length 1500 --random 2000
+```
+
+### Bugs found while building the out-of-order core
+
+Each was caught by the verification flow before the milestone was reported:
+
+- M1: the testbench logged a retired register by reading the register file,
+  which slot 1 had already overwritten when both commit slots wrote the same
+  register in one cycle (a checker bug, not an RTL bug)
+- M1: two performance counters (fence wait, store-ordering stall) no longer
+  counted anything once fences and loads waited in new places
+- M2: a deadlock (1 random program in about 2,500): in a recovery cycle the
+  LSU output buffer handed a younger result to the CDB, an older load filled
+  the freed buffer in the same cycle, and the squash then erased the older
+  load's result
+- M4: the first gshare version predicted every cold branch taken, slowing
+  short programs (and polluting the I-cache with wrong-path fetches); cold
+  backward branches are now predicted taken and cold forward ones not taken
+- M4: a store-buffer drain rule from the in-order core held back drains
+  during store bursts and filled the buffer; removing it also made one
+  directed test's expectation (a full buffer) obsolete
+- M4 option 5: a faulting FP CSR access (FS off) took the new fast path and
+  never completed
+- CI only (Icarus 12 / Verilator 5.020): `always_comb` blocks sharing a
+  function, or reading their own outputs, re-triggered each other forever at
+  time 0 (the FP-subset commit's CI run hit the 1-hour limit); `break` and
+  `continue` were rejected; a local array in `always_comb` crashed the
+  simulator; Verilator could not unroll a 512-entry reset loop or the
+  64 x 4 checkpoint update loop
+
 ## Project Layout
 
 - Root `*.sv` files: core RTL, caches, MMIO, predictor, and testbenches
@@ -260,17 +387,27 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 - `test_files/asm/`: hand-written directed assembly tests
 - `test_files/lockstep/`: directed programs for the Spike lockstep flow
 - `test_files/generated/`: generated `.mem` images used in simulation
-- `tools/`: build, test, reporting, and helper scripts
+- `tools/`: build, test, reporting, performance, and helper scripts
+- `docs/`: `PERFORMANCE.md` and `perf_history.json` (performance history),
+  `diagrams/` (Graphviz sources), `images/` (rendered diagrams)
+- `.github/workflows/verification.yml`: the CI workflow
 - `software/freertos_coremark/`: FreeRTOS + CoreMark software example
 - `third_party/`: vendored FreeRTOS and CoreMark sources
 
 ## Current Status
 
 The current design is a two-wide out-of-order RV32IMAC core with a
-single-precision FP subset, atomics, compressed instructions, branch
-prediction, CSR/trap support, a store buffer, and a two-level data-cache
-hierarchy. The repo also includes verification scripts and
-a software bring-up path so the project is easier to study and extend.
+single-precision FP subset, atomics, compressed instructions, gshare branch
+prediction with early recovery, store-to-load forwarding, CSR/trap support,
+a store buffer, and a two-level fully associative cache hierarchy. On
+FreeRTOS + CoreMark it runs at IPC 1.207, 27% faster than the dual-issue
+in-order core it replaced, and every benchmark workload is faster. The repo
+also includes the verification flows above and a software bring-up path so
+the project is easier to study and extend.
+
+Possible next steps: a non-blocking D-cache (several outstanding misses) and
+a stride prefetcher, return-stack repair on mispredicts, a larger ROB, or a
+second hart with coherent caches.
 
 ## Floating-Point Units
 
