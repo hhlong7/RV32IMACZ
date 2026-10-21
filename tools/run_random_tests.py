@@ -875,8 +875,14 @@ def build_atomic_program(seed: int, pass_code: int, fail_base: int, cov: Counter
     return "\n".join(lines)
 
 
-def run(cmd: list[str], cwd: pathlib.Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=False)
+def run(cmd: list[str], cwd: pathlib.Path, timeout: int = 600) -> subprocess.CompletedProcess[str]:
+    """Run a command; a wall-clock timeout (e.g. a simulator stuck in a
+    zero-time loop) comes back as a failed result instead of hanging."""
+    try:
+        return subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, timeout=timeout, check=False)
+    except subprocess.TimeoutExpired as exc:
+        out = exc.stdout if isinstance(exc.stdout, str) else (exc.stdout or b"").decode(errors="replace")
+        return subprocess.CompletedProcess(cmd, 124, out + f"\nTIMEOUT after {timeout}s: {' '.join(cmd[:2])}\n", "")
 
 
 def extract_tb_line(sim_out: str, prefix: str) -> str:

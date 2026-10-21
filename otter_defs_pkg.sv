@@ -2,6 +2,9 @@ package otter_defs_pkg;
 
     // This packet is the front-end handoff between fetch-side prediction logic
     // and the downstream decode / hazard machinery.
+    // Global branch history length for the gshare direction predictor.
+    localparam int GHR_BITS = 8;
+
     typedef struct packed {
         logic valid;
         logic predicted_taken;
@@ -23,6 +26,9 @@ package otter_defs_pkg;
         // The instruction as fetched (16 bits for compressed): reported in
         // mtval when the instruction is illegal.
         logic [31:0] raw_ir;
+        // Global history the direction prediction used: carried to the branch
+        // unit (history repair on a mispredict) and to commit (training).
+        logic [GHR_BITS-1:0] ghr;
     } frontend_t;
 
     // Cache replacement policy for the fully associative L1 I/D caches and

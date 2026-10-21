@@ -21,7 +21,8 @@ def parse_log(path: pathlib.Path) -> dict[str, Counter]:
         "stats": Counter(),
         "lsu": Counter(),
         "atom": Counter(),
-        "cov": Counter(),
+        "ooo": Counter(),
+        "rec": Counter(),
         "rand_cov": Counter(),
     }
 
@@ -34,8 +35,10 @@ def parse_log(path: pathlib.Path) -> dict[str, Counter]:
             groups["lsu"].update(parse_kv_line(line.split("TB LSU", 1)[1]))
         elif "TB ATOM" in line:
             groups["atom"].update(parse_kv_line(line.split("TB ATOM", 1)[1]))
-        elif "TB COV" in line:
-            groups["cov"].update(parse_kv_line(line.split("TB COV", 1)[1]))
+        elif "TB REC" in line:
+            groups["rec"].update(parse_kv_line(line.split("TB REC", 1)[1]))
+        elif "TB OOO" in line:
+            groups["ooo"].update(parse_kv_line(line.split("TB OOO", 1)[1]))
         elif line.startswith("RAND COV "):
             groups["rand_cov"].update(parse_kv_line(line[len("RAND COV ") :]))
 
@@ -47,7 +50,8 @@ def merge_groups(items: list[dict[str, Counter]]) -> dict[str, Counter]:
         "stats": Counter(),
         "lsu": Counter(),
         "atom": Counter(),
-        "cov": Counter(),
+        "ooo": Counter(),
+        "rec": Counter(),
         "rand_cov": Counter(),
     }
     for item in items:
@@ -82,16 +86,22 @@ def main() -> int:
     merged = merge_groups(parsed)
 
     bins = {
-        "hazard_paths": nonzero_bins(
-            merged["cov"],
-            ["hazard_load_use", "pair_issue", "atomic_wait", "lsu_busy"],
+        "ooo_backend": nonzero_bins(
+            merged["ooo"],
+            ["dual_dispatch", "dual_commit", "dispatch_stall", "rob_full", "lsu_busy", "cdb_conflict"],
         ),
-        "branch_recovery": nonzero_bins(merged["cov"], ["branch_mispredict", "fence_complete"]),
-        "cache_behavior": nonzero_bins(merged["stats"], ["ic_hit", "ic_miss", "dc_hit", "dc_miss"]),
-        "csr_trap": nonzero_bins(merged["cov"], ["trap_commit", "mret_commit"]),
+        "branch_recovery": nonzero_bins(merged["stats"], ["mispredicts", "flushes"]),
+        # Store-queue, FP-pipeline, and divider squashes are exercised by
+        # test_files/lockstep/branch_recovery.s and the random lockstep runs.
+        "early_recovery": nonzero_bins(merged["rec"], ["recoveries", "load_squash", "memq_squash", "rs_squash", "nested"]),
+        "cache_behavior": nonzero_bins(merged["stats"], ["ic_fetch", "ic_fill", "ic_prefetch", "dc_hit", "dc_miss", "l2_hit"]),
+        "csr_trap": nonzero_bins(merged["ooo"], ["traps", "mrets"]),
         "memory_ordering": nonzero_bins(
             merged["lsu"],
-            ["sb_enq", "sb_fwd", "sb_drain", "fence_wait"],
+            # No sb_full_stall bin: the store buffer drains as fast as commit
+            # retires stores, so it no longer fills in practice (the full
+            # check stays in the RTL as a guard).
+            ["sb_enq", "sb_fwd", "sq_fwd", "sb_drain", "sb_conflict_stall", "fence_wait"],
         ),
         "atomic_paths": nonzero_bins(
             merged["atom"],

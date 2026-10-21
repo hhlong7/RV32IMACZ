@@ -1,0 +1,70 @@
+// Top-level dataflow of the out-of-order OTTER_MCU (otter_mcu_ooo.sv).
+// Regenerate: dot -Tsvg docs/diagrams/otter_mcu_block.dot -o docs/images/otter_mcu_block.svg
+digraph OTTER_MCU_BLOCK {
+    graph [rankdir=TB, fontname="Helvetica", fontsize=13, nodesep=0.35, ranksep=0.45, compound=true];
+    node  [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica", fontsize=11];
+    edge  [fontname="Helvetica", fontsize=9, color="#455a64"];
+
+    subgraph cluster_front {
+        label="Front end (in order, 2-wide, past compressed\nand predicted-not-taken instructions)"; style="rounded,filled"; fillcolor="#e3f2fd"; color="#90a4ae";
+        pc   [label="PC + BranchPredictor\n(gshare 512, BTB 16, RAS 4)"];
+        ic   [label="L1 I-cache 16 lines\n(fully assoc., PLRU)\n+ next-line prefetch"];
+        exp  [label="RVCExpander x2\nFrontendPacketBuilder x2"];
+        pc -> ic -> exp;
+    }
+
+    subgraph cluster_rename {
+        label="Decode / rename / dispatch (in order, 2-wide)"; style="rounded,filled"; fillcolor="#e8f5e9"; color="#90a4ae";
+        dec  [label="DispatchDecode x2\n(CU_DCDR, FPDecode, AtomicDecode)"];
+        rat  [label="RenameTable\n64 entries (x0-31, f0-31)\nbusy + ROB tag\n+ 4 branch checkpoints"];
+        rf   [label="REG_FILE / FP_REG_FILE\n4 read, 2 write ports"];
+        dec -> rat; dec -> rf [style=dashed, label="operands"];
+    }
+
+    subgraph cluster_ooo {
+        label="Out-of-order execution (Tomasulo)"; style="rounded,filled"; fillcolor="#fff3e0"; color="#90a4ae";
+        rs_alu  [label="RS_ALU (8)\n2 issues / cycle"];
+        rs_br   [label="RS_BR (4)"];
+        memq    [label="LSU memory queue (8)\nin order + store queue (4)\nstore-to-load forwarding"];
+        rs_fadd [label="RS_FADD (2)"];
+        rs_fmul [label="RS_FMUL (2)"];
+        rs_fdiv [label="RS_FDIV (2)"];
+
+        alu  [label="2 integer ALUs\n(+ M ext.)", fillcolor="#ffe0b2"];
+        bru  [label="Branch unit\n(BranchGenerator)", fillcolor="#ffe0b2"];
+        lsu  [label="LoadStoreUnit\nStoreBuffer, L1 D 16 lines,\nL2 32 lines, atomics", fillcolor="#ffe0b2"];
+        fadd [label="fp_adder\n3-stage pipeline", fillcolor="#ffe0b2"];
+        fmul [label="fp_multiplier\n3-stage pipeline", fillcolor="#ffe0b2"];
+        fdiv [label="fp_divider\niterative, 1 at a time", fillcolor="#ffe0b2"];
+
+        rs_alu -> alu; rs_br -> bru; memq -> lsu;
+        rs_fadd -> fadd; rs_fmul -> fmul; rs_fdiv -> fdiv;
+
+        arb [label="CdbArbiter\noldest three of seven requests", fillcolor="#fff9c4"];
+        cdb [label="CDB0 + CDB1 + CDB2\n(tag, value, exception, branch outcome, fflags)", shape=box, style="filled", fillcolor="#fff59d"];
+        alu -> arb; bru -> arb; lsu -> arb; fadd -> arb; fmul -> arb; fdiv -> arb;
+        arb -> cdb;
+    }
+
+    subgraph cluster_commit {
+        label="Commit (in order, 2-wide)"; style="rounded,filled"; fillcolor="#f3e5f5"; color="#90a4ae";
+        rob [label="ReorderBuffer\n16 entries (index = rename tag)"];
+        csr [label="CSR_FILE\ntraps, interrupts, mret,\nfcsr, perf counters"];
+        rob -> csr [label="serializing ops,\nexceptions"];
+    }
+
+    mem [label="Memory + MMIO\n(otter_memory_v1_07)", fillcolor="#eceff1"];
+
+    exp -> dec;
+    rat -> rs_alu [lhead=cluster_ooo, label="renamed ops"];
+    dec -> rob [label="allocate"];
+    cdb -> rob [label="complete"];
+    // Feedback paths (CDB wake-up of waiting RS entries, retire writes to the
+    // register files, RAT busy clear, commit of stores to the LSU, and the
+    // redirect/flush) are summarized by one note to keep the layout readable.
+    fb [shape=note, fillcolor="#ffebee", color="#c62828", fontcolor="#b71c1c",
+        label="Feedback from the CDB and the ROB head:\l- CDB wakes waiting RS / memory-queue entries\l- retire: register-file writes, RAT busy clear, stores to store buffer\l- mispredicted branch (at execute): restore rename checkpoint,\l  squash younger work, redirect PC\l- trap, mret, fence.i (at commit): flush all + redirect PC\l"];
+    rob -> fb [color="#c62828", style=dashed, arrowhead=none];
+    ic  -> mem [style=dotted];
+    lsu -> mem [style=dotted];
+}

@@ -47,7 +47,10 @@ module fp_divider (
     assign out_valid = (state == DONE);
 
     // Rounding of the finished quotient (only meaningful in DONE).
-    always_comb begin
+    // always @* rather than always_comb: Icarus 12 makes an always_comb block
+    // sensitive to the local variables of the functions it calls, so blocks
+    // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
+    always @* begin
         logic [36:0] packed_result;
         int msb;
         msb = leading_one(64'(quotient));

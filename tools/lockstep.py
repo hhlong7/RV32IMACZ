@@ -316,6 +316,9 @@ def compare(rtl: Trace, ref: Trace, rtl_output: str) -> tuple[bool, str]:
         return False, "program took an unexpected trap (both models agree)"
     if "TB PASS" not in rtl_output:
         return False, "RTL did not report TB PASS:\n" + rtl_output[-2000:]
+    asserts = [line for line in rtl_output.splitlines() if line.startswith("ASSERT_FAIL")]
+    if asserts:
+        return False, "RTL testbench assertion failed:\n" + "\n".join(asserts[:10])
     return True, ""
 
 

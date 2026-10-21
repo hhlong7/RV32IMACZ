@@ -63,31 +63,36 @@ module fp_adder (
     s2_t s2_d, s2_q;
 
     // ---- S1 ------------------------------------------------------------------
-    always_comb begin
+    // always @* rather than always_comb: Icarus 12 makes an always_comb block
+    // sensitive to the local variables of the functions it calls, so blocks
+    // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
+    always @* begin
         logic [31:0] a, b, big_op, small_op;
         logic [23:0] sig_big, sig_small;
         int exp_small, distance;
         logic [WIDE-1:0] small_full;
         logic sticky;
+        s1_t n;               // built locally and assigned once: the block never
+                              // reads its own output
 
         a = in_a;
         b = {in_b[31] ^ in_sub, in_b[30:0]};
 
-        s1_d = '0;
-        s1_d.valid = in_valid;
-        s1_d.rm = in_rm;
+        n = '0;
+        n.valid = in_valid;
+        n.rm = in_rm;
 
         if (is_nan(a) || is_nan(b)) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = CANONICAL_NAN;
-            s1_d.special_flags[FLAG_NV] = is_snan(in_a) || is_snan(in_b);
+            n.special = 1'b1;
+            n.special_result = CANONICAL_NAN;
+            n.special_flags[FLAG_NV] = is_snan(in_a) || is_snan(in_b);
         end else if (is_inf(a) && is_inf(b) && (a[31] != b[31])) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = CANONICAL_NAN;
-            s1_d.special_flags[FLAG_NV] = 1'b1;
+            n.special = 1'b1;
+            n.special_result = CANONICAL_NAN;
+            n.special_flags[FLAG_NV] = 1'b1;
         end else if (is_inf(a) || is_inf(b)) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = is_inf(a) ? a : b;
+            n.special = 1'b1;
+            n.special_result = is_inf(a) ? a : b;
         end
 
         // Order by magnitude (exponent field, then fraction) so that
@@ -102,29 +107,33 @@ module fp_adder (
 
         sig_big = unpack_sig(big_op);
         sig_small = unpack_sig(small_op);
-        s1_d.exp_big = unpack_exp(big_op);
+        n.exp_big = unpack_exp(big_op);
         exp_small = unpack_exp(small_op);
-        s1_d.sign_big = big_op[31];
-        s1_d.sign_small = small_op[31];
-        s1_d.eff_sub = big_op[31] ^ small_op[31];
+        n.sign_big = big_op[31];
+        n.sign_small = small_op[31];
+        n.eff_sub = big_op[31] ^ small_op[31];
 
-        s1_d.big_sig = {sig_big, 31'b0};
+        n.big_sig = {sig_big, 31'b0};
         small_full = {sig_small, 31'b0};
-        distance = s1_d.exp_big - exp_small;
+        distance = n.exp_big - exp_small;
         sticky = 1'b0;
         if (distance >= WIDE) begin
-            s1_d.small_sig = '0;
+            n.small_sig = '0;
             sticky = (sig_small != 0);
         end else begin
-            s1_d.small_sig = small_full >> distance;
+            n.small_sig = small_full >> distance;
             for (int i = 0; i < WIDE; i++)
                 if (i < distance && small_full[i]) sticky = 1'b1;
         end
-        s1_d.small_sig[0] = s1_d.small_sig[0] | sticky;
+        n.small_sig[0] = n.small_sig[0] | sticky;
+        s1_d = n;
     end
 
     // ---- S2 ------------------------------------------------------------------
-    always_comb begin
+    // always @* rather than always_comb: Icarus 12 makes an always_comb block
+    // sensitive to the local variables of the functions it calls, so blocks
+    // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
+    always @* begin
         logic [WIDE:0] sum;
         int msb;
 
@@ -153,7 +162,10 @@ module fp_adder (
     end
 
     // ---- S3 ------------------------------------------------------------------
-    always_comb begin
+    // always @* rather than always_comb: Icarus 12 makes an always_comb block
+    // sensitive to the local variables of the functions it calls, so blocks
+    // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
+    always @* begin
         logic [36:0] packed_result;
         packed_result = round_pack(s2_q.sign, s2_q.exp, s2_q.sig, s2_q.rm);
 

@@ -113,16 +113,19 @@ module tb_fpu_units;
             path = "out/fp_vectors.txt";
         fd = $fopen(path, "r");
         if (fd == 0) $fatal(1, "cannot open %s", path);
-        while (n_vec < MAX_VECTORS) begin
+        // Read until the file or the table runs out (no `break`: Icarus 12).
+        code = 6;
+        while (n_vec < MAX_VECTORS && code == 6) begin
             code = $fscanf(fd, "%d %d %h %h %h %h\n", op, rm, a, b, res, flags);
-            if (code != 6) break;
-            vop[n_vec] = op;
-            vrm[n_vec] = rm[2:0];
-            va[n_vec] = a;
-            vb[n_vec] = b;
-            vres[n_vec] = res;
-            vflags[n_vec] = flags[4:0];
-            n_vec++;
+            if (code == 6) begin
+                vop[n_vec] = op;
+                vrm[n_vec] = rm[2:0];
+                va[n_vec] = a;
+                vb[n_vec] = b;
+                vres[n_vec] = res;
+                vflags[n_vec] = flags[4:0];
+                n_vec++;
+            end
         end
         $fclose(fd);
 
@@ -141,20 +144,21 @@ module tb_fpu_units;
 
         // fdiv: one at a time; random delay before acknowledging.
         for (int i = 0; i < n_vec; i++) begin
-            if (vop[i] != 3) continue;
-            @(negedge clk);
-            div_start = 1'b1;
-            in_a = va[i];
-            in_b = vb[i];
-            in_rm = vrm[i];
-            @(negedge clk);
-            div_start = 1'b0;
-            while (!div_valid) @(negedge clk);
-            repeat ($urandom_range(0, 2)) @(negedge clk);
-            check(i, div_result, div_flags);
-            div_ack = 1'b1;
-            @(negedge clk);
-            div_ack = 1'b0;
+            if (vop[i] == 3) begin           // no `continue`: Icarus 12
+                @(negedge clk);
+                div_start = 1'b1;
+                in_a = va[i];
+                in_b = vb[i];
+                in_rm = vrm[i];
+                @(negedge clk);
+                div_start = 1'b0;
+                while (!div_valid) @(negedge clk);
+                repeat ($urandom_range(0, 2)) @(negedge clk);
+                check(i, div_result, div_flags);
+                div_ack = 1'b1;
+                @(negedge clk);
+                div_ack = 1'b0;
+            end
         end
 
         if (errors == 0)

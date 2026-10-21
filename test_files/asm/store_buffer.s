@@ -11,8 +11,9 @@ main:
     li s0, SSEG
     la t0, buf
 
-    # Back-to-back stores should enqueue into the store buffer. With depth=4,
-    # the fifth store forces a full-buffer stall before draining resumes.
+    # Back-to-back stores enqueue into the store buffer (depth 4). The buffer
+    # drains one store per cycle, as fast as commit retires them, so even a
+    # five-store burst must get through without a single full-buffer stall.
     li t1, 0x11111111
     li t2, 0x22222222
     li t3, 0x33333333
@@ -38,7 +39,7 @@ main:
     blt t4, t5, fail_503
 
     csrrs t4, 0xB0D, x0           # full-buffer stall cycles
-    beq t4, x0, fail_504
+    bne t4, x0, fail_504
 
     csrrs t4, 0xB0E, x0           # store-to-load forwards
     beq t4, x0, fail_505

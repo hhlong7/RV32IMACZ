@@ -1,9 +1,24 @@
 `timescale 1ns/1ps
-
+//////////////////////////////////////////////////////////////////////////////////
+// Module Name: BranchPredictor
+// Description:
+//   Front-end prediction state.
+//
+//   Direction   gshare: 2-bit counters indexed by the halfword PC (compressed
+//               instructions get their own entries) XOR the global history.
+//   History     a speculative global history shifts as conditional branches
+//               are fetched. A mispredicted branch reloads it from the copy
+//               it carried plus its real outcome; a commit-time flush reloads
+//               the retired history, which shifts as branches commit.
+//   Targets     conditional branches and jal compute their targets from the
+//               instruction (FrontendPacketBuilder); the BTB holds indirect
+//               jalr targets, and the RAS predicts returns.
+//////////////////////////////////////////////////////////////////////////////////
 module BranchPredictor #(
-    parameter int BHT_ENTRIES = 16,
-    parameter int BTB_ENTRIES = 8,
+    parameter int BHT_ENTRIES = 512,
+    parameter int BTB_ENTRIES = 16,
     parameter int RAS_DEPTH = 4,
+    parameter int GHR_BITS = 8,
     parameter logic [1:0] BHT_RESET_VALUE = 2'b01
 ) (
     input logic clk,
@@ -11,22 +26,34 @@ module BranchPredictor #(
 
     input logic [31:0] fetch0_pc,
     output logic fetch0_bht_taken,
+    output logic fetch0_bht_weak,             // counter still at its reset value
     output logic fetch0_btb_hit,
     output logic [31:0] fetch0_btb_target,
 
     input logic [31:0] fetch1_pc,
     output logic fetch1_bht_taken,
+    output logic fetch1_bht_weak,
     output logic fetch1_btb_hit,
     output logic [31:0] fetch1_btb_target,
 
     output logic ras_valid,
     output logic [31:0] ras_top,
 
+    // Speculative global history.
+    output logic [GHR_BITS-1:0] ghr,
+    input logic ghr_shift,                    // a conditional branch was fetched
+    input logic ghr_shift_taken,              // ...with this prediction
+    input logic ghr_recover,                  // a mispredicted branch resolved
+    input logic [GHR_BITS-1:0] ghr_recover_value,
+    input logic ghr_restore_retired,          // commit-time flush
+
     input logic train_enable,
 
+    // Training at commit (in program order).
     input logic branch_update_valid,
     input logic branch_taken,
     input logic [31:0] branch_pc,
+    input logic [GHR_BITS-1:0] branch_ghr,    // history used when it was predicted
 
     input logic btb_update_valid,
     input logic [31:0] btb_update_pc,
@@ -51,36 +78,51 @@ module BranchPredictor #(
     logic [31:0] ras_stack [0:RAS_DEPTH-1];
     logic [RAS_PTR_WIDTH-1:0] ras_sp;
     logic [RAS_COUNT_WIDTH-1:0] ras_count;
+    logic [GHR_BITS-1:0] ghr_spec, ghr_retired;
 
     logic [BHT_INDEX_WIDTH-1:0] bht_ridx0, bht_ridx1, bht_widx;
     logic [BTB_INDEX_WIDTH-1:0] btb_ridx0, btb_ridx1, btb_widx;
     integer pred_i;
 
-    assign bht_ridx0 = fetch0_pc[BHT_INDEX_WIDTH+1:2];
-    assign bht_ridx1 = fetch1_pc[BHT_INDEX_WIDTH+1:2];
-    assign bht_widx = branch_pc[BHT_INDEX_WIDTH+1:2];
-    assign btb_ridx0 = fetch0_pc[BTB_INDEX_WIDTH+1:2];
-    assign btb_ridx1 = fetch1_pc[BTB_INDEX_WIDTH+1:2];
-    assign btb_widx = btb_update_pc[BTB_INDEX_WIDTH+1:2];
+    // gshare index: halfword PC bits XOR the history (zero-extended).
+    function automatic logic [BHT_INDEX_WIDTH-1:0] gshare(input logic [31:0] pc, input logic [GHR_BITS-1:0] h);
+        gshare = pc[BHT_INDEX_WIDTH:1] ^ BHT_INDEX_WIDTH'(h);
+    endfunction
+
+    assign ghr = ghr_spec;
+    assign bht_ridx0 = gshare(fetch0_pc, ghr_spec);
+    assign bht_ridx1 = gshare(fetch1_pc, ghr_spec);
+    assign bht_widx = gshare(branch_pc, branch_ghr);
+    assign btb_ridx0 = fetch0_pc[BTB_INDEX_WIDTH:1];
+    assign btb_ridx1 = fetch1_pc[BTB_INDEX_WIDTH:1];
+    assign btb_widx = btb_update_pc[BTB_INDEX_WIDTH:1];
 
     assign fetch0_bht_taken = bht[bht_ridx0][1];
+    assign fetch0_bht_weak = (bht[bht_ridx0] == BHT_RESET_VALUE);
     assign fetch0_btb_hit = btb_valid[btb_ridx0] && (btb_pc[btb_ridx0] == fetch0_pc);
     assign fetch0_btb_target = btb_target_mem[btb_ridx0];
 
     assign fetch1_bht_taken = bht[bht_ridx1][1];
+    assign fetch1_bht_weak = (bht[bht_ridx1] == BHT_RESET_VALUE);
     assign fetch1_btb_hit = btb_valid[btb_ridx1] && (btb_pc[btb_ridx1] == fetch1_pc);
     assign fetch1_btb_target = btb_target_mem[btb_ridx1];
 
     assign ras_valid = (ras_count != '0);
     assign ras_top = ras_stack[(ras_sp == '0) ? LAST_RAS_ENTRY : (ras_sp - 1'b1)];
 
+    // The direction table is a RAM: initialized once, not cleared by reset
+    // (a 512-entry reset loop is also more than Verilator 5.0 will unroll).
+    initial begin
+        for (int i = 0; i < BHT_ENTRIES; i++)
+            bht[i] = BHT_RESET_VALUE;
+    end
+
     always_ff @(posedge clk) begin
         if (rst) begin
             ras_sp <= '0;
             ras_count <= '0;
-
-            for (pred_i = 0; pred_i < BHT_ENTRIES; pred_i = pred_i + 1)
-                bht[pred_i] <= BHT_RESET_VALUE;
+            ghr_spec <= '0;
+            ghr_retired <= '0;
 
             for (pred_i = 0; pred_i < BTB_ENTRIES; pred_i = pred_i + 1) begin
                 btb_valid[pred_i] <= 1'b0;
@@ -90,33 +132,47 @@ module BranchPredictor #(
 
             for (pred_i = 0; pred_i < RAS_DEPTH; pred_i = pred_i + 1)
                 ras_stack[pred_i] <= 32'b0;
-        end else if (train_enable) begin
-            if (branch_update_valid) begin
-                unique case (bht[bht_widx])
-                    2'b00: bht[bht_widx] <= branch_taken ? 2'b01 : 2'b00;
-                    2'b01: bht[bht_widx] <= branch_taken ? 2'b10 : 2'b00;
-                    2'b10: bht[bht_widx] <= branch_taken ? 2'b11 : 2'b01;
-                    2'b11: bht[bht_widx] <= branch_taken ? 2'b11 : 2'b10;
-                    default: bht[bht_widx] <= BHT_RESET_VALUE;
-                endcase
-            end
+        end else begin
+            // History: a flush or recovery overrides any fetch this cycle
+            // (fetch is redirected in both cases).
+            if (ghr_restore_retired)
+                ghr_spec <= branch_update_valid ? {ghr_retired[GHR_BITS-2:0], branch_taken} : ghr_retired;
+            else if (ghr_recover)
+                ghr_spec <= ghr_recover_value;
+            else if (ghr_shift)
+                ghr_spec <= {ghr_spec[GHR_BITS-2:0], ghr_shift_taken};
 
-            if (btb_update_valid) begin
-                btb_valid[btb_widx] <= 1'b1;
-                btb_pc[btb_widx] <= btb_update_pc;
-                btb_target_mem[btb_widx] <= btb_update_target;
-            end
+            if (branch_update_valid)
+                ghr_retired <= {ghr_retired[GHR_BITS-2:0], branch_taken};
 
-            if (ras_pop && ras_valid) begin
-                ras_sp <= ras_sp - 1'b1;
-                ras_count <= ras_count - 1'b1;
-            end
+            if (train_enable) begin
+                if (branch_update_valid) begin
+                    unique case (bht[bht_widx])
+                        2'b00: bht[bht_widx] <= branch_taken ? 2'b01 : 2'b00;
+                        2'b01: bht[bht_widx] <= branch_taken ? 2'b10 : 2'b00;
+                        2'b10: bht[bht_widx] <= branch_taken ? 2'b11 : 2'b01;
+                        2'b11: bht[bht_widx] <= branch_taken ? 2'b11 : 2'b10;
+                        default: bht[bht_widx] <= BHT_RESET_VALUE;
+                    endcase
+                end
 
-            if (ras_push) begin
-                ras_stack[ras_sp] <= ras_push_addr;
-                ras_sp <= ras_sp + 1'b1;
-                if (ras_count != RAS_COUNT_MAX)
-                    ras_count <= ras_count + 1'b1;
+                if (btb_update_valid) begin
+                    btb_valid[btb_widx] <= 1'b1;
+                    btb_pc[btb_widx] <= btb_update_pc;
+                    btb_target_mem[btb_widx] <= btb_update_target;
+                end
+
+                if (ras_pop && ras_valid) begin
+                    ras_sp <= ras_sp - 1'b1;
+                    ras_count <= ras_count - 1'b1;
+                end
+
+                if (ras_push) begin
+                    ras_stack[ras_sp] <= ras_push_addr;
+                    ras_sp <= ras_sp + 1'b1;
+                    if (ras_count != RAS_COUNT_MAX)
+                        ras_count <= ras_count + 1'b1;
+                end
             end
         end
     end

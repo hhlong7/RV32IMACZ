@@ -52,31 +52,37 @@ module fp_multiplier (
     s2_t s2_d, s2_q;
 
     // ---- S1 ------------------------------------------------------------------
-    always_comb begin
-        s1_d = '0;
-        s1_d.valid = in_valid;
-        s1_d.rm = in_rm;
-        s1_d.sign = in_a[31] ^ in_b[31];
+    // always @* rather than always_comb: Icarus 12 makes an always_comb block
+    // sensitive to the local variables of the functions it calls, so blocks
+    // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
+    always @* begin
+        s1_t n;               // built locally and assigned once: the block never
+                              // reads its own output
+        n = '0;
+        n.valid = in_valid;
+        n.rm = in_rm;
+        n.sign = in_a[31] ^ in_b[31];
 
         if (is_nan(in_a) || is_nan(in_b)) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = CANONICAL_NAN;
-            s1_d.special_flags[FLAG_NV] = is_snan(in_a) || is_snan(in_b);
+            n.special = 1'b1;
+            n.special_result = CANONICAL_NAN;
+            n.special_flags[FLAG_NV] = is_snan(in_a) || is_snan(in_b);
         end else if ((is_inf(in_a) && is_zero(in_b)) || (is_zero(in_a) && is_inf(in_b))) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = CANONICAL_NAN;
-            s1_d.special_flags[FLAG_NV] = 1'b1;
+            n.special = 1'b1;
+            n.special_result = CANONICAL_NAN;
+            n.special_flags[FLAG_NV] = 1'b1;
         end else if (is_inf(in_a) || is_inf(in_b)) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = signed_inf(s1_d.sign);
+            n.special = 1'b1;
+            n.special_result = signed_inf(n.sign);
         end else if (is_zero(in_a) || is_zero(in_b)) begin
-            s1_d.special = 1'b1;
-            s1_d.special_result = {s1_d.sign, 31'b0};
+            n.special = 1'b1;
+            n.special_result = {n.sign, 31'b0};
         end
 
-        s1_d.sig_a = unpack_sig(in_a);
-        s1_d.sig_b = unpack_sig(in_b);
-        s1_d.exp = unpack_exp(in_a) + unpack_exp(in_b) - 127;
+        n.sig_a = unpack_sig(in_a);
+        n.sig_b = unpack_sig(in_b);
+        n.exp = unpack_exp(in_a) + unpack_exp(in_b) - 127;
+        s1_d = n;
     end
 
     // ---- S2 ------------------------------------------------------------------
@@ -92,7 +98,10 @@ module fp_multiplier (
     end
 
     // ---- S3 ------------------------------------------------------------------
-    always_comb begin
+    // always @* rather than always_comb: Icarus 12 makes an always_comb block
+    // sensitive to the local variables of the functions it calls, so blocks
+    // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
+    always @* begin
         logic [36:0] packed_result;
         int msb;
 

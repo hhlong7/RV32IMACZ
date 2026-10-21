@@ -1,0 +1,69 @@
+// Module hierarchy of the out-of-order OTTER_MCU (instance : module).
+// Regenerate: dot -Tsvg docs/diagrams/otter_mcu_hierarchy.dot -o docs/images/otter_mcu_hierarchy.svg
+digraph OTTER_MCU_HIERARCHY {
+    graph [rankdir=LR, fontname="Helvetica", nodesep=0.12, ranksep=0.5];
+    node  [shape=box, style="rounded,filled", fillcolor=white, fontname="Helvetica", fontsize=10];
+    edge  [color="#78909c", arrowsize=0.6];
+
+    top [label="OTTER_MCU\n(otter_mcu_ooo.sv)", fillcolor="#cfd8dc"];
+
+    node [fillcolor="#e3f2fd"];
+    bp    [label="BranchPredictor"];
+    exp0  [label="FETCH_SLOT0_EXPANDER : RVCExpander"];
+    exp1  [label="FETCH_SLOT1_EXPANDER : RVCExpander"];
+    bld0  [label="FETCH_SLOT0_BUILDER : FrontendPacketBuilder"];
+    bld1  [label="FETCH_SLOT1_BUILDER : FrontendPacketBuilder"];
+    imem0 [label="OTTER_IMEM : imem"];
+    imem1 [label="OTTER_IMEM_PREFETCH : imem"];
+    icache [label="OTTER_CACHE : Cache"];
+    icfsm [label="OTTER_CACHE_FSM : CacheFSM"];
+    ictags [label="cache_tags"];
+
+    node [fillcolor="#e8f5e9"];
+    dec0 [label="DECODE0 : DispatchDecode"];
+    dec1 [label="DECODE1 : DispatchDecode"];
+    cu   [label="CU_DCDR"]; fpd [label="FPDecode"]; amod [label="AtomicDecode"];
+    rf   [label="OTTER_REG_FILE : REG_FILE"];
+    frf  [label="OTTER_FP_REG_FILE : FP_REG_FILE"];
+    rat  [label="OTTER_RAT : RenameTable"];
+
+    node [fillcolor="#fff3e0"];
+    rsalu [label="RS_ALU : ReservationStation"];
+    rsbr  [label="RS_BR : ReservationStation"];
+    rsfa  [label="RS_FADD : ReservationStation"];
+    rsfm  [label="RS_FMUL : ReservationStation"];
+    rsfd  [label="RS_FDIV : ReservationStation"];
+    aimm  [label="ALU_IMM : ImmediateGenerator"];
+    alu   [label="OTTER_ALU : ALU"];
+    aimm1 [label="ALU1_IMM : ImmediateGenerator"];
+    alu1  [label="OTTER_ALU1 : ALU"];
+    bimm  [label="BR_IMM : ImmediateGenerator"];
+    bgen  [label="OTTER_BRANCH_GEN : BranchGenerator"];
+    fadd  [label="OTTER_FP_ADDER : fp_adder"];
+    fmul  [label="OTTER_FP_MULTIPLIER : fp_multiplier"];
+    fdiv  [label="OTTER_FP_DIVIDER : fp_divider"];
+    arb   [label="OTTER_CDB_ARBITER : CdbArbiter"];
+
+    lsu   [label="OTTER_LSU : LoadStoreUnit"];
+    memq  [label="MEMQ : ReservationStation"];
+    sb    [label="STORE_BUFFER : StoreBuffer"];
+    dc    [label="DCACHE : datacache"];
+    l2    [label="L2CACHE : l2cache"];
+    dcfsm [label="DCACHE_FSM : datacachefsm"];
+    dctags [label="cache_tags"]; l2tags [label="cache_tags"];
+
+    node [fillcolor="#f3e5f5"];
+    rob [label="OTTER_ROB : ReorderBuffer"];
+    csr [label="OTTER_CSR_FILE : CSR_FILE"];
+    mem [label="OTTER_MEMORY : Memory"];
+    mmio [label="MMIO_BLOCK : OTTER_MMIO"];
+
+    top -> {bp exp0 exp1 bld0 bld1 imem0 imem1 icache icfsm};
+    icache -> ictags;
+    top -> {dec0 dec1 rf frf rat};
+    dec0 -> {cu fpd amod};
+    top -> {rob rsalu rsbr aimm alu aimm1 alu1 bimm bgen lsu rsfa rsfm rsfd fadd fmul fdiv arb csr mem};
+    lsu -> {memq sb dc l2 dcfsm};
+    dc -> dctags; l2 -> l2tags;
+    mem -> mmio;
+}

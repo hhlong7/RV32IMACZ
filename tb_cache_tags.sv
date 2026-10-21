@@ -58,11 +58,12 @@ module tb_cache_tags;
 
     function automatic void model_touch(int p, int ln);
         if (p == 1) begin
+            // Lines appear at most once in the queue; no `break` (Icarus 12).
+            int hit;
+            hit = -1;
             foreach (recency[i])
-                if (recency[i] == ln) begin
-                    recency.delete(i);
-                    break;
-                end
+                if (recency[i] == ln) hit = i;
+            if (hit >= 0) recency.delete(hit);
             recency.push_front(ln);
         end else begin
             // Walk the line number MSB first; at each node point the other way.

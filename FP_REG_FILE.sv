@@ -2,20 +2,22 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Module Name: FP_REG_FILE
 // Description:
-//   32 x 32-bit floating-point registers (f0 is an ordinary register). Two
-//   read ports for decode, one write port at writeback. Like REG_FILE, a
-//   write in the current cycle is visible to the read ports immediately, and
-//   the array updates on the falling edge.
+//   32 x 32-bit floating-point registers (f0 is an ordinary register). Four
+//   read ports for two-wide dispatch and two write ports for two-wide commit;
+//   when both writes target one register the younger (port 1) wins. Writes in
+//   the current cycle are visible to the read ports immediately, and the
+//   array updates on the falling edge.
 //////////////////////////////////////////////////////////////////////////////////
 module FP_REG_FILE (
     input  logic        CLK,
-    input  logic        WE,
-    input  logic [4:0]  WA,
-    input  logic [31:0] WD,
-    input  logic [4:0]  RA1,
-    input  logic [4:0]  RA2,
-    output logic [31:0] RD1,
-    output logic [31:0] RD2
+    input  logic        WE0,
+    input  logic [4:0]  WA0,
+    input  logic [31:0] WD0,
+    input  logic        WE1,
+    input  logic [4:0]  WA1,
+    input  logic [31:0] WD1,
+    input  logic [3:0][4:0]  RA,
+    output logic [3:0][31:0] RD
 );
     logic [31:0] ram [0:31];
 
@@ -24,11 +26,21 @@ module FP_REG_FILE (
             ram[i] = 32'b0;
     end
 
-    assign RD1 = (WE && WA == RA1) ? WD : ram[RA1];
-    assign RD2 = (WE && WA == RA2) ? WD : ram[RA2];
+    always_comb begin
+        for (int p = 0; p < 4; p++) begin
+            if (WE1 && WA1 == RA[p])
+                RD[p] = WD1;
+            else if (WE0 && WA0 == RA[p])
+                RD[p] = WD0;
+            else
+                RD[p] = ram[RA[p]];
+        end
+    end
 
     always_ff @(negedge CLK) begin
-        if (WE)
-            ram[WA] <= WD;
+        if (WE0)
+            ram[WA0] <= WD0;
+        if (WE1)
+            ram[WA1] <= WD1;
     end
 endmodule

@@ -11,7 +11,9 @@ env:
 
 jobs:
   regress:
-    runs-on: ubuntu-latest
+    # Pinned: the simulator version comes from this image's apt packages
+    # (Icarus 12.0 on 24.04), and ubuntu-latest moves to a new release.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
@@ -51,6 +53,13 @@ jobs:
           echo "$HOME/spike/bin" >> "$GITHUB_PATH"
           "$HOME/spike/bin/spike" --help 2>&1 | head -n 1
 
+      - name: Tool versions
+        run: |
+          iverilog -V 2>&1 | head -n 1
+          verilator --version
+          riscv64-unknown-elf-as --version | head -n 1
+          spike --help 2>&1 | head -n 1
+
       - name: Verilator lint
         run: |
           verilator --lint-only --timing -Wall -Wno-fatal --top-module tb_core \
@@ -71,6 +80,7 @@ jobs:
       # CI is set on GitHub runners, so the flow requires Spike and GNU
       # binutils here instead of skipping the lockstep and assembler checks.
       - name: Run verification suite
+        timeout-minutes: 30
         run: |
           bash tools/run_verification_quality.sh out/verification_logs
 

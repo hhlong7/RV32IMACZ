@@ -1,7 +1,7 @@
 otter_defs_pkg.sv
 fpu_pkg.sv
+ooo_pkg.sv
 ALU.sv
-AtomicController.sv
 AtomicDecode.sv
 BAG.sv
 BCG.sv
@@ -14,9 +14,7 @@ FP_REG_FILE.sv
 fp_adder.sv
 fp_multiplier.sv
 fp_divider.sv
-DualIssueInOrder.sv
 FrontendPacketBuilder.sv
-Hazard.sv
 ImmediateGenerator.sv
 OTTER_MMIO.sv
 REG_FILE.sv
@@ -30,4 +28,10 @@ datacachefsm.sv
 l2cache.sv
 imem.sv
 otter_memory_v1_07.sv
-otter_mcu_pipeline_template_v2.sv
+DispatchDecode.sv
+ReservationStation.sv
+ReorderBuffer.sv
+RenameTable.sv
+CdbArbiter.sv
+LoadStoreUnit.sv
+otter_mcu_ooo.sv

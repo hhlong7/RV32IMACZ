@@ -1,6 +1,10 @@
 `timescale 1ns/1ps
 
-module FrontendPacketBuilder(
+module FrontendPacketBuilder #(
+    // Backward-taken / forward-not-taken for counters still at their reset
+    // value (weakly not-taken): loops predict taken from their first visit.
+    parameter bit BTFN_COLD = 1'b1
+) (
     input logic valid_i,
     input logic [31:0] pc_i,
     input logic [31:0] ir_i,
@@ -11,6 +15,8 @@ module FrontendPacketBuilder(
     input logic btb_hit_i,
     input logic [31:0] btb_target_i,
     input logic bht_taken_i,
+    input logic bht_weak_i,
+    input logic [otter_defs_pkg::GHR_BITS-1:0] ghr_i,
     output otter_defs_pkg::frontend_t packet_o
 );
 
@@ -38,6 +44,7 @@ module FrontendPacketBuilder(
                              (ir_i[11:7] == 5'd0) &&
                              packet_o.rs1_is_link &&
                              (ir_i[31:20] == 12'd0);
+        packet_o.ghr = ghr_i;
         packet_o.predicted_taken = 1'b0;
         packet_o.predicted_target = packet_o.pc_next;
 
@@ -52,16 +59,18 @@ module FrontendPacketBuilder(
                 // less reliable than the architecturally paired call stack.
                 packet_o.predicted_taken = 1'b1;
                 packet_o.predicted_target = ras_top_i;
-            end else if (btb_hit_i) begin
-                if (packet_o.is_jalr) begin
-                    // Non-return jalr relies entirely on the remembered BTB target.
+            end else if (packet_o.is_branch) begin
+                // Conditional branches: the direction comes from the gshare
+                // table, and the target is computed from the instruction's own
+                // immediate, so a taken prediction never waits on the BTB.
+                if (bht_taken_i || (BTFN_COLD && bht_weak_i && ir_i[31])) begin
                     packet_o.predicted_taken = 1'b1;
-                    packet_o.predicted_target = btb_target_i;
-                end else if (packet_o.is_branch && bht_taken_i) begin
-                    // Conditional branches only redirect when both BTB and BHT agree.
-                    packet_o.predicted_taken = 1'b1;
-                    packet_o.predicted_target = btb_target_i;
+                    packet_o.predicted_target = pc_i + {{20{ir_i[31]}}, ir_i[7], ir_i[30:25], ir_i[11:8], 1'b0};
                 end
+            end else if (packet_o.is_jalr && btb_hit_i) begin
+                // Non-return jalr relies entirely on the remembered BTB target.
+                packet_o.predicted_taken = 1'b1;
+                packet_o.predicted_target = btb_target_i;
             end
         end
     end

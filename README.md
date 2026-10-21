@@ -1,16 +1,21 @@
 # RV32IMACZ
 
-This repo contains a simulation-first RISC-V CPU built around a
-seven-stage in-order core and a practical verification flow. The current
+This repo contains a simulation-first RISC-V CPU built around a two-wide
+out-of-order core (Tomasulo's algorithm with a reorder buffer) and a practical
+verification flow. The current
 software target is `rv32imac_zicsr_zifencei`, and the repo includes directed
 tests, randomized tests, and a FreeRTOS + CoreMark demo.
 
 ## Project Overview
 
-- Seven-stage pipeline: `IF1 -> IF2 -> ID -> EX1 -> EX2 -> MEM -> WB`
-- Two-slot front end with restricted dual issue
+- Out-of-order core: two-wide in-order fetch/rename/dispatch, Tomasulo
+  reservation stations, three common data buses, and a 16-entry reorder buffer
+  for two-wide in-order commit with precise exceptions (see
+  [Out-of-Order Core](#out-of-order-core))
+- Execution units: two integer ALUs, branch unit, load/store unit, pipelined
+  FP adder, pipelined FP multiplier, iterative FP divider
 - ISA support: RV32I, RV32M, RV32A, RV32C, `Zicsr`, `Zifencei`
-- Branch prediction with a small BHT, BTB, and RAS
+- Branch prediction: 512-entry gshare (8-bit global history) with backward-taken defaults for cold branches, a 16-entry BTB for indirect jumps, and a 4-entry RAS
 - Fully associative caches with tree pseudo-LRU replacement: 16-line L1
   I-cache with next-line prefetch, 16-line L1 D-cache, 32-line L2 (32-byte
   lines), plus a store buffer
@@ -68,8 +73,11 @@ Deeper module hierarchy view extracted from the RTL:
 
 ## Learn The Project
 
-1. `otter_mcu_pipeline_template_v2.sv`
-   Main core RTL and pipeline behavior.
+1. `otter_mcu_ooo.sv` (module `OTTER_MCU`)
+   Main core RTL: front end, rename/dispatch, execution units, CDBs, commit.
+   The out-of-order building blocks are `ooo_pkg.sv`, `DispatchDecode.sv`,
+   `RenameTable.sv`, `ReservationStation.sv`, `ReorderBuffer.sv`,
+   `CdbArbiter.sv`, and `LoadStoreUnit.sv`.
 2. `tb_core.sv`
    Main testbench, pass/fail behavior, and verification checks.
 3. `test_files/asm/`
@@ -87,8 +95,9 @@ Other useful files:
   (unit-tested by `tb_cache_tags.sv`)
 - `BranchPredictor.sv`, `FrontendPacketBuilder.sv`, `RVCExpander.sv` for the
   front end
-- `CSR_FILE.sv`, `AtomicController.sv`, `AtomicDecode.sv` for system and
-  atomic support
+- `CSR_FILE.sv`, `AtomicDecode.sv` for system and atomic support (atomics
+  execute in `LoadStoreUnit.sv`)
+- `docs/diagrams/*.dot`: Graphviz sources of the diagrams above
 - `OTTER_Wrapper_v1_03.sv` and `Basys3_Master.xdc` for board-level integration
 
 ## How To Use It
@@ -120,17 +129,18 @@ cd out/run && vvp -n ../otter_tb.vvp +PASS_SSEG=101
 
 The testbench loads `Test_All.mem` from its working directory and ends with a
 run report: pass/fail, cycles, retired instructions and IPC (from the core's
-own `mcycle`/`minstret`), dual-issue share, branch prediction accuracy, stall
-breakdown, I-cache/D-cache/L2 behavior, store buffer, atomics, and traps.
+own `mcycle`/`minstret`), two-wide dispatch and commit share, dispatch
+stalls, branch prediction accuracy, CDB contention, I-cache/D-cache/L2
+behavior, store buffer, atomics, and traps.
 
 | Option | Effect |
 | --- | --- |
 | `+PASS_SSEG=N` / `+FAIL_SSEG=N` | stop when the program writes N to the seven-segment register |
 | `+MAX_CYCLES=N` | time out after N cycles |
-| `+VERBOSE_PIPE` / `+VERBOSE_LSU` / `+VERBOSE_ICACHE` | per-cycle pipeline, LSU, or I-cache trace |
+| `+VERBOSE_COMMIT` / `+VERBOSE_LSU` | print every retired instruction, or store-buffer and atomic events |
 | `+VERBOSE_MMIO` | print every MMIO write (LEDs, seven-segment) |
 | `+COMMIT_LOG=file` | write the retirement trace used by `tools/lockstep.py` |
-| `+STATS` | print machine-readable `TB FINAL/STATS/LSU/ATOM/COV` lines instead of the report (used by the scripts) |
+| `+STATS` | print machine-readable `TB FINAL/STATS/LSU/ATOM/OOO` lines instead of the report (used by the scripts) |
 
 The directed assembly tests use the repo's own assembler script
 `tools/assemble_tests.py`, so you do not need an external RISC-V assembler for
@@ -208,13 +218,19 @@ appended, e.g. `tools/run_freertos_coremark.sh +VERBOSE_MMIO`.
 
 ## Latest Verification Run
 
-Run on October 15, 2026 with `bash tools/run_verification_quality.sh`:
+Run on October 21, 2026 on the out-of-order core (milestone 4) with
+`bash tools/run_verification_quality.sh`:
 
 - Directed regression suite: `23 / 23` passed
-- Legacy randomized tests: store-buffer unit test plus `16 / 16` seeded programs
+- Legacy randomized tests: store-buffer, cache-tag, and FP-unit unit tests
+  plus `16 / 16` seeded programs
+- Coverage report: 47 / 47 bins hit
 - Assembler cross-check: 6,000 random instructions, 0 encoding mismatches
-- Lockstep vs Spike: 8 directed + 200 random programs, ~115k retired
-  instructions, 0 mismatches (an additional 1,000-seed run also passed)
+- Lockstep vs Spike: 14 directed + 200 random programs, ~144k retired
+  instructions, 0 mismatches; across M4, an additional ~21,500 random
+  programs (~12M instructions) also passed
+- The same flow under CI's Icarus 12.0 (Ubuntu 24.04 container): all passed
+- FreeRTOS + CoreMark: PASS
 - Verilator lint: no RTL warnings (only `PROCASSINIT` style warnings in
   `tb_core.sv`)
 
@@ -250,9 +266,10 @@ Run on October 15, 2026 with `bash tools/run_verification_quality.sh`:
 
 ## Current Status
 
-The current design is a seven-stage RV32IMAC core with atomics, compressed
-instructions, branch prediction, CSR/trap support, a store buffer, and a
-two-level data-cache hierarchy. The repo also includes verification scripts and
+The current design is a two-wide out-of-order RV32IMAC core with a
+single-precision FP subset, atomics, compressed instructions, branch
+prediction, CSR/trap support, a store buffer, and a two-level data-cache
+hierarchy. The repo also includes verification scripts and
 a software bring-up path so the project is easier to study and extend.
 
 ## Floating-Point Units
@@ -261,12 +278,12 @@ a software bring-up path so the project is easier to study and extend.
 | --- | --- | --- | --- | --- |
 | `fp_adder.sv` | `fadd.s`, `fsub.s` | 3-stage pipeline (align / add+normalize / round) | 3 cycles | 1 per cycle |
 | `fp_multiplier.sv` | `fmul.s` | 3-stage pipeline (unpack / 24x24 multiply / normalize+round) | 3 cycles | 1 per cycle |
-| `fp_divider.sv` | `fdiv.s` | iterative restoring divider, 1 quotient bit per cycle | holds EX1 for 28 cycles (1 setup + 27 quotient bits) | 1 at a time |
+| `fp_divider.sv` | `fdiv.s` | iterative restoring divider, 1 quotient bit per cycle | 28 cycles (1 setup + 27 quotient bits) | 1 at a time |
 
-The pipelined units run beside EX1 -> EX2 -> MEM, so an FP result is ready in
-MEM like load data; a dependent FP instruction directly behind its producer
-waits one cycle. `fdiv.s` waits in EX1 while the divider runs. FP
-instructions issue alone (never in the second dual-issue slot).
+Each unit has its own reservation station. The adder and multiplier accept a
+new operation every cycle and hold their pipeline only when their result
+loses CDB arbitration; the divider takes one operation at a time while other
+units keep executing around it.
 
 Verification: `tb_fpu_units.sv` checks the three units against an
 exact-rational reference model (`tools/fp_ref.py`, 150,000 vectors), and the
@@ -277,7 +294,159 @@ and rounding mode, generated by `tools/gen_fp_lockstep.py`),
 traps, compressed FP loads/stores, dependencies), and random programs that
 mix FP with all other traffic.
 
+## Out-of-Order Core
+
+| Structure | Size | Notes |
+| --- | --- | --- |
+| Fetch / dispatch / commit width | 2 / 2 / 2 | in order; slot 1 is fetched behind compressed and unaligned instructions and behind a branch predicted not-taken; slot 1 commits only simple instructions alongside slot 0 |
+| Reorder buffer | 16 entries | the ROB index is the rename tag |
+| Rename table | 64 entries | x0-x31 and f0-f31: busy bit + ROB tag |
+| Integer ALU RS | 8 | ALU and M-extension ops; issues the two oldest ready entries to two ALUs |
+| Branch RS | 4 | branches, `jal`, `jalr`; each holds one rename-table checkpoint |
+| Memory queue / store queue | 8 / 4 | in order; stores wait in the store queue until commit and forward to younger loads |
+| FP add / mul / div RS | 2 / 2 / 2 | |
+| Common data buses | 3 | `CdbArbiter` grants the three oldest of seven finished results |
+| Branch predictor | 512 + 16 + 4 | gshare counters (halfword-indexed) XOR 8-bit speculative history, repaired on a mispredict; branch and `jal` targets computed at fetch; BTB for other `jalr`; RAS for returns |
+
+Operands are read at dispatch from the register files, the ROB (finished
+results), or the CDBs in the same cycle; otherwise the RS entry waits for the
+producer's tag on a CDB. CSR accesses, atomics, fences, `mret`, and `wfi`
+serialize: they dispatch into an empty ROB and execute as they commit. FP CSR
+accesses that cannot change the rounding mode (any `fflags` access, and
+reads of `frm`/`fcsr`) do not: they dispatch normally, read the CSR when they
+reach the ROB head (after every older FP operation has accrued its flags),
+and broadcast the value on a CDB to wake their dependents.
+Exceptions, interrupts, `mret`, and `fence.i` are handled at the ROB head
+with a full flush, so all state changes are precise.
+
+Branch recovery happens at execute. Each branch or jump saves a checkpoint
+of the rename table at dispatch (commits keep clearing busy bits inside the
+checkpoints). When it resolves as mispredicted, in the cycle it wins a CDB,
+fetch is redirected, the rename table is restored from the checkpoint, and
+everything younger is squashed: the ROB tail, reservation-station and
+memory-queue entries, the store-queue tail, the load in flight, the LSU
+output buffer, FP pipeline stages (live bits), and a running divide. Older
+work keeps executing. The branch predictor's BHT and BTB train at commit;
+the RAS updates at dispatch.
+
+Loads use store-to-load forwarding. The memory queue is in order, so when a
+load reaches its head every older store is already in the store queue with
+its address and data. The youngest overlapping store forwards its data if it
+covers every byte the load reads (the load completes without a cache
+access); a partial overlap waits for those stores to commit; a load with no
+overlapping store goes straight to the store buffer and caches. MMIO loads
+still wait for all older stores, keeping device accesses in program order.
+
+Milestones: M1 Tomasulo back end, M2 early branch recovery, M3 store-queue
+forwarding, M4 tuning (all done; see the performance section). Ideas not
+done: return-stack repair on mispredicts, and a 32-entry ROB (ROB-full
+stalls are about 9k cycles of FreeRTOS + CoreMark).
+
 ## Performance Snapshots
+
+[`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) tracks every core version on the
+same seven workloads (FreeRTOS + CoreMark, the two system workloads, and four
+lockstep kernels including FP), with cycles, IPC, branch, cache, and
+store-buffer numbers per snapshot. A new snapshot is recorded after each
+feature:
+
+```bash
+python3 tools/perf_snapshot.py --label "OoO M2" --notes "early branch recovery"
+```
+
+`--rtl-root DIR` measures another tree (for example an export of `main`) on
+the same program images.
+
+### Out-of-Order Core, Milestone 4: Tuning (October 2026)
+
+Each option was measured on its own (`docs/PERFORMANCE.md` has every counter
+for every step) and validated against Spike (thousands of random programs per
+step) and in the CI container (Icarus 12) before the next one.
+
+| Step | Change | FreeRTOS + CoreMark cycles | IPC |
+| --- | --- | ---: | ---: |
+| In-order dual-issue core | | 379,141 | 0.877 |
+| OoO M3 (start of M4) | | 369,375 | 0.900 |
+| 0 | dispatch-stall attribution counters (testbench only) | 369,375 | 0.900 |
+| 1 | gshare predictor, branch targets at fetch, BTFN for cold branches | 352,921 | 0.942 |
+| 2 | branch RS and checkpoints 2 -> 4 | 350,240 | 0.950 |
+| 6 | store buffer drains every cycle (depth 8 measured: no gain) | 345,430 | 0.963 |
+| 3 | slot 1 behind compressed/unaligned instructions; past not-taken branches | 315,867 | 1.053 |
+| 4 | second integer ALU, 8-entry ALU RS, third CDB | **275,491** | **1.207** |
+| 5 | FP CSR accesses (`fflags`, `frm`/`fcsr` reads) no longer serialize | 275,491 | 1.207 |
+
+| Workload | In-order | OoO M3 | OoO M4 |
+| --- | ---: | ---: | ---: |
+| FreeRTOS + CoreMark | 379,141 | 369,375 | **275,491** (-27.3%) |
+| `system_workload` | 902 | 941 | **805** (-10.8%) |
+| `system_workload_benchmark` | 984 | 1,022 | **901** (-8.4%) |
+| `rv32im_alu` | 5,586 | 6,865 | **3,856** (-31.0%) |
+| `rv32i_control` | 1,024 | 1,031 | **801** (-21.8%) |
+| `cache_stress` | 4,271 | 4,057 | **4,031** (-5.6%) |
+| `fp_arith` | 86,804 | 93,138 | **51,620** (-40.5%) |
+
+(Percentages are against the in-order core.) What the measurements showed:
+81% of mispredicts were taken branches missing in the 8-entry BTB, so branch
+targets are now computed from the instruction; branch-RS-full stalls were
+mostly branches waiting on loads (8 entries only moved the stall to the
+memory queue); the store buffer never needed more entries, just to stop
+holding back drains during store bursts; and the largest single limit was
+fetch, which filled slot 1 only behind a word-aligned 32-bit instruction;
+and `fp_arith`, which reads `fflags` after almost every FP operation, was
+throttled by CSR serialization until option 5 (FreeRTOS has no FP, so that
+step leaves it unchanged). Every workload is now faster than on the in-order
+core.
+
+### Out-of-Order Core, Milestone 3: Store-to-Load Forwarding (October 2026)
+
+| Workload | Metric | In-order dual-issue | OoO M1 | OoO M2 | OoO M3 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| FreeRTOS + CoreMark | cycles | 379,141 | 397,592 | 375,765 | **369,375** |
+| FreeRTOS + CoreMark | IPC | 0.877 | 0.837 | 0.885 | **0.900** |
+| FreeRTOS + CoreMark | store-ordering stall cycles | 0 | 9,077 | 9,065 | 3 |
+| `cache_stress` | cycles | 4,271 | 4,696 | 4,555 | **4,057** |
+| `system_workload` | cycles | **902** | 1,001 | 964 | 941 |
+| `system_workload_benchmark` | cycles | **984** | 1,102 | 1,058 | 1,022 |
+
+Almost every M1/M2 store-ordering stall was a load waiting behind an older
+store to a different address; those loads now issue at once, and loads that
+read a just-stored value take it from the store queue. The out-of-order core
+now leads the in-order one by 2.6% on FreeRTOS + CoreMark and 5.0% on
+`cache_stress`. It still trails on integer-only code (one integer ALU:
+`rv32im_alu` IPC 0.998 vs 1.227), on `fp_arith` (frequent `frm`/`fflags`
+CSR accesses serialize the ROB), and slightly on the small system workloads.
+
+### Out-of-Order Core, Milestone 2: Early Branch Recovery (October 2026)
+
+| Workload | Metric | In-order dual-issue | OoO M1 | OoO M2 |
+| --- | --- | ---: | ---: | ---: |
+| FreeRTOS + CoreMark | cycles | 379,141 | 397,592 | **375,765** |
+| FreeRTOS + CoreMark | IPC | 0.877 | 0.837 | **0.885** |
+| `system_workload` | cycles | **902** | 1,001 | 964 |
+| `system_workload_benchmark` | cycles | **984** | 1,102 | 1,058 |
+| `rv32i_control` | cycles | **1,024** | 1,140 | 1,031 |
+
+Recovering at execute instead of commit cuts FreeRTOS + CoreMark by 5.5%,
+which puts the out-of-order core ahead of the in-order one there. The small
+system workloads remain behind: their loads still wait for older stores
+(M3), and integer-only code is limited by the single integer ALU. Mispredict
+counts can rise slightly versus M1 because wrong-path branches now resolve
+and recover before an older branch squashes them.
+
+### Out-of-Order Core, Milestone 1 (October 2026)
+
+| Workload | Metric | In-order dual-issue (before) | Out-of-order M1 |
+| --- | --- | ---: | ---: |
+| FreeRTOS + CoreMark | cycles | **379,141** | 397,592 |
+| FreeRTOS + CoreMark | IPC | **0.877** | 0.837 |
+| `system_workload` | cycles | **902** | 1,001 |
+| `system_workload_benchmark` | cycles | **984** | 1,102 |
+
+Milestone 1 is about correctness, and it is slower than the in-order core it
+replaces: a mispredicted branch is recovered only when it reaches the ROB
+head (11,824 mispredicts in the FreeRTOS run), and loads wait until every
+older store has committed (9,077 such stall cycles). Those are the two
+planned next milestones.
 
 ### Fully Associative Caches (October 2026)
 

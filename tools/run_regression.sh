@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/otter_regression.XXXXXX")"
 SIM="$WORK/otter_tb.vvp"
 LOG_DIR="${VERIF_LOG_DIR:-}"
+SIM_WALL_SECONDS="${SIM_WALL_SECONDS:-120}"
 trap 'rm -rf "$WORK"' EXIT
 
 cd "$ROOT"
@@ -53,7 +54,14 @@ for spec in "${tests[@]}"; do
   cp "$mem" "$WORK/Test_All.mem"
   # +STATS keeps the machine-readable counters in the logs for
   # tools/verification_report.py.
-  sim_out="$(cd "$WORK" && vvp -n "$SIM" +STATS +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000 2>&1 || true)"
+  # +MAX_CYCLES bounds simulated time; the wall-clock limit (perl alarm, which
+  # works on macOS and Linux alike) also catches a simulator stuck in a
+  # zero-time loop, which never reaches the cycle limit.
+  sim_out="$(cd "$WORK" && perl -e 'alarm shift; exec @ARGV' "$SIM_WALL_SECONDS" \
+             vvp -n "$SIM" +STATS +PASS_SSEG="$pass" +FAIL_SSEG=-1 +MAX_CYCLES=12000 2>&1 || true)"
+  if [[ -z "$sim_out" ]]; then
+    sim_out="TB TIMEOUT wall clock: no output after ${SIM_WALL_SECONDS}s (simulator stuck)"
+  fi
   if [[ -n "$LOG_DIR" ]]; then
     printf '%s\n' "$sim_out" > "$LOG_DIR/${name}.log"
   fi

@@ -93,16 +93,15 @@ module datacachefsm(
     assign start_uncached_load = uncached_load && ~fill_cache && ~uncached_wait && storebufEmpty;
     assign block_addr = {exmemAddr[31:5], 5'b0};
 
-    // The oldest store may drain whenever the load-miss machinery is idle.
-    // During a normal posted-store burst we avoid draining in the same cycle as
-    // a new store arrival so the buffer can actually absorb the burst. Once the
-    // buffer is full, draining is re-enabled immediately to break the stall.
+    // The oldest store drains whenever the load-miss machinery is idle, even
+    // in a cycle where a new store arrives (the buffer enqueues and drains in
+    // the same cycle). Holding drains back during a store burst only filled
+    // the buffer and stalled commit: two-wide commit releases stores in bursts.
     assign drain_issue = storebufDrainValid &&
                          ~fill_cache &&
                          ~start_fill &&
                          ~uncached_wait &&
-                         ~start_uncached_load &&
-                         (~exmemWrite || storebufFull);
+                         ~start_uncached_load;
 
     assign miss_start = start_fill;
     assign busy = fill_cache || uncached_wait || ~storebufEmpty || start_fill || start_uncached_load;
