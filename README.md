@@ -310,6 +310,34 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 - A trap could overtake an older in-flight `csrw` to `mcause`/`mtval`
 - `tools/run_regression.sh` printed results but never failed on a failing test
 
+## FPGA Synthesis Estimate
+
+The core (`OTTER_MCU`, with the 64 KB memory and the two `imem` memory
+models left out as black boxes, since they model external RAM and have more
+ports than FPGA block RAM) was synthesized with Yosys `synth_xilinx` for
+Xilinx 7-series after converting the SystemVerilog with `sv2v`:
+
+| | Original | After the CDB arbiter rewrite |
+| --- | ---: | ---: |
+| LUTs | 131,016 | **90,742** |
+| Flip-flops | 25,367 | 25,367 |
+| DSP slices | 37 | 13 |
+| `CdbArbiter` alone | 44,239 LUTs + 24 DSPs | 4,224 LUTs |
+
+The original arbiter picked the oldest requests with integer loop variables
+indexing the wide (about 170-bit) request records, which synthesized into
+huge multiplexer chains. It now compares only the 4-bit ages once, ranks each
+request, and selects the CDB records one-hot with an AND-OR. The rewrite was
+proven equivalent to the old arbiter with a Yosys SAT miter (and a
+million-vector simulation), and every workload keeps exactly the same cycle
+count.
+
+For reference, an Artix-7 100T (Nexys A7 / Arty A7) has 63,400 LUTs and a
+200T (Nexys Video) 133,800. Remaining FPGA work: a multi-cycle integer
+divider (both ALUs divide in one cycle), rising-edge register-file writes
+(they write on the falling edge), block-RAM or DRAM memory behind the
+caches, and Vivado timing; Yosys reports no timing for Xilinx parts.
+
 ## Trying To Break The Out-Of-Order Core
 
 After the out-of-order core was finished (milestones 1-4), it was attacked on
