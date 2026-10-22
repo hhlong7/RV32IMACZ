@@ -357,8 +357,10 @@ vivado -mode batch -source tools/vivado/synth_core.tcl
 
 The top is `OTTER_MCU`, the part defaults to the Artix-7 200T
 (`xc7a200tsbg484-1`; pass another part with `-tclargs`), the clock target is
-50 MHz (`tools/vivado/core_ooc.xdc`), and the utilization and timing reports
-land in `out/vivado/<part>/`. Using the board wrapper (`OTTER_Wrapper`) as
+50 MHz (`tools/vivado/core_ooc.xdc`). The console ends with a summary
+(resources, worst slack, estimated maximum clock, the five worst paths), and
+the full utilization and timing reports land in `reports/vivado/<part>/`,
+which is tracked, so a `git push` from the Vivado machine shares them. Using the board wrapper (`OTTER_Wrapper`) as
 the top fails with Synth 8-3391 on the memory models, since they cannot be
 built from FPGA block RAM.
 
