@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2026.1 (64-bit)
+# SW Build 6511674 on Tue Jun 16 11:02:23 MDT 2026
+# IP Build 6504888 on Tue Jun 09 09:05:25 MDT 2026
+# SharedData Build 6501428 on Mon Jun 08 17:34:18 MDT 2026
+# Start of session at: Wed Oct 21 22:40:07 2026
+# Process ID         : 21688
+# Current directory  : C:/Users/hhlon/Documents/RV32IMACZ/rv32imacz.runs/synth_1
+# Command line       : vivado.exe -log OTTER_Wrapper.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source OTTER_Wrapper.tcl
+# Log file           : C:/Users/hhlon/Documents/RV32IMACZ/rv32imacz.runs/synth_1/OTTER_Wrapper.vds
+# Journal file       : C:/Users/hhlon/Documents/RV32IMACZ/rv32imacz.runs/synth_1\vivado.jou
+# Running On         : L-Zenbook
+# Platform           : Windows 11
+# Operating System   : 26200
+# Processor Detail   : Intel(R) Core(TM) Ultra 7 255H
+# CPU Frequency      : 3686 MHz
+# CPU Physical cores : 16
+# CPU Logical cores  : 16
+# Host memory        : 16505 MB
+# Swap memory        : 19362 MB
+# Total Virtual      : 35868 MB
+# Available Virtual  : 4329 MB
+#-----------------------------------------------------------
+source OTTER_Wrapper.tcl -notrace

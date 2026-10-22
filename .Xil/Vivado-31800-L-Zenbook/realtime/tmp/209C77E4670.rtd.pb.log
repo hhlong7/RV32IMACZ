@@ -1,0 +1,143 @@
+xilinx rtfpga
+rt::do_reinfer_area_combined 1
+WARNING: [Synth 8-7129] Port exmemWrite in module datacachefsm is either unconnected or has no load
+WARNING: [Synth 8-7129] Port storebufFull in module datacachefsm is either unconnected or has no load
+WARNING: [Synth 8-7129] Port query_addr[1] in module StoreBuffer is either unconnected or has no load
+WARNING: [Synth 8-7129] Port query_addr[0] in module StoreBuffer is either unconnected or has no load
+WARNING: [Synth 8-7129] Port ins0[valid] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port ins1[valid] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[exception] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][31] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][30] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][29] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][28] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][27] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][26] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][25] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][24] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][23] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][22] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][21] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][20] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][19] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][18] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][17] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][16] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][15] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][14] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][13] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][12] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][11] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][10] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][9] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][8] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][7] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][6] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][5] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][4] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][3] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][2] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][1] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[cause][0] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][31] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][30] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][29] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][28] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][27] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][26] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][25] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][24] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][23] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][22] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][21] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][20] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][19] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][18] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][17] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][16] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][15] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][14] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][13] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][12] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][11] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][10] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][9] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][8] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][7] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][6] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][5] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][4] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][3] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][2] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][1] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[tval][0] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[mispredict] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[taken] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][31] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][30] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][29] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][28] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][27] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][26] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][25] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][24] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][23] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][22] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][21] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][20] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][19] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][18] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][17] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][16] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][15] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][14] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][13] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][12] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][11] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][10] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][9] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][8] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][7] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][6] in module ReservationStation__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb0[next_pc][5] in module ReservationStation__parameterized1 is either unconnected or has no load
+INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+INFO: [Synth 8-3886] merging instance 'out_q_reg[fp_flags][0]' (FDRE) to 'out_q_reg[next_pc][0]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[fp_flags][1]' (FDRE) to 'out_q_reg[next_pc][0]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[fp_flags][2]' (FDRE) to 'out_q_reg[next_pc][0]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[fp_flags][3]' (FDRE) to 'out_q_reg[next_pc][0]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[fp_flags][4]' (FDRE) to 'out_q_reg[next_pc][0]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][0]' (FDRE) to 'out_q_reg[next_pc][1]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][1]' (FDRE) to 'out_q_reg[next_pc][2]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][2]' (FDRE) to 'out_q_reg[next_pc][3]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][3]' (FDRE) to 'out_q_reg[next_pc][4]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][4]' (FDRE) to 'out_q_reg[next_pc][5]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][5]' (FDRE) to 'out_q_reg[next_pc][6]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][6]' (FDRE) to 'out_q_reg[next_pc][7]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][7]' (FDRE) to 'out_q_reg[next_pc][8]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][8]' (FDRE) to 'out_q_reg[next_pc][9]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][9]' (FDRE) to 'out_q_reg[next_pc][10]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][10]' (FDRE) to 'out_q_reg[next_pc][11]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][11]' (FDRE) to 'out_q_reg[next_pc][12]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][12]' (FDRE) to 'out_q_reg[next_pc][13]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][13]' (FDRE) to 'out_q_reg[next_pc][14]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][14]' (FDRE) to 'out_q_reg[next_pc][15]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][15]' (FDRE) to 'out_q_reg[next_pc][16]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][16]' (FDRE) to 'out_q_reg[next_pc][17]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][17]' (FDRE) to 'out_q_reg[next_pc][18]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][18]' (FDRE) to 'out_q_reg[next_pc][19]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][19]' (FDRE) to 'out_q_reg[next_pc][20]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][20]' (FDRE) to 'out_q_reg[next_pc][21]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][21]' (FDRE) to 'out_q_reg[next_pc][22]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][22]' (FDRE) to 'out_q_reg[next_pc][23]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][23]' (FDRE) to 'out_q_reg[next_pc][24]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][24]' (FDRE) to 'out_q_reg[next_pc][25]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][25]' (FDRE) to 'out_q_reg[next_pc][26]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][26]' (FDRE) to 'out_q_reg[next_pc][27]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][27]' (FDRE) to 'out_q_reg[next_pc][28]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][28]' (FDRE) to 'out_q_reg[next_pc][29]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][29]' (FDRE) to 'out_q_reg[next_pc][30]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][30]' (FDRE) to 'out_q_reg[next_pc][31]'
+INFO: [Synth 8-3886] merging instance 'out_q_reg[next_pc][31]' (FDRE) to 'out_q_reg[cause][0]'
+INFO: [Synth 8-3333] propagating constant 0 across sequential element (\out_q_reg[mispredict] )
+INFO: [Synth 8-3333] propagating constant 0 across sequential element (\out_q_reg[cause][0] )
+INFO: [Synth 8-3886] merging instance 'out_q_reg[cause][2]' (FDRE) to 'out_q_reg[exception]'
