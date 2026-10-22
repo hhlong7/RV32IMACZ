@@ -332,6 +332,21 @@ proven equivalent to the old arbiter with a Yosys SAT miter (and a
 million-vector simulation), and every workload keeps exactly the same cycle
 count.
 
+To open the core in the Vivado GUI on any machine, recreate the project from
+the repository (the project itself is not committed: Vivado projects hold
+absolute paths and machine-specific caches):
+
+```bash
+vivado -source tools/vivado/create_project.tcl
+```
+
+This builds `vivado/otter_core/otter_core.xpr` from `rtl.f` with `OTTER_MCU`
+as the top and the memory models as black-box stubs, sets out-of-context
+synthesis, adds `tb_core.sv` as the simulation top, and opens the elaborated
+design. Options go after `-tclargs`: `part=xc7a100tcsg324-1` for another FPGA,
+`memories=real` to view the full design with the real memory models (that
+version cannot be synthesized), `elaborate=0` to only create the project.
+
 To get Vivado's own numbers and timing, synthesize the core out of context
 (no board, no pins) with the memory models replaced by black-box stubs; on
 Windows or Linux, from the repository root:

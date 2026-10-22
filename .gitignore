@@ -11,3 +11,18 @@ __pycache__/
 # Simulator build products
 simv
 *.vvp
+
+# Vivado: the project is recreated by tools/vivado/create_project.tcl, so its
+# generated files (absolute paths, caches, run logs) stay local.
+/vivado/
+.Xil/
+*.xpr
+*.cache/
+*.hw/
+*.runs/
+*.sim/
+*.gen/
+*.ip_user_files/
+vivado*.jou
+vivado*.log
+vivado*.str
