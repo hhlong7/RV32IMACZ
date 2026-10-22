@@ -62,8 +62,10 @@ module REG_FILE(
     end
    
    // Retire the older write first and the younger write second so same-cycle
-   // WAW collisions match sequential in-order commit.
-    always_ff@(negedge CLK) begin
+   // WAW collisions match sequential in-order commit. Writes land on the
+   // rising edge; reads in the writing cycle see them through read_port's
+   // forwarding (a falling-edge write would give these paths half a cycle).
+    always_ff @(posedge CLK) begin
         if (EN0 == 1'b1 && WA0 != 5'd0)
             ram[WA0] <= WD0;
 

@@ -91,28 +91,46 @@ module tb_core;
 
     // ---- Retirement trace ---------------------------------------------------
     // Sampled at the posedge before state updates: a ROB entry retires on this
-    // edge when commit0/commit1 is high, and the register file was written on
-    // the preceding negedge. The logged value is the write-port data; reading
-    // the array back also proves the write landed, except for a slot-0 write
-    // that slot 1 overwrote in the same cycle. FP registers are reported as 32-63.
+    // edge when commit0/commit1 is high. The logged value is the write-port
+    // data. The register files write on this same edge, so the array is read
+    // back one cycle later to prove the write landed (except a slot-0 write
+    // that slot 1 overwrote in the same cycle). FP registers are 32-63.
+    // Register writes retired last cycle, checked against the arrays now.
+    int pend_n = 0;
+    bit pend_fp [2];
+    logic [4:0] pend_rd [2];
+    logic [31:0] pend_val [2], pend_pc [2];
+
+    task automatic check_landed();
+        for (int k = 0; k < pend_n; k++) begin
+            logic [31:0] stored;
+            stored = pend_fp[k] ? dut.OTTER_FP_REG_FILE.ram[pend_rd[k]] : dut.OTTER_REG_FILE.ram[pend_rd[k]];
+            if (stored !== pend_val[k])
+                $display("ASSERT_FAIL register write did not land pc=0x%08x rd=%0d port=0x%08x array=0x%08x",
+                         pend_pc[k], pend_fp[k] ? 32 + pend_rd[k] : pend_rd[k], pend_val[k], stored);
+        end
+        pend_n = 0;
+    endtask
+
     task automatic log_retire(input rob_entry_t e, input logic [31:0] written, input bit shadowed);
         int rd_id;
-        logic [31:0] value, stored;
+        logic [31:0] value;
         rd_id = 0;
         value = 32'b0;
-        stored = 32'b0;
         if (e.wr_fp) begin
             rd_id = 32 + e.rd;
             value = written;
-            stored = dut.OTTER_FP_REG_FILE.ram[e.rd];
         end else if (e.wr_int) begin
             rd_id = e.rd;
             value = written;
-            stored = dut.OTTER_REG_FILE.ram[e.rd];
         end
-        if ((e.wr_fp || e.wr_int) && !shadowed && stored !== value)
-            $display("ASSERT_FAIL register write did not land pc=0x%08x rd=%0d port=0x%08x array=0x%08x",
-                     e.pc, rd_id, value, stored);
+        if ((e.wr_fp || (e.wr_int && e.rd != 5'd0)) && !shadowed) begin
+            pend_fp[pend_n] = e.wr_fp;
+            pend_rd[pend_n] = e.rd;
+            pend_val[pend_n] = value;
+            pend_pc[pend_n] = e.pc;
+            pend_n++;
+        end
         if (commit_fd != 0)
             $fdisplay(commit_fd, "R %08x %0d %08x", e.pc, rd_id, value);
         if (verbose_commit)
@@ -121,6 +139,7 @@ module tb_core;
 
     always @(posedge clk) begin
         if (!reset) begin
+            check_landed();
             if (dut.commit0)
                 log_retire(dut.h0, dut.h0.wr_fp ? dut.h0.value : dut.commit0_value,
                            dut.commit1 && dut.h0.rd == dut.h1.rd &&
@@ -173,8 +192,8 @@ module tb_core;
             if (dut.commit1) dual_commit_count <= dual_commit_count + 1;
             if (dut.if_id.valid && dut.rob_free == 0) rob_full_cycles <= rob_full_cycles + 1;
             if (dut.lsu_busy) lsu_busy_cycles <= lsu_busy_cycles + 1;
-            if (dut.cdb_grant[1]) branch_unit_count <= branch_unit_count + 1;
-            if ($countones(dut.cdb_req_valid) > 3) cdb_conflict_cycles <= cdb_conflict_cycles + 1;
+            if (dut.br_e.valid) branch_unit_count <= branch_unit_count + 1;
+            if ($countones(dut.cdb_req_valid) > $countones(dut.bus_free)) cdb_conflict_cycles <= cdb_conflict_cycles + 1;
             if (dut.branch_recover) mispredict_count <= mispredict_count + 1;
             if (dut.branch_recover) begin
                 if (dut.br_e.ir[6:0] == 7'b1100011) begin
@@ -317,6 +336,12 @@ module tb_core;
                    dut.OTTER_ROB.entries[t].valid;
     endfunction
 
+    // Some CDB carries this tag this cycle.
+    function automatic bit cdb_carries(ooo_pkg::tag_t t);
+        cdb_carries = (dut.cdb0.valid && dut.cdb0.tag == t) || (dut.cdb1.valid && dut.cdb1.tag == t) ||
+                      (dut.cdb2.valid && dut.cdb2.tag == t);
+    endfunction
+
     task automatic inv_fail(input string what);
         if (inv_fail_count < 20)
             $display("ASSERT_FAIL invariant %s cycle=%0d", what, cycle_count);
@@ -338,6 +363,10 @@ module tb_core;
                     dut.OTTER_ROB.entries[rs.slots[i].src2_tag].done || \
                     ooo_pkg::tag_age(rs.slots[i].src2_tag, dut.rob_head) >= ooo_pkg::tag_age(rs.slots[i].tag, dut.rob_head))) \
                     inv_fail($sformatf("%s[%0d] waits on src2 tag %0d that will never broadcast", name, i, rs.slots[i].src2_tag)); \
+                if (rs.slots[i].src1_spec && !cdb_carries(rs.slots[i].src1_tag)) \
+                    inv_fail($sformatf("%s[%0d] src1 woken early by tag %0d but its value is on no CDB", name, i, rs.slots[i].src1_tag)); \
+                if (rs.slots[i].src2_spec && !cdb_carries(rs.slots[i].src2_tag)) \
+                    inv_fail($sformatf("%s[%0d] src2 woken early by tag %0d but its value is on no CDB", name, i, rs.slots[i].src2_tag)); \
             end \
         end
 
@@ -374,6 +403,12 @@ module tb_core;
             `CHECK_RS(dut.RS_FADD, "RS_FADD")
             `CHECK_RS(dut.RS_FMUL, "RS_FMUL")
             `CHECK_RS(dut.RS_FDIV, "RS_FDIV")
+            `CHECK_RS(dut.RS_IMUL, "RS_IMUL")
+            `CHECK_RS(dut.RS_IDIV, "RS_IDIV")
+
+            // The integer divider, while busy, works for a live, unfinished entry.
+            if (dut.idiv_busy && (!rob_live(dut.idiv_tag) || dut.OTTER_ROB.entries[dut.idiv_tag].done))
+                inv_fail($sformatf("integer divider busy for tag %0d, not a live unfinished entry", dut.idiv_tag));
             `CHECK_RS(dut.OTTER_LSU.MEMQ, "MEMQ")
 
             // Store queue: live stores, oldest first.
@@ -386,6 +421,14 @@ module tb_core;
                     ooo_pkg::tag_age(dut.OTTER_LSU.sq[(int'(dut.OTTER_LSU.sq_head) + i - 1) % $size(dut.OTTER_LSU.sq)].tag, dut.rob_head))
                     inv_fail($sformatf("store queue out of program order at entry %0d", i));
             end
+
+            // Execute registers hold live, unfinished instructions.
+            if (dut.alu_e.valid && (!rob_live(dut.alu_e.tag) || dut.OTTER_ROB.entries[dut.alu_e.tag].done))
+                inv_fail($sformatf("ALU 0 executes tag %0d, not a live unfinished entry", dut.alu_e.tag));
+            if (dut.alu1_e.valid && (!rob_live(dut.alu1_e.tag) || dut.OTTER_ROB.entries[dut.alu1_e.tag].done))
+                inv_fail($sformatf("ALU 1 executes tag %0d, not a live unfinished entry", dut.alu1_e.tag));
+            if (dut.br_e.valid && (!rob_live(dut.br_e.tag) || dut.OTTER_ROB.entries[dut.br_e.tag].done))
+                inv_fail($sformatf("branch unit executes tag %0d, not a live unfinished entry", dut.br_e.tag));
 
             // Load in flight (unless squashed) belongs to a live, unfinished load.
             if (dut.OTTER_LSU.ld.valid && !dut.OTTER_LSU.ld.squashed &&
@@ -465,7 +508,7 @@ module tb_core;
                      branch_unit_count, mispredict_count, 100.0 - percent(mispredict_count, branch_unit_count));
             $display("Mispredicts   branch predicted not-taken %0d, predicted taken %0d; jal %0d; return %0d; other jalr %0d",
                      mp_br_nt, mp_br_t, mp_jal, mp_ret, mp_jalr);
-            $display("CDB           %0d cycles with more finished results than CDBs (3)", cdb_conflict_cycles);
+            $display("CDB           %0d cycles with more finished results than free CDBs", cdb_conflict_cycles);
             $display("I-cache       %0d fetches, %0d line fills (%0.1f%% hit), %0d next-line prefetch hits",
                      fetch_count, dut.OTTER_CSR_FILE.counters[5],
                      100.0 - percent(dut.OTTER_CSR_FILE.counters[5], fetch_count), dut.OTTER_CSR_FILE.counters[7]);

@@ -132,7 +132,7 @@ module LoadStoreUnit
     ReservationStation #(.ENTRIES(QUEUE_ENTRIES), .IN_ORDER(1'b1)) MEMQ (
         .clk, .rst, .flush, .squash, .squash_tag,
         .ins0_en, .ins0, .ins1_en, .ins1, .free_count,
-        .cdb0, .cdb1, .cdb2, .rob_head,
+        .cdb0, .cdb1, .cdb2, .wk_valid(2'b00), .wk_tag('0), .rob_head,
         .issue_valid(head_valid), .issue_entry(head), .issue_take(head_take),
         .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
     );

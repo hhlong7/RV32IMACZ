@@ -989,6 +989,7 @@ def main() -> int:
     run_unit_tb("cache-tags", ["cache_tags.sv", "tb_cache_tags.sv"], "TB_CACHE_TAGS PASS")
     run_unit_tb("fp-units", ["fpu_pkg.sv", "fp_adder.sv", "fp_multiplier.sv", "fp_divider.sv",
                              "tb_fpu_units.sv"], "TB_FPU PASS", vectors=30000)
+    run_unit_tb("int-mul-div", ["IntDivider.sv", "IntMultiplier.sv", "tb_int_units.sv"], "TB_INT PASS")
     compile_sim()
 
     with tempfile.TemporaryDirectory(prefix="otter_random_") as tmpdir:

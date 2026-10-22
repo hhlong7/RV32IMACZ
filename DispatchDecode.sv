@@ -18,7 +18,7 @@ module DispatchDecode
     input  logic [1:0]  fs,
     input  logic        csr_illegal,  // CSR file's verdict for this slot's CSR address
 
-    output logic [2:0]  cls,          // CLS_* execution unit
+    output logic [3:0]  cls,          // CLS_* execution unit
     output logic [2:0]  sys,          // SYS_* serializing kind
     output logic        exception,
     output logic [31:0] cause,
@@ -141,6 +141,8 @@ module DispatchDecode
             cls = CLS_MEM;
         else if (is_control)
             cls = CLS_BRANCH;
+        else if (opcode == OPC_OP && ir[31:25] == 7'b0000001)
+            cls = ir[14] ? CLS_IDIV : CLS_IMUL;   // RV32M: funct3[2] = divide
         else if (fp_unit == FP_UNIT_ADD)
             cls = CLS_FPADD;
         else if (fp_unit == FP_UNIT_MUL)

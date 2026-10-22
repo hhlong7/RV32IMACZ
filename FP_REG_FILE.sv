@@ -5,8 +5,8 @@
 //   32 x 32-bit floating-point registers (f0 is an ordinary register). Four
 //   read ports for two-wide dispatch and two write ports for two-wide commit;
 //   when both writes target one register the younger (port 1) wins. Writes in
-//   the current cycle are visible to the read ports immediately, and the
-//   array updates on the falling edge.
+//   the current cycle are visible to the read ports immediately (forwarded),
+//   and the array updates on the rising edge.
 //////////////////////////////////////////////////////////////////////////////////
 module FP_REG_FILE (
     input  logic        CLK,
@@ -37,7 +37,7 @@ module FP_REG_FILE (
         end
     end
 
-    always_ff @(negedge CLK) begin
+    always_ff @(posedge CLK) begin
         if (WE0)
             ram[WA0] <= WD0;
         if (WE1)

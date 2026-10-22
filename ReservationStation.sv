@@ -10,12 +10,24 @@
 //   station). IN_ORDER=1 only ever offers the oldest entry, which turns the station
 //   into an in-order queue (used for memory operations). A squash drops
 //   every entry younger than the mispredicted branch.
+//
+//   Wake-up happens on insertion too: an entry dispatched in the cycle its
+//   producer broadcasts captures the value as it is written, so dispatch
+//   needs no same-cycle bypass from the CDBs.
+//
+//   SPEC_WAKE=1 also accepts tag-only wake-ups (wk_*) from the ALUs: when an
+//   ALU instruction is selected, its tag is broadcast at once; a consumer
+//   waiting on it becomes ready (src*_spec) and may be selected in the very
+//   next cycle, which is exactly the cycle the ALU drives the value on its
+//   CDB. The offered entry then takes that value from the CDB, so dependent
+//   ALU instructions still issue back to back.
 //////////////////////////////////////////////////////////////////////////////////
 module ReservationStation
     import ooo_pkg::*;
 #(
     parameter int ENTRIES = 4,
-    parameter bit IN_ORDER = 1'b0
+    parameter bit IN_ORDER = 1'b0,
+    parameter bit SPEC_WAKE = 1'b0
 ) (
     input  logic clk,
     input  logic rst,
@@ -32,6 +44,8 @@ module ReservationStation
     input  cdb_t cdb0,
     input  cdb_t cdb1,
     input  cdb_t cdb2,
+    input  logic [1:0] wk_valid,          // tag-only wake-ups (SPEC_WAKE)
+    input  tag_t [1:0] wk_tag,
     input  tag_t rob_head,
 
     output logic      issue_valid,
@@ -72,7 +86,6 @@ module ReservationStation
                 end
             end
         end
-        issue_entry = slots[issue_idx];
         issue_valid = found && slots[issue_idx].src1_ready && slots[issue_idx].src2_ready;
     end
 
@@ -92,20 +105,60 @@ module ReservationStation
                 issue1_idx = IDX_BITS'(i);
             end
         end
-        issue1_entry = slots[issue1_idx];
         issue1_valid = found;
     end
 
+    // The offered entries, with any speculatively woken operand taken from
+    // the CDB that carries it this cycle. always @* (not always_comb): Icarus
+    // 12 makes always_comb blocks that share a function re-trigger each other.
+    function automatic rs_entry_t resolve(input rs_entry_t e, input cdb_t c0, input cdb_t c1, input cdb_t c2);
+        resolve = e;
+        if (e.src1_spec) begin
+            if (c0.valid && c0.tag == e.src1_tag) resolve.src1 = c0.value;
+            else if (c1.valid && c1.tag == e.src1_tag) resolve.src1 = c1.value;
+            else if (c2.valid && c2.tag == e.src1_tag) resolve.src1 = c2.value;
+        end
+        if (e.src2_spec) begin
+            if (c0.valid && c0.tag == e.src2_tag) resolve.src2 = c0.value;
+            else if (c1.valid && c1.tag == e.src2_tag) resolve.src2 = c1.value;
+            else if (c2.valid && c2.tag == e.src2_tag) resolve.src2 = c2.value;
+        end
+    endfunction
+
+    always @* issue_entry = resolve(slots[issue_idx], cdb0, cdb1, cdb2);
+    always @* issue1_entry = resolve(slots[issue1_idx], cdb0, cdb1, cdb2);
+
+    // Value wake-up: also completes a speculative wake-up (the value arrives).
     function automatic rs_entry_t wake(input rs_entry_t e, input cdb_t c);
         wake = e;
-        if (c.valid && !e.src1_ready && e.src1_tag == c.tag) begin
+        if (c.valid && (!e.src1_ready || e.src1_spec) && e.src1_tag == c.tag) begin
             wake.src1_ready = 1'b1;
+            wake.src1_spec = 1'b0;
             wake.src1 = c.value;
         end
-        if (c.valid && !e.src2_ready && e.src2_tag == c.tag) begin
+        if (c.valid && (!e.src2_ready || e.src2_spec) && e.src2_tag == c.tag) begin
             wake.src2_ready = 1'b1;
+            wake.src2_spec = 1'b0;
             wake.src2 = c.value;
         end
+    endfunction
+
+    // Tag-only wake-up: ready now, value on a CDB next cycle.
+    function automatic rs_entry_t spec_wake(input rs_entry_t e, input logic v, input tag_t t);
+        spec_wake = e;
+        if (SPEC_WAKE && v && !e.src1_ready && e.src1_tag == t) begin
+            spec_wake.src1_ready = 1'b1;
+            spec_wake.src1_spec = 1'b1;
+        end
+        if (SPEC_WAKE && v && !e.src2_ready && e.src2_tag == t) begin
+            spec_wake.src2_ready = 1'b1;
+            spec_wake.src2_spec = 1'b1;
+        end
+    endfunction
+
+    function automatic rs_entry_t all_wakes(input rs_entry_t e, input cdb_t c0, input cdb_t c1, input cdb_t c2,
+                                            input logic [1:0] wv, input tag_t [1:0] wt);
+        all_wakes = spec_wake(spec_wake(wake(wake(wake(e, c0), c1), c2), wv[0], wt[0]), wv[1], wt[1]);
     endfunction
 
     always_ff @(posedge clk) begin
@@ -120,7 +173,7 @@ module ReservationStation
                 rs_entry_t e;
                 e = slots[i];
                 if (e.valid) begin
-                    e = wake(wake(wake(e, cdb0), cdb1), cdb2);
+                    e = all_wakes(e, cdb0, cdb1, cdb2, wk_valid, wk_tag);
                     if (issue_take && issue_valid && IDX_BITS'(i) == issue_idx)
                         e.valid = 1'b0;
                     if (issue1_take && issue1_valid && IDX_BITS'(i) == issue1_idx)
@@ -128,11 +181,11 @@ module ReservationStation
                     if (squash && tag_younger(e.tag, squash_tag, rob_head))
                         e.valid = 1'b0;
                 end else if (!placed0) begin
-                    e = ins0;
+                    e = all_wakes(ins0, cdb0, cdb1, cdb2, wk_valid, wk_tag);
                     e.valid = 1'b1;
                     placed0 = 1'b1;
                 end else if (!placed1) begin
-                    e = ins1;
+                    e = all_wakes(ins1, cdb0, cdb1, cdb2, wk_valid, wk_tag);
                     e.valid = 1'b1;
                     placed1 = 1'b1;
                 end

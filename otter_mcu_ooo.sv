@@ -10,7 +10,9 @@
 //               allocate up to two instructions per cycle into the reorder
 //               buffer (ROB) and the reservation station of their unit.
 //   Execute     Tomasulo-style: each unit issues its oldest ready entry.
-//                 2 integer ALUs (incl. RV32M) 1 cycle, sharing one station
+//                 2 integer ALUs               1 cycle, sharing one station
+//                 integer multiplier           3-stage pipeline
+//                 integer divider              iterative, about 35 cycles
 //                 branch unit                  1 cycle
 //                 load/store unit              in-order memory queue
 //                 FP adder / multiplier        3-stage pipelines
@@ -51,9 +53,11 @@ module OTTER_MCU
     localparam int RAS_DEPTH = 4;
 
     // Requesters on the common data buses.
-    localparam int REQ_ALU = 0, REQ_BR = 1, REQ_LSU = 2, REQ_FADD = 3, REQ_FMUL = 4, REQ_FDIV = 5;
-    localparam int REQ_ALU1 = 6, REQ_CSR = 7;
-    localparam int REQUESTERS = 8;
+    // Units that share the free common data buses (ALU 0, ALU 1, and the
+    // branch unit own CDB 0, 1, and 2 whenever they execute).
+    localparam int REQ_LSU = 0, REQ_FADD = 1, REQ_FMUL = 2, REQ_FDIV = 3;
+    localparam int REQ_IMUL = 4, REQ_IDIV = 5, REQ_CSR = 6;
+    localparam int REQUESTERS = 7;
 
 //////////////////////////////////////////////////////////////////
     // Signals
@@ -88,7 +92,8 @@ module OTTER_MCU
     logic icache_invalidate;
 
     // Decode / dispatch (index 0 = if_id, 1 = if1_if2)
-    logic [1:0][2:0] cls, sys, dec_fp_rm;
+    logic [1:0][3:0] cls;
+    logic [1:0][2:0] sys, dec_fp_rm;
     logic [1:0] exc, dec_alu_src_a, dec_mem_load, dec_mem_store, dec_mem_atomic;
     logic [1:0] dec_fp_sub, dec_fp_arith, dec_is_control, dec_csr_write_attempt, dec_csr_nonserial;
     // Slot 0 is an FP CSR access that dispatches without serializing (its
@@ -101,7 +106,7 @@ module OTTER_MCU
     logic [1:0][3:0] dec_atomic_op;
     logic dispatch0, dispatch1;
     // Reservation-station insert enables, [slot] per class.
-    logic [1:0] ins_alu, ins_br, ins_mem, ins_fadd, ins_fmul, ins_fdiv;
+    logic [1:0] ins_alu, ins_br, ins_mem, ins_fadd, ins_fmul, ins_fdiv, ins_imul, ins_idiv;
     logic dispatch_stall;
     logic serial_in_flight;
     logic fence_dispatch_wait;
@@ -136,10 +141,23 @@ module OTTER_MCU
     logic [1:0] commit_count;
 
     // Reservation stations and units
-    logic [3:0] free_alu, free_br, free_mem, free_fadd, free_fmul, free_fdiv;
-    logic alu_issue, alu1_issue, br_issue, fadd_issue, fmul_issue, fdiv_issue;
-    rs_entry_t alu_e, alu1_e, br_e, fadd_e, fmul_e, fdiv_e;
-    cdb_t cdb_alu, cdb_alu1, cdb_br, cdb_lsu, cdb_fadd, cdb_fmul, cdb_fdiv, cdb_csr;
+    logic [3:0] free_alu, free_br, free_mem, free_fadd, free_fmul, free_fdiv, free_imul, free_idiv;
+    logic alu_issue, alu1_issue, br_issue, fadd_issue, fmul_issue, fdiv_issue, imul_issue, idiv_issue;
+    rs_entry_t alu_e, alu1_e, br_e, fadd_e, fmul_e, fdiv_e, imul_e, idiv_e;
+    // Issue/execute split: the stations select (alu_sel, alu1_sel, br_sel);
+    // the selected entries execute from registers (alu_e, alu1_e, br_e) in
+    // the next cycle.
+    rs_entry_t alu_sel, alu1_sel, br_sel;
+    logic [1:0] wk_valid;                 // tag-only wake-ups from ALU selects
+    tag_t [1:0] wk_tag;
+    logic [2:0] bus_free;                 // CDB j not driven by its owner unit
+    cdb_t arb_bus0, arb_bus1, arb_bus2;
+    cdb_t cdb_alu, cdb_alu1, cdb_br, cdb_lsu, cdb_fadd, cdb_fmul, cdb_fdiv, cdb_csr, cdb_imul, cdb_idiv;
+    // RV32M units: pipelined multiplier and iterative divider.
+    logic imul_advance, imul_valid, idiv_busy, idiv_valid, idiv_kill, idiv_start;
+    logic [31:0] imul_result, idiv_result;
+    tag_t imul_tag1, imul_tag2, imul_tag3, idiv_tag;
+    logic imul_live1, imul_live2, imul_live3;
     cdb_t [REQUESTERS-1:0] cdb_req;
     logic [REQUESTERS-1:0] cdb_grant;
     cdb_t cdb0, cdb1, cdb2;
@@ -654,8 +672,7 @@ module OTTER_MCU
     end
 
     // Resolve each source: no source, x0, the slot-0 result (for slot 1),
-    // a finished or just-broadcast ROB value, a pending tag, or the
-    // committed register value.
+    // a finished ROB value, a pending tag, or the committed register value.
     always_comb begin
         for (int p = 0; p < 4; p++) begin
             logic [1:0] kind;
@@ -676,14 +693,10 @@ module OTTER_MCU
                 src_tag[p] = tag0;
             end else if (rat_busy[p]) begin
                 src_tag[p] = t;
+                // A value broadcast this very cycle is not forwarded here (a
+                // long path); the reservation station captures it on insertion.
                 if (rob_done[t]) begin
                     src_value[p] = rob_value[t];
-                end else if (cdb0.valid && cdb0.tag == t) begin
-                    src_value[p] = cdb0.value;
-                end else if (cdb1.valid && cdb1.tag == t) begin
-                    src_value[p] = cdb1.value;
-                end else if (cdb2.valid && cdb2.tag == t) begin
-                    src_value[p] = cdb2.value;
                 end else begin
                     src_ready[p] = 1'b0;
                 end
@@ -695,7 +708,7 @@ module OTTER_MCU
     // Dispatch
 
     function automatic rob_entry_t make_rob_entry(input frontend_t f, input int s,
-                                                  input logic [2:0] c, input logic [2:0] sy,
+                                                  input logic [3:0] c, input logic [2:0] sy,
                                                   input logic e, input logic [31:0] ca, input logic [31:0] tv,
                                                   input logic [1:0] d, input logic [4:0] r,
                                                   input logic is_store, input logic is_ctl, input logic fpa,
@@ -808,7 +821,7 @@ module OTTER_MCU
             ckpt_used <= '0;
         end else begin
             for (int k = 0; k < CKPTS; k++) begin
-                if (cdb_grant[REQ_BR] && br_e.ckpt == ckpt_t'(k))
+                if (br_e.valid && br_e.ckpt == ckpt_t'(k))
                     ckpt_used[k] <= 1'b0;
                 else if (branch_recover && ckpt_used[k] && tag_younger(ckpt_owner[k], recover_tag, rob_head))
                     ckpt_used[k] <= 1'b0;
@@ -820,9 +833,10 @@ module OTTER_MCU
         end
     end
 
-    function automatic logic [3:0] class_free(input logic [2:0] c,
+    function automatic logic [3:0] class_free(input logic [3:0] c,
                                               input logic [3:0] fa, input logic [3:0] fb, input logic [3:0] fm,
-                                              input logic [3:0] fx, input logic [3:0] fy, input logic [3:0] fz);
+                                              input logic [3:0] fx, input logic [3:0] fy, input logic [3:0] fz,
+                                              input logic [3:0] fi, input logic [3:0] fd);
         unique case (c)
             CLS_ALU:    class_free = fa;
             CLS_BRANCH: class_free = fb;
@@ -830,6 +844,8 @@ module OTTER_MCU
             CLS_FPADD:  class_free = fx;
             CLS_FPMUL:  class_free = fy;
             CLS_FPDIV:  class_free = fz;
+            CLS_IMUL:   class_free = fi;
+            CLS_IDIV:   class_free = fd;
             default:    class_free = 4'd15;
         endcase
     endfunction
@@ -849,8 +865,8 @@ module OTTER_MCU
         logic [3:0] need0_free, need1_free;
         logic same_class;
 
-        need0_free = class_free(cls[0], free_alu, free_br, free_mem, free_fadd, free_fmul, free_fdiv);
-        need1_free = class_free(cls[1], free_alu, free_br, free_mem, free_fadd, free_fmul, free_fdiv);
+        need0_free = class_free(cls[0], free_alu, free_br, free_mem, free_fadd, free_fmul, free_fdiv, free_imul, free_idiv);
+        need1_free = class_free(cls[1], free_alu, free_br, free_mem, free_fadd, free_fmul, free_fdiv, free_imul, free_idiv);
         same_class = (cls[0] == cls[1]) && (cls[0] != CLS_NONE);
 
         dispatch0 = if_id.valid && !flush && !branch_recover && !serial_in_flight && !csr_interrupt_pending &&
@@ -886,6 +902,8 @@ module OTTER_MCU
             ins_fadd[k] = 1'b0;
             ins_fmul[k] = 1'b0;
             ins_fdiv[k] = 1'b0;
+            ins_imul[k] = 1'b0;
+            ins_idiv[k] = 1'b0;
             if (go[k]) begin
                 unique case (cls[k])
                     CLS_ALU:    ins_alu[k] = 1'b1;
@@ -894,6 +912,8 @@ module OTTER_MCU
                     CLS_FPADD:  ins_fadd[k] = 1'b1;
                     CLS_FPMUL:  ins_fmul[k] = 1'b1;
                     CLS_FPDIV:  ins_fdiv[k] = 1'b1;
+                    CLS_IMUL:   ins_imul[k] = 1'b1;
+                    CLS_IDIV:   ins_idiv[k] = 1'b1;
                     default: ;
                 endcase
             end
@@ -931,23 +951,49 @@ module OTTER_MCU
 //////////////////////////////////////////////////////////////////
     // Reservation stations and execution units
 
-    ReservationStation #(.ENTRIES(8)) RS_ALU (
+    ReservationStation #(.ENTRIES(8), .SPEC_WAKE(1'b1)) RS_ALU (
         .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
         .ins0_en(ins_alu[0]), .ins0(rs_new0),
         .ins1_en(ins_alu[1]), .ins1(rs_new1),
-        .free_count(free_alu), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .rob_head(rob_head),
-        .issue_valid(alu_issue), .issue_entry(alu_e), .issue_take(cdb_grant[REQ_ALU]),
-        .issue1_valid(alu1_issue), .issue1_entry(alu1_e), .issue1_take(cdb_grant[REQ_ALU1])
+        .free_count(free_alu), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
+        .issue_valid(alu_issue), .issue_entry(alu_sel), .issue_take(alu_issue),
+        .issue1_valid(alu1_issue), .issue1_entry(alu1_sel), .issue1_take(alu1_issue)
     );
 
-    ReservationStation #(.ENTRIES(BR_RS_ENTRIES)) RS_BR (
+    ReservationStation #(.ENTRIES(BR_RS_ENTRIES), .SPEC_WAKE(1'b1)) RS_BR (
         .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
         .ins0_en(ins_br[0]), .ins0(rs_new0),
         .ins1_en(ins_br[1]), .ins1(rs_new1),
-        .free_count(free_br), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .rob_head(rob_head),
-        .issue_valid(br_issue), .issue_entry(br_e), .issue_take(cdb_grant[REQ_BR]),
+        .free_count(free_br), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
+        .issue_valid(br_issue), .issue_entry(br_sel), .issue_take(br_issue),
         .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
     );
+
+    // ---- Issue -> execute registers ----------------------------------------
+    // The ALUs and the branch unit never stall: whatever the stations select
+    // executes next cycle on the unit's own CDB. A selected instruction that
+    // a recovery squashes this cycle never enters execution.
+    always_ff @(posedge CLK) begin
+        if (RESET || flush) begin
+            alu_e <= '0;
+            alu1_e <= '0;
+            br_e <= '0;
+        end else begin
+            alu_e <= alu_sel;
+            alu_e.valid <= alu_issue && !(branch_recover && tag_younger(alu_sel.tag, recover_tag, rob_head));
+            alu1_e <= alu1_sel;
+            alu1_e.valid <= alu1_issue && !(branch_recover && tag_younger(alu1_sel.tag, recover_tag, rob_head));
+            br_e <= br_sel;
+            br_e.valid <= br_issue && !(branch_recover && tag_younger(br_sel.tag, recover_tag, rob_head));
+        end
+    end
+
+    // Speculative wake-up: a selected ALU instruction's tag, broadcast now;
+    // its value follows on the ALU's own CDB next cycle.
+    always_comb begin
+        wk_valid = {alu1_issue, alu_issue};
+        wk_tag = {alu1_sel.tag, alu_sel.tag};
+    end
 
     // ---- Integer ALU: one cycle, result straight onto a CDB ---------------
     logic [31:0] alu_u, alu_i, alu_s, alu_b_imm, alu_j, alu_a, alu_b, alu_result;
@@ -971,7 +1017,7 @@ module OTTER_MCU
 
     always_comb begin
         cdb_alu = '0;
-        cdb_alu.valid = alu_issue;
+        cdb_alu.valid = alu_e.valid;
         cdb_alu.tag = alu_e.tag;
         cdb_alu.value = alu_result;
     end
@@ -998,7 +1044,7 @@ module OTTER_MCU
 
     always_comb begin
         cdb_alu1 = '0;
-        cdb_alu1.valid = alu1_issue;
+        cdb_alu1.valid = alu1_e.valid;
         cdb_alu1.tag = alu1_e.tag;
         cdb_alu1.value = alu1_result;
     end
@@ -1029,7 +1075,7 @@ module OTTER_MCU
                  (br_pcsource == 3'b011) ? br_jal_tgt : br_e.pc_next;
 
         cdb_br = '0;
-        cdb_br.valid = br_issue;
+        cdb_br.valid = br_e.valid;
         cdb_br.tag = br_e.tag;
         cdb_br.value = br_e.pc_next;      // jal/jalr link value
         cdb_br.taken = taken;
@@ -1038,9 +1084,10 @@ module OTTER_MCU
                                      (taken && br_e.predicted_target != target);
     end
 
-    // A mispredicted branch recovers when it wins a CDB (its result and the
-    // squash land together). A commit-time flush takes priority.
-    assign branch_recover = cdb_grant[REQ_BR] && cdb_br.mispredict && !flush;
+    // A mispredicted branch recovers as it executes (it owns CDB 2 that
+    // cycle, so its result and the squash land together). A commit-time
+    // flush takes priority.
+    assign branch_recover = br_e.valid && cdb_br.mispredict && !flush;
     assign recover_tag = br_e.tag;
     assign recover_target = cdb_br.next_pc;
 
@@ -1095,7 +1142,7 @@ module OTTER_MCU
         .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
         .ins0_en(ins_fadd[0]), .ins0(rs_new0),
         .ins1_en(ins_fadd[1]), .ins1(rs_new1),
-        .free_count(free_fadd), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .rob_head(rob_head),
+        .free_count(free_fadd), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
         .issue_valid(fadd_issue), .issue_entry(fadd_e), .issue_take(fadd_issue && fadd_advance),
         .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
     );
@@ -1104,7 +1151,7 @@ module OTTER_MCU
         .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
         .ins0_en(ins_fmul[0]), .ins0(rs_new0),
         .ins1_en(ins_fmul[1]), .ins1(rs_new1),
-        .free_count(free_fmul), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .rob_head(rob_head),
+        .free_count(free_fmul), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
         .issue_valid(fmul_issue), .issue_entry(fmul_e), .issue_take(fmul_issue && fmul_advance),
         .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
     );
@@ -1113,7 +1160,7 @@ module OTTER_MCU
         .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
         .ins0_en(ins_fdiv[0]), .ins0(rs_new0),
         .ins1_en(ins_fdiv[1]), .ins1(rs_new1),
-        .free_count(free_fdiv), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .rob_head(rob_head),
+        .free_count(free_fdiv), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
         .issue_valid(fdiv_issue), .issue_entry(fdiv_e), .issue_take(fdiv_start),
         .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
     );
@@ -1166,6 +1213,89 @@ module OTTER_MCU
         .out_flags(fdiv_flags),
         .ack(cdb_grant[REQ_FDIV])
     );
+
+    // ---- RV32M units --------------------------------------------------------
+    // Multiplies: a 3-stage pipeline, one per cycle, squashed with live bits
+    // like the FP pipelines. Divides: iterative (about 35 cycles), one at a
+    // time, killed by a squash like the FP divider.
+    ReservationStation #(.ENTRIES(2), .SPEC_WAKE(1'b1)) RS_IMUL (
+        .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
+        .ins0_en(ins_imul[0]), .ins0(rs_new0),
+        .ins1_en(ins_imul[1]), .ins1(rs_new1),
+        .free_count(free_imul), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
+        .issue_valid(imul_issue), .issue_entry(imul_e), .issue_take(imul_issue && imul_advance),
+        .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
+    );
+
+    ReservationStation #(.ENTRIES(2)) RS_IDIV (
+        .clk(CLK), .rst(RESET), .flush(flush), .squash(branch_recover), .squash_tag(recover_tag),
+        .ins0_en(ins_idiv[0]), .ins0(rs_new0),
+        .ins1_en(ins_idiv[1]), .ins1(rs_new1),
+        .free_count(free_idiv), .cdb0(cdb0), .cdb1(cdb1), .cdb2(cdb2), .wk_valid(wk_valid), .wk_tag(wk_tag), .rob_head(rob_head),
+        .issue_valid(idiv_issue), .issue_entry(idiv_e), .issue_take(idiv_start),
+        .issue1_valid(), .issue1_entry(), .issue1_take(1'b0)
+    );
+
+    assign imul_advance = !(cdb_imul.valid && !cdb_grant[REQ_IMUL]);
+    assign idiv_kill = branch_recover && idiv_busy && tag_younger(idiv_tag, recover_tag, rob_head);
+    assign idiv_start = idiv_issue && !idiv_busy &&
+                        !(branch_recover && tag_younger(idiv_e.tag, recover_tag, rob_head));
+
+    IntMultiplier OTTER_INT_MULTIPLIER (
+        .clk(CLK),
+        .rst(RESET || flush),
+        .advance(imul_advance),
+        .in_valid(imul_issue),
+        .in_op(imul_e.alu_fun[1:0]),
+        .in_a(imul_e.src1),
+        .in_b(imul_e.src2),
+        .out_valid(imul_valid),
+        .out_result(imul_result)
+    );
+
+    IntDivider OTTER_INT_DIVIDER (
+        .clk(CLK),
+        .rst(RESET || flush || idiv_kill),
+        .in_valid(idiv_start),
+        .in_op(idiv_e.alu_fun[1:0]),
+        .in_a(idiv_e.src1),
+        .in_b(idiv_e.src2),
+        .busy(idiv_busy),
+        .out_valid(idiv_valid),
+        .out_result(idiv_result),
+        .ack(cdb_grant[REQ_IDIV])
+    );
+
+    always_ff @(posedge CLK) begin
+        logic sq;
+        sq = branch_recover;
+        if (imul_advance) begin
+            imul_tag1 <= imul_e.tag;
+            imul_tag2 <= imul_tag1;
+            imul_tag3 <= imul_tag2;
+            imul_live1 <= imul_issue && !(sq && tag_younger(imul_e.tag, recover_tag, rob_head));
+            imul_live2 <= imul_live1 && !(sq && tag_younger(imul_tag1, recover_tag, rob_head));
+            imul_live3 <= imul_live2 && !(sq && tag_younger(imul_tag2, recover_tag, rob_head));
+        end else if (sq) begin
+            imul_live1 <= imul_live1 && !tag_younger(imul_tag1, recover_tag, rob_head);
+            imul_live2 <= imul_live2 && !tag_younger(imul_tag2, recover_tag, rob_head);
+            imul_live3 <= imul_live3 && !tag_younger(imul_tag3, recover_tag, rob_head);
+        end
+        if (idiv_start)
+            idiv_tag <= idiv_e.tag;
+    end
+
+    always_comb begin
+        cdb_imul = '0;
+        cdb_imul.valid = imul_valid && imul_live3;
+        cdb_imul.tag = imul_tag3;
+        cdb_imul.value = imul_result;
+
+        cdb_idiv = '0;
+        cdb_idiv.valid = idiv_valid;
+        cdb_idiv.tag = idiv_tag;
+        cdb_idiv.value = idiv_result;
+    end
 
     always_ff @(posedge CLK) begin
         logic sq;
@@ -1224,14 +1354,13 @@ module OTTER_MCU
 
     // Requests by index (REQ_*).
     always_comb begin
-        cdb_req[REQ_ALU]  = cdb_alu;
-        cdb_req[REQ_BR]   = cdb_br;
         cdb_req[REQ_LSU]  = cdb_lsu;
         cdb_req[REQ_FADD] = cdb_fadd;
         cdb_req[REQ_FMUL] = cdb_fmul;
         cdb_req[REQ_FDIV] = cdb_fdiv;
-        cdb_req[REQ_ALU1] = cdb_alu1;
         cdb_req[REQ_CSR]  = cdb_csr;
+        cdb_req[REQ_IMUL] = cdb_imul;
+        cdb_req[REQ_IDIV] = cdb_idiv;
     end
     logic [REQUESTERS-1:0] cdb_req_valid;      // for the testbench report
     always_comb begin
@@ -1239,14 +1368,22 @@ module OTTER_MCU
             cdb_req_valid[i] = cdb_req[i].valid;
     end
 
+    assign bus_free = {!br_e.valid, !alu1_e.valid, !alu_e.valid};
+
     CdbArbiter #(.REQUESTERS(REQUESTERS)) OTTER_CDB_ARBITER (
         .req(cdb_req),
         .rob_head(rob_head),
+        .bus_free(bus_free),
         .grant(cdb_grant),
-        .cdb0(cdb0),
-        .cdb1(cdb1),
-        .cdb2(cdb2)
+        .bus0(arb_bus0),
+        .bus1(arb_bus1),
+        .bus2(arb_bus2)
     );
+
+    // Each bus: its owner unit's result when it executes, else a granted request.
+    assign cdb0 = alu_e.valid ? cdb_alu : arb_bus0;
+    assign cdb1 = alu1_e.valid ? cdb_alu1 : arb_bus1;
+    assign cdb2 = br_e.valid ? cdb_br : arb_bus2;
 
 //////////////////////////////////////////////////////////////////
     // Commit
@@ -1346,7 +1483,7 @@ module OTTER_MCU
         .prefetch_hit_event(prefetch_hit_event),
         .prefetch_useless_event(prefetch_useless_event),
         .trap_event(trap_take || interrupt_take),
-        .mext_busy_event((cdb_grant[REQ_ALU] && alu_e.alu_fun[4]) || (cdb_grant[REQ_ALU1] && alu1_e.alu_fun[4])),
+        .mext_busy_event(idiv_busy || imul_valid),
         .mext_stall_event(1'b0),
         .storebuf_enqueue_event(storebuf_enqueue_event),
         .storebuf_full_stall_event(h0_ready_store_blocked),

@@ -21,13 +21,15 @@ package ooo_pkg;
     localparam logic [1:0] DST_FP   = 2'd2;
 
     // Execution unit (and reservation station) of an instruction.
-    localparam logic [2:0] CLS_NONE   = 3'd0;   // completes at dispatch (system, exceptions)
-    localparam logic [2:0] CLS_ALU    = 3'd1;
-    localparam logic [2:0] CLS_BRANCH = 3'd2;
-    localparam logic [2:0] CLS_MEM    = 3'd3;
-    localparam logic [2:0] CLS_FPADD  = 3'd4;
-    localparam logic [2:0] CLS_FPMUL  = 3'd5;
-    localparam logic [2:0] CLS_FPDIV  = 3'd6;
+    localparam logic [3:0] CLS_NONE   = 4'd0;   // completes at dispatch (system, exceptions)
+    localparam logic [3:0] CLS_ALU    = 4'd1;
+    localparam logic [3:0] CLS_BRANCH = 4'd2;
+    localparam logic [3:0] CLS_MEM    = 4'd3;
+    localparam logic [3:0] CLS_FPADD  = 4'd4;
+    localparam logic [3:0] CLS_FPMUL  = 4'd5;
+    localparam logic [3:0] CLS_FPDIV  = 4'd6;
+    localparam logic [3:0] CLS_IMUL   = 4'd7;   // RV32M multiplies (pipelined unit)
+    localparam logic [3:0] CLS_IDIV   = 4'd8;   // RV32M divides/remainders (iterative unit)
 
     // Instructions that execute at the ROB head with the ROB otherwise empty.
     localparam logic [2:0] SYS_NONE    = 3'd0;
@@ -62,9 +64,12 @@ package ooo_pkg;
         logic fp_sub;
         logic [2:0] fp_rm;
         logic src1_ready;
+        logic src1_spec;                // ready by a tag-only wake-up: the value
+                                        // is on a CDB this cycle (see the RS)
         tag_t src1_tag;
         logic [31:0] src1;
         logic src2_ready;
+        logic src2_spec;
         tag_t src2_tag;
         logic [31:0] src2;
     } rs_entry_t;

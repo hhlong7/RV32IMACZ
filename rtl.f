@@ -14,6 +14,8 @@ FP_REG_FILE.sv
 fp_adder.sv
 fp_multiplier.sv
 fp_divider.sv
+IntMultiplier.sv
+IntDivider.sv
 FrontendPacketBuilder.sv
 ImmediateGenerator.sv
 OTTER_MMIO.sv

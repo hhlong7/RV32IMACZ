@@ -13,7 +13,8 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
   for two-wide in-order commit with precise exceptions (see
   [Out-of-Order Core](#out-of-order-core))
 - Execution units: two integer ALUs, branch unit, load/store unit, pipelined
-  FP adder, pipelined FP multiplier, iterative FP divider
+  integer multiplier, iterative integer divider, pipelined FP adder, pipelined
+  FP multiplier, iterative FP divider
 - ISA support: RV32I, RV32M, RV32A, RV32C, `Zicsr`, `Zifencei`, and a
   single-precision F subset (`fadd/fsub/fmul/fdiv.s`, FP loads/stores, `fcsr`)
 - Branch prediction: 512-entry gshare (8-bit global history) with backward-taken defaults for cold branches, a 16-entry BTB for indirect jumps, and a 4-entry RAS
@@ -364,6 +365,12 @@ which is tracked, so a `git push` from the Vivado machine shares them. Using the
 the top fails with Synth 8-3391 on the memory models, since they cannot be
 built from FPGA block RAM.
 
+The first Vivado run (before milestone 5, synthesis only) reported 52,826
+LUTs (39% of the 200T), 33,595 flip-flops, 10 DSP slices, and a worst setup
+slack of -101.7 ns at 50 MHz: about 8 MHz. After milestone 5, Yosys reports
+83,859 LUTs (from 90,742), 27,114 flip-flops, and 6 DSP slices; rerun the
+script for Vivado's post-route numbers.
+
 For reference, an Artix-7 100T (Nexys A7 / Arty A7) has 63,400 LUTs and a
 200T (Nexys Video) 133,800. Remaining FPGA work: a multi-cycle integer
 divider (both ALUs divide in one cycle), rising-edge register-file writes
@@ -460,8 +467,10 @@ The current design is a two-wide out-of-order RV32IMAC core with a
 single-precision FP subset, atomics, compressed instructions, gshare branch
 prediction with early recovery, store-to-load forwarding, CSR/trap support,
 a store buffer, and a two-level fully associative cache hierarchy. On
-FreeRTOS + CoreMark it runs at IPC 1.207, 27% faster than the dual-issue
-in-order core it replaced, and every benchmark workload is faster. The repo
+FreeRTOS + CoreMark it runs at IPC 1.107 (21% fewer cycles than the
+dual-issue in-order core it replaced). Milestone 5 restructured it for FPGA
+clock speed, trading about 8% IPC for a much shorter critical path; the
+post-route Vivado measurement of that clock speed is the next step. The repo
 also includes the verification flows above and a software bring-up path so
 the project is easier to study and extend.
 
@@ -498,16 +507,23 @@ mix FP with all other traffic.
 | Fetch / dispatch / commit width | 2 / 2 / 2 | in order; slot 1 is fetched behind compressed and unaligned instructions and behind a branch predicted not-taken; slot 1 commits only simple instructions alongside slot 0 |
 | Reorder buffer | 16 entries | the ROB index is the rename tag |
 | Rename table | 64 entries | x0-x31 and f0-f31: busy bit + ROB tag |
-| Integer ALU RS | 8 | ALU and M-extension ops; issues the two oldest ready entries to two ALUs |
+| Integer ALU RS | 8 | issues the two oldest ready entries to two ALUs, which execute next cycle from registers |
+| Integer multiply / divide RS | 2 / 2 | 3-stage pipelined multiplier (DSP slices); iterative radix-2 divider (about 35 cycles) |
 | Branch RS | 4 | branches, `jal`, `jalr`; each holds one rename-table checkpoint |
 | Memory queue / store queue | 8 / 4 | in order; stores wait in the store queue until commit and forward to younger loads |
 | FP add / mul / div RS | 2 / 2 / 2 | |
-| Common data buses | 3 | `CdbArbiter` grants the three oldest of seven finished results |
+| Common data buses | 3 | ALU 0, ALU 1, and the branch unit own CDB 0, 1, and 2 when they execute; `CdbArbiter` gives the free buses to the oldest of the other seven units' results |
 | Branch predictor | 512 + 16 + 4 | gshare counters (halfword-indexed) XOR 8-bit speculative history, repaired on a mispredict; branch and `jal` targets computed at fetch; BTB for other `jalr`; RAS for returns |
 
-Operands are read at dispatch from the register files, the ROB (finished
-results), or the CDBs in the same cycle; otherwise the RS entry waits for the
-producer's tag on a CDB. CSR accesses, atomics, fences, `mret`, and `wfi`
+Operands are read at dispatch from the register files or the ROB (finished
+results); otherwise the RS entry waits for the producer's tag, and also
+checks the CDBs as it is written, so a value broadcast in the dispatch cycle
+is not missed. Each station selects in one cycle and its unit executes in the
+next, from a register. To keep dependent ALU instructions issuing back to
+back, a selected ALU instruction broadcasts its tag at once (a speculative,
+tag-only wake-up): waiting consumers in the ALU, branch, and multiplier
+stations become ready the next cycle, which is exactly when the ALU drives
+the value on its own CDB, and take it from there. CSR accesses, atomics, fences, `mret`, and `wfi`
 serialize: they dispatch into an empty ROB and execute as they commit. FP CSR
 accesses that cannot change the rounding mode (any `fflags` access, and
 reads of `frm`/`fcsr`) do not: they dispatch normally, read the CSR when they
@@ -518,11 +534,12 @@ with a full flush, so all state changes are precise.
 
 Branch recovery happens at execute. Each branch or jump saves a checkpoint
 of the rename table at dispatch (commits keep clearing busy bits inside the
-checkpoints). When it resolves as mispredicted, in the cycle it wins a CDB,
+checkpoints). When it resolves as mispredicted, in the cycle it executes,
 fetch is redirected, the rename table is restored from the checkpoint, and
 everything younger is squashed: the ROB tail, reservation-station and
 memory-queue entries, the store-queue tail, the load in flight, the LSU
-output buffer, FP pipeline stages (live bits), and a running divide. Older
+output buffer, FP and integer-multiply pipeline stages (live bits), and a
+running FP or integer divide. Older
 work keeps executing. The branch predictor's BHT and BTB train at commit;
 the RAS updates at dispatch.
 
@@ -535,7 +552,8 @@ overlapping store goes straight to the store buffer and caches. MMIO loads
 still wait for all older stores, keeping device accesses in program order.
 
 Milestones: M1 Tomasulo back end, M2 early branch recovery, M3 store-queue
-forwarding, M4 tuning (all done; see the performance section). Ideas not
+forwarding, M4 tuning, M5 FPGA timing closure (all done; see the performance
+section and [`docs/TIMING_CLOSURE_PLAN.md`](docs/TIMING_CLOSURE_PLAN.md)). Ideas not
 done: return-stack repair on mispredicts, and a 32-entry ROB (ROB-full
 stalls are about 9k cycles of FreeRTOS + CoreMark).
 
@@ -553,6 +571,31 @@ python3 tools/perf_snapshot.py --label "OoO M2" --notes "early branch recovery"
 
 `--rtl-root DIR` measures another tree (for example an export of `main`) on
 the same program images.
+
+### Out-of-Order Core, Milestone 5: FPGA Timing Closure (October 2026)
+
+The design ran at about 8 MHz on an FPGA (Vivado, Artix-7 200T): one clock
+cycle held a whole out-of-order step, from picking an instruction through a
+single-cycle 32-bit divide to broadcasting and capturing the result (a
+337-level path). Milestone 5 split that chain; see
+[`docs/TIMING_CLOSURE_PLAN.md`](docs/TIMING_CLOSURE_PLAN.md) for the plan,
+measurements, and results.
+
+| Step | Change | FreeRTOS + CoreMark cycles | IPC |
+| --- | --- | ---: | ---: |
+| Before | | 275,491 | 1.207 |
+| 1 + 2 | Iterative integer divider and 3-stage pipelined multiplier as their own units | 281,339 | 1.182 |
+| 3 | Select and execute in separate cycles; ALUs and branch unit own their CDBs; speculative tag wake-up keeps dependent ALU operations back to back | 300,374 | 1.107 |
+| 4 | Register files write on the rising edge | 300,374 | 1.107 |
+
+Together the steps cost 9% of the cycles (8% IPC) on FreeRTOS + CoreMark, in
+exchange for a much shorter clock period: the longest path in the Yosys
+logic-depth proxy fell from 267 to 44 LUT levels. Vivado post-route timing
+gives the real clock speed (see [FPGA Synthesis Estimate](#fpga-synthesis-estimate)).
+A measured trade-off: the small `system_workload` programs and the
+divide-heavy `rv32im_alu` test now take more cycles than on the old in-order
+core (932 vs 902, 1,040 vs 984, 14,504 vs 5,586), while FreeRTOS + CoreMark
+still takes 21% fewer.
 
 ### Out-of-Order Core, Milestone 4: Tuning (October 2026)
 
