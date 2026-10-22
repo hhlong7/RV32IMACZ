@@ -332,6 +332,21 @@ proven equivalent to the old arbiter with a Yosys SAT miter (and a
 million-vector simulation), and every workload keeps exactly the same cycle
 count.
 
+To get Vivado's own numbers and timing, synthesize the core out of context
+(no board, no pins) with the memory models replaced by black-box stubs; on
+Windows or Linux, from the repository root:
+
+```bash
+vivado -mode batch -source tools/vivado/synth_core.tcl
+```
+
+The top is `OTTER_MCU`, the part defaults to the Artix-7 200T
+(`xc7a200tsbg484-1`; pass another part with `-tclargs`), the clock target is
+50 MHz (`tools/vivado/core_ooc.xdc`), and the utilization and timing reports
+land in `out/vivado/<part>/`. Using the board wrapper (`OTTER_Wrapper`) as
+the top fails with Synth 8-3391 on the memory models, since they cannot be
+built from FPGA block RAM.
+
 For reference, an Artix-7 100T (Nexys A7 / Arty A7) has 63,400 LUTs and a
 200T (Nexys Video) 133,800. Remaining FPGA work: a multi-cycle integer
 divider (both ALUs divide in one cycle), rising-edge register-file writes
