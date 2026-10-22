@@ -1,0 +1,16 @@
+==================== OTTER_MCU synthesis summary (xc7a200tsbg484-1) ====================
+LUTs (logic)             0
+LUTs as memory           0
+Flip-flops               0
+DSP48 slices            10
+Block RAM tiles          0
+Clock target        20.000 ns (50.0 MHz)
+Worst setup slack -101.748 ns  -> FAILED
+Estimated Fmax         8.2 MHz (synthesis estimate, before placement)
+Worst paths (slack ns, logic levels, start -> end):
+  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[0][src1][22]/D
+  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[1][src1][22]/D
+  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[2][src1][22]/D
+  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[3][src1][22]/D
+  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[4][src1][22]/D
+Full reports: C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/xc7a200tsbg484-1
