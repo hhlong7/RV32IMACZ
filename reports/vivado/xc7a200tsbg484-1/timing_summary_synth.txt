@@ -1,0 +1,2063 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2026.1 (win64) Build 6511674 Tue Jun 16 11:02:23 MDT 2026
+| Date         : Thu Oct 22 02:50:34 2026
+| Host         : L-Zenbook running 64-bit major release  (build 9200)
+| Command      : report_timing_summary -max_paths 10 -file C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/xc7a200tsbg484-1/timing_summary_synth.txt
+| Design       : OTTER_MCU
+| Device       : 7a200t-sbg484
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Synthesized
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (2)
+6. checking no_output_delay (64)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (2)
+------------------------------
+ There are 2 input ports with no input delay specified. (HIGH)
+
+ There are 0 input ports with no input delay but user has a false path constraint.
+
+
+6. checking no_output_delay (64)
+--------------------------------
+ There are 64 ports with no output delay specified. (HIGH)
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+    -17.055  -157944.375                  54434                76084        0.189        0.000                      0                76084        8.750        0.000                       0                 35178  
+
+
+Timing constraints are not met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock  Waveform(ns)       Period(ns)      Frequency(MHz)
+-----  ------------       ----------      --------------
+clk    {0.000 10.000}     20.000          50.000          
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+clk               -17.055  -157944.375                  54434                76084        0.189        0.000                      0                76084        8.750        0.000                       0                 35178  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  clk
+  To Clock:  clk
+
+Setup :        54434  Failing Endpoints,  Worst Slack      -17.055ns,  Total Violation  -157944.378ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.189ns,  Total Violation        0.000ns
+PW    :            0  Failing Endpoints,  Worst Slack        8.750ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -17.055ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[1][src2_ready]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        37.000ns  (logic 6.736ns (18.205%)  route 30.264ns (81.795%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src2_ready]_i_13__0/O
+                         net (fo=4, unplaced)         0.926    36.823    RS_ALU/slots[0][src2_ready]_i_13__0_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.947 r  RS_ALU/slots[1][src2_ready]_i_3__3/O
+                         net (fo=1, unplaced)         0.902    37.849    RS_IMUL/slots_reg[1][src2_ready]_2
+                         LUT6 (Prop_lut6_I1_O)        0.124    37.973 r  RS_IMUL/slots[1][src2_ready]_i_1__5/O
+                         net (fo=1, unplaced)         0.000    37.973    RS_IMUL/slots[1][src2_ready]_i_1__5_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src2_ready]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src2_ready]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[1][src2_ready]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.973    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -17.055    <hidden>
+
+Slack (VIOLATED) :        -17.049ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[0][src1_ready]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.994ns  (logic 6.736ns (18.208%)  route 30.258ns (81.792%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src1_ready]_i_9__0/O
+                         net (fo=3, unplaced)         0.920    36.817    RS_ALU/slots[0][src1_ready]_i_9__0_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.941 r  RS_ALU/slots[0][src1_ready]_i_3__5/O
+                         net (fo=1, unplaced)         0.902    37.843    RS_IMUL/slots_reg[0][src1_ready]_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    37.967 r  RS_IMUL/slots[0][src1_ready]_i_1__5/O
+                         net (fo=1, unplaced)         0.000    37.967    RS_IMUL/slots[0][src1_ready]_i_1__5_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src1_ready]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src1_ready]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[0][src1_ready]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.967    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -17.049    <hidden>
+
+Slack (VIOLATED) :        -17.049ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[0][src2_ready]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.994ns  (logic 6.736ns (18.208%)  route 30.258ns (81.792%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src2_ready]_i_8__1/O
+                         net (fo=3, unplaced)         0.920    36.817    RS_ALU/slots[0][src2_ready]_i_8__1_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.941 r  RS_ALU/slots[0][src2_ready]_i_3__5/O
+                         net (fo=1, unplaced)         0.902    37.843    RS_IMUL/slots_reg[0][src2_ready]_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    37.967 r  RS_IMUL/slots[0][src2_ready]_i_1__5/O
+                         net (fo=1, unplaced)         0.000    37.967    RS_IMUL/slots[0][src2_ready]_i_1__5_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src2_ready]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src2_ready]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[0][src2_ready]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.967    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -17.049    <hidden>
+
+Slack (VIOLATED) :        -17.049ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[1][src1_ready]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.994ns  (logic 6.736ns (18.208%)  route 30.258ns (81.792%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src1_ready]_i_9__0/O
+                         net (fo=3, unplaced)         0.920    36.817    RS_ALU/slots[0][src1_ready]_i_9__0_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.941 r  RS_ALU/slots[1][src1_ready]_i_3__5/O
+                         net (fo=1, unplaced)         0.902    37.843    RS_IMUL/slots_reg[1][src1_ready]_2
+                         LUT6 (Prop_lut6_I1_O)        0.124    37.967 r  RS_IMUL/slots[1][src1_ready]_i_1__5/O
+                         net (fo=1, unplaced)         0.000    37.967    RS_IMUL/slots[1][src1_ready]_i_1__5_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src1_ready]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src1_ready]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[1][src1_ready]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.967    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -17.049    <hidden>
+
+Slack (VIOLATED) :        -16.602ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[0][src1_spec]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.547ns  (logic 6.736ns (18.431%)  route 29.811ns (81.569%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src1_ready]_i_14/O
+                         net (fo=4, unplaced)         0.926    36.823    RS_ALU/slots[0][src1_ready]_i_14_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.947 r  RS_ALU/slots[0][src1_spec]_i_5__1/O
+                         net (fo=1, unplaced)         0.449    37.396    RS_IMUL/slots_reg[0][src1_spec]_6
+                         LUT6 (Prop_lut6_I3_O)        0.124    37.520 r  RS_IMUL/slots[0][src1_spec]_i_1__1/O
+                         net (fo=1, unplaced)         0.000    37.520    RS_IMUL/slots[0][src1_spec]_i_1__1_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src1_spec]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src1_spec]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[0][src1_spec]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.520    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -16.602    <hidden>
+
+Slack (VIOLATED) :        -16.602ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[0][src2_spec]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.547ns  (logic 6.736ns (18.431%)  route 29.811ns (81.569%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src2_ready]_i_13__0/O
+                         net (fo=4, unplaced)         0.926    36.823    RS_ALU/slots[0][src2_ready]_i_13__0_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.947 r  RS_ALU/slots[0][src2_spec]_i_4__1/O
+                         net (fo=1, unplaced)         0.449    37.396    RS_IMUL/slots_reg[0][src2_spec]_3
+                         LUT6 (Prop_lut6_I2_O)        0.124    37.520 r  RS_IMUL/slots[0][src2_spec]_i_1__1/O
+                         net (fo=1, unplaced)         0.000    37.520    RS_IMUL/slots[0][src2_spec]_i_1__1_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src2_spec]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[0][src2_spec]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[0][src2_spec]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.520    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -16.602    <hidden>
+
+Slack (VIOLATED) :        -16.602ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[1][src1_spec]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.547ns  (logic 6.736ns (18.431%)  route 29.811ns (81.569%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src1_ready]_i_14/O
+                         net (fo=4, unplaced)         0.926    36.823    RS_ALU/slots[0][src1_ready]_i_14_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.947 r  RS_ALU/slots[1][src1_spec]_i_4__1/O
+                         net (fo=1, unplaced)         0.449    37.396    RS_IMUL/slots_reg[1][src1_spec]_1
+                         LUT6 (Prop_lut6_I3_O)        0.124    37.520 r  RS_IMUL/slots[1][src1_spec]_i_1__1/O
+                         net (fo=1, unplaced)         0.000    37.520    RS_IMUL/slots[1][src1_spec]_i_1__1_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src1_spec]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src1_spec]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[1][src1_spec]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.520    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -16.602    <hidden>
+
+Slack (VIOLATED) :        -16.572ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_IMUL/slots_reg[1][src2_spec]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.517ns  (logic 6.736ns (18.446%)  route 29.781ns (81.554%))
+  Logic Levels:           47  (LUT4=5 LUT5=6 LUT6=35 MUXF7=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][2]_i_3/O
+                         net (fo=5, unplaced)         0.000    34.374    RS_ALU/alu1_e[tag][2]_i_3_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247    34.621 r  RS_ALU/alu1_e_reg[tag][2]_i_1/O
+                         net (fo=35, unplaced)        0.978    35.599    RS_ALU/alu1_sel[tag][2]
+                         LUT6 (Prop_lut6_I0_O)        0.298    35.897 f  RS_ALU/slots[0][src2_ready]_i_13__0/O
+                         net (fo=4, unplaced)         0.926    36.823    RS_ALU/slots[0][src2_ready]_i_13__0_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    36.947 r  RS_ALU/slots[1][src2_spec]_i_3__1/O
+                         net (fo=1, unplaced)         0.419    37.366    RS_IMUL/slots_reg[1][src2_spec]_1
+                         LUT6 (Prop_lut6_I1_O)        0.124    37.490 r  RS_IMUL/slots[1][src2_spec]_i_1__1/O
+                         net (fo=1, unplaced)         0.000    37.490    RS_IMUL/slots[1][src2_spec]_i_1__1_n_0
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src2_spec]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_IMUL/CLK
+                         FDRE                                         r  RS_IMUL/slots_reg[1][src2_spec]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_IMUL/slots_reg[1][src2_spec]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.490    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -16.572    <hidden>
+
+Slack (VIOLATED) :        -16.291ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_ALU/slots_reg[0][src1_spec]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.236ns  (logic 6.439ns (17.770%)  route 29.797ns (82.230%))
+  Logic Levels:           47  (LUT4=7 LUT5=6 LUT6=34)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][1]_i_3/O
+                         net (fo=5, unplaced)         0.477    34.851    RS_ALU/alu1_e[tag][1]_i_3_n_0
+                         LUT4 (Prop_lut4_I2_O)        0.124    34.975 r  RS_ALU/slots[7][src1_ready]_i_12/O
+                         net (fo=4, unplaced)         0.926    35.901    RS_ALU/slots[7][src1_ready]_i_12_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    36.025 r  RS_ALU/slots[7][src1_spec]_i_6/O
+                         net (fo=8, unplaced)         0.487    36.512    RS_ALU/p_423_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    36.636 r  RS_ALU/slots[0][src1_spec]_i_4/O
+                         net (fo=1, unplaced)         0.449    37.085    RS_ALU/slots[0][src1_spec]_i_4_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    37.209 r  RS_ALU/slots[0][src1_spec]_i_1/O
+                         net (fo=1, unplaced)         0.000    37.209    RS_ALU/slots[0][src1_spec]_i_1_n_0
+                         FDRE                                         r  RS_ALU/slots_reg[0][src1_spec]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_ALU/CLK
+                         FDRE                                         r  RS_ALU/slots_reg[0][src1_spec]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_ALU/slots_reg[0][src1_spec]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.209    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -16.291    <hidden>
+
+Slack (VIOLATED) :        -16.291ns  (required time - arrival time)
+  Source:                 OTTER_ROB/head_reg[2]_rep__7/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            RS_ALU/slots_reg[0][src2_spec]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        36.236ns  (logic 6.439ns (17.770%)  route 29.797ns (82.230%))
+  Logic Levels:           47  (LUT4=7 LUT5=6 LUT6=34)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.973     0.973    OTTER_ROB/CLK
+                         FDRE                                         r  OTTER_ROB/head_reg[2]_rep__7/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     1.429 f  OTTER_ROB/head_reg[2]_rep__7/Q
+                         net (fo=112, unplaced)       1.067     2.496    OTTER_ROB/head_reg[2]_rep__7_0
+                         LUT6 (Prop_lut6_I0_O)        0.295     2.791 r  OTTER_ROB/alu_e[pc][31]_i_91/O
+                         net (fo=1, unplaced)         0.449     3.240    RS_ALU/alu_e[pc][31]_i_93_0
+                         LUT6 (Prop_lut6_I2_O)        0.124     3.364 r  RS_ALU/alu_e[pc][31]_i_84/O
+                         net (fo=3, unplaced)         0.683     4.047    RS_ALU/alu_e[pc][31]_i_84_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124     4.171 r  RS_ALU/alu_e[pc][31]_i_77/O
+                         net (fo=5, unplaced)         0.477     4.648    RS_ALU/alu_e[pc][31]_i_77_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124     4.772 f  RS_ALU/alu_e[pc][31]_i_63/O
+                         net (fo=3, unplaced)         0.920     5.692    RS_ALU/alu_e[pc][31]_i_63_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.816 f  RS_ALU/alu_e[pc][31]_i_76/O
+                         net (fo=1, unplaced)         0.449     6.265    RS_ALU/alu_e[pc][31]_i_76_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124     6.389 f  RS_ALU/alu_e[pc][31]_i_62/O
+                         net (fo=7, unplaced)         0.484     6.873    RS_ALU/found1609_out
+                         LUT4 (Prop_lut4_I2_O)        0.124     6.997 f  RS_ALU/alu_e[pc][31]_i_52/O
+                         net (fo=2, unplaced)         0.913     7.910    RS_ALU/alu_e[pc][31]_i_52_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     8.034 r  RS_ALU/alu_e[pc][31]_i_51/O
+                         net (fo=9, unplaced)         0.490     8.524    RS_ALU/found1611_out
+                         LUT6 (Prop_lut6_I2_O)        0.124     8.648 f  RS_ALU/alu_e[pc][31]_i_46/O
+                         net (fo=4, unplaced)         0.926     9.574    RS_ALU/alu_e[pc][31]_i_46_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     9.698 f  RS_ALU/alu_e[pc][31]_i_37/O
+                         net (fo=1, unplaced)         0.449    10.147    RS_ALU/alu_e[pc][31]_i_37_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    10.271 f  RS_ALU/alu_e[pc][31]_i_22/O
+                         net (fo=8, unplaced)         0.487    10.758    RS_ALU/found1613_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    10.874 f  RS_ALU/alu_e[valid]_i_16/O
+                         net (fo=2, unplaced)         0.913    11.787    RS_ALU/alu_e[valid]_i_16_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    11.911 r  RS_ALU/alu_e[pc][31]_i_23/O
+                         net (fo=10, unplaced)        0.492    12.403    RS_ALU/found1615_out
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.527 f  RS_ALU/alu_e[pc][31]_i_29/O
+                         net (fo=3, unplaced)         0.920    13.447    RS_ALU/alu_e[pc][31]_i_29_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    13.571 f  RS_ALU/alu_e[pc][31]_i_21/O
+                         net (fo=1, unplaced)         0.449    14.020    RS_ALU/alu_e[pc][31]_i_21_n_0
+                         LUT5 (Prop_lut5_I1_O)        0.124    14.144 f  RS_ALU/alu_e[pc][31]_i_11/O
+                         net (fo=5, unplaced)         0.477    14.621    RS_ALU/found1617_out
+                         LUT4 (Prop_lut4_I2_O)        0.116    14.737 f  RS_ALU/alu_e[valid]_i_6/O
+                         net (fo=3, unplaced)         0.920    15.657    RS_ALU/alu_e[valid]_i_6_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    15.781 r  RS_ALU/alu_e[pc][31]_i_5/O
+                         net (fo=8, unplaced)         0.487    16.268    RS_ALU/found1619_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    16.392 r  RS_ALU/alu_e[pc][31]_i_2/O
+                         net (fo=161, unplaced)       1.014    17.406    RS_ALU/issue_idx[2]
+                         LUT4 (Prop_lut4_I0_O)        0.124    17.530 f  RS_ALU/alu1_e[alu_fun][4]_i_101/O
+                         net (fo=4, unplaced)         0.926    18.456    RS_ALU/alu1_e[alu_fun][4]_i_101_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    18.580 r  RS_ALU/alu1_e[alu_fun][4]_i_88/O
+                         net (fo=7, unplaced)         0.484    19.064    RS_ALU/found4
+                         LUT6 (Prop_lut6_I5_O)        0.124    19.188 f  RS_ALU/alu1_e[alu_fun][4]_i_87/O
+                         net (fo=1, unplaced)         0.449    19.637    RS_ALU/alu1_e[alu_fun][4]_i_87_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    19.761 f  RS_ALU/alu1_e[alu_fun][4]_i_69/O
+                         net (fo=4, unplaced)         0.473    20.234    RS_ALU/alu1_e[alu_fun][4]_i_69_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.358 f  RS_ALU/alu1_e[alu_fun][4]_i_36/O
+                         net (fo=9, unplaced)         0.490    20.848    RS_ALU/found1
+                         LUT6 (Prop_lut6_I0_O)        0.124    20.972 f  RS_ALU/alu1_e[alu_fun][4]_i_60/O
+                         net (fo=2, unplaced)         0.913    21.885    RS_ALU/alu1_e[alu_fun][4]_i_60_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    22.009 r  RS_ALU/alu1_e[alu_fun][4]_i_33/O
+                         net (fo=11, unplaced)        0.495    22.504    OTTER_ROB/found1578_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    22.628 r  OTTER_ROB/alu1_e[alu_fun][4]_i_72/O
+                         net (fo=2, unplaced)         0.913    23.541    RS_ALU/alu1_e[alu_fun][4]_i_34_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    23.665 r  RS_ALU/alu1_e[alu_fun][4]_i_66/O
+                         net (fo=1, unplaced)         0.419    24.084    RS_ALU/alu1_e[alu_fun][4]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.208 r  RS_ALU/alu1_e[alu_fun][4]_i_34/O
+                         net (fo=13, unplaced)        0.499    24.707    OTTER_ROB/found1582_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    24.831 r  OTTER_ROB/alu1_e[alu_fun][4]_i_45/O
+                         net (fo=2, unplaced)         0.913    25.744    RS_ALU/alu1_e[alu_fun][4]_i_6_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    25.868 r  RS_ALU/alu1_e[alu_fun][4]_i_19/O
+                         net (fo=1, unplaced)         0.449    26.317    RS_ALU/alu1_e[alu_fun][4]_i_19_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    26.441 r  RS_ALU/alu1_e[alu_fun][4]_i_6/O
+                         net (fo=9, unplaced)         0.490    26.931    OTTER_ROB/found1586_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    27.055 r  OTTER_ROB/alu1_e[alu_fun][4]_i_51/O
+                         net (fo=2, unplaced)         0.913    27.968    RS_ALU/alu1_e[alu_fun][4]_i_7_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    28.092 r  RS_ALU/alu1_e[alu_fun][4]_i_24/O
+                         net (fo=1, unplaced)         0.419    28.511    RS_ALU/alu1_e[alu_fun][4]_i_24_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    28.635 r  RS_ALU/alu1_e[alu_fun][4]_i_7/O
+                         net (fo=12, unplaced)        0.497    29.132    OTTER_ROB/found1590_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    29.256 r  OTTER_ROB/alu1_e[alu_fun][4]_i_38/O
+                         net (fo=2, unplaced)         0.913    30.169    RS_ALU/alu1_e[alu_fun][4]_i_5_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.293 r  RS_ALU/alu1_e[alu_fun][4]_i_13/O
+                         net (fo=1, unplaced)         0.449    30.742    RS_ALU/alu1_e[alu_fun][4]_i_13_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    30.866 r  RS_ALU/alu1_e[alu_fun][4]_i_5/O
+                         net (fo=11, unplaced)        0.495    31.361    OTTER_ROB/found1594_out
+                         LUT6 (Prop_lut6_I4_O)        0.124    31.485 r  OTTER_ROB/alu1_e[alu_fun][4]_i_56/O
+                         net (fo=1, unplaced)         0.902    32.387    RS_ALU/alu1_e[alu_fun][4]_i_8_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    32.511 r  RS_ALU/alu1_e[alu_fun][4]_i_29/O
+                         net (fo=1, unplaced)         0.449    32.960    RS_ALU/alu1_e[alu_fun][4]_i_29_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    33.084 r  RS_ALU/alu1_e[alu_fun][4]_i_8/O
+                         net (fo=6, unplaced)         0.481    33.565    RS_ALU/found1598_out
+                         LUT6 (Prop_lut6_I5_O)        0.124    33.689 r  RS_ALU/slots[3][valid]_i_4__0/O
+                         net (fo=161, unplaced)       0.561    34.250    RS_ALU/slots[3][valid]_i_4__0_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    34.374 r  RS_ALU/alu1_e[tag][1]_i_3/O
+                         net (fo=5, unplaced)         0.477    34.851    RS_ALU/alu1_e[tag][1]_i_3_n_0
+                         LUT4 (Prop_lut4_I2_O)        0.124    34.975 r  RS_ALU/slots[7][src2_ready]_i_12/O
+                         net (fo=4, unplaced)         0.926    35.901    RS_ALU/slots[7][src2_ready]_i_12_n_0
+                         LUT6 (Prop_lut6_I3_O)        0.124    36.025 r  RS_ALU/slots[7][src2_spec]_i_5/O
+                         net (fo=8, unplaced)         0.487    36.512    RS_ALU/p_420_out
+                         LUT4 (Prop_lut4_I2_O)        0.124    36.636 r  RS_ALU/slots[0][src2_spec]_i_3/O
+                         net (fo=1, unplaced)         0.449    37.085    RS_ALU/slots[0][src2_spec]_i_3_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    37.209 r  RS_ALU/slots[0][src2_spec]_i_1/O
+                         net (fo=1, unplaced)         0.000    37.209    RS_ALU/slots[0][src2_spec]_i_1_n_0
+                         FDRE                                         r  RS_ALU/slots_reg[0][src2_spec]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=35183, unset)        0.924    20.924    RS_ALU/CLK
+                         FDRE                                         r  RS_ALU/slots_reg[0][src2_spec]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.029    20.918    RS_ALU/slots_reg[0][src2_spec]
+  -------------------------------------------------------------------
+                         required time                         20.918    <hidden>
+                         arrival time                         -37.209    <hidden>
+  -------------------------------------------------------------------
+                         slack                                -16.291    <hidden>
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[9]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[10]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[9]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[9]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[9]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[12]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[10]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[10]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[10]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[10]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[11]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[12]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[11]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[11]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[11]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[12]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[12]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[12]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[12]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[12]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[13]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[14]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[13]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[13]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[13]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[16]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[14]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[14]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[14]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[14]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[15]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[16]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[15]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[15]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[16]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[16]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[16]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[16]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[16]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[17]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[18]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[17]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[17]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[17]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[20]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[18]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[18]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[18]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[18]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[19]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[20]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[19]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[19]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[19]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[20]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[20]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[20]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[20]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[20]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[21]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[22]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[21]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[21]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[21]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[24]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[22]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[22]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[22]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[22]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[23]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[24]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[23]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[23]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[23]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[24]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[24]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[24]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[24]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[24]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[25]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[26]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[25]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[25]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[25]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[28]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[26]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[26]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[26]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[26]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[27]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[28]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[27]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[27]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count[27]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[28]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[28]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[28]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=35183, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[28]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[28]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         clk
+Waveform(ns):       { 0.000 10.000 }
+Period(ns):         20.000
+Sources:            { CLK }
+
+Check Type        Corner  Lib Pin      Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
+Min Period        n/a     DSP48E1/CLK  n/a            3.884         20.000      16.116               OTTER_FP_MULTIPLIER/s2_q_reg[product]/CLK
+Min Period        n/a     DSP48E1/CLK  n/a            3.884         20.000      16.116               OTTER_INT_MULTIPLIER/s2_product_reg/CLK
+Min Period        n/a     DSP48E1/CLK  n/a            3.687         20.000      16.313               OTTER_INT_MULTIPLIER/s2_product_reg__0/CLK
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][0]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][1]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][2]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][3]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][4]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_src_a]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_src_b][0]/C
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+
+
+
