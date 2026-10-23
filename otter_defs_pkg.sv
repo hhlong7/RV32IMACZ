@@ -41,6 +41,16 @@ package otter_defs_pkg;
     // Line address: everything above the 32-byte line offset.
     localparam int CACHE_TAG_BITS = 27;
 
+    // L2 data cache: left out by default. On an FPGA the memory behind the
+    // L1 caches is on-chip block RAM, which refills a line one word per
+    // cycle just as the L2 does, so the L2 cost about 6,000 LUTs and 9,000
+    // flip-flops for no speedup. Build with -DOTTER_L2 to include it.
+`ifdef OTTER_L2
+    localparam bit L2_ENABLE = 1'b1;
+`else
+    localparam bit L2_ENABLE = 1'b0;
+`endif
+
     // RV32 major opcodes (instruction bits [6:0]).
     localparam logic [6:0] OPC_LOAD     = 7'b0000011;
     localparam logic [6:0] OPC_MISC_MEM = 7'b0001111;

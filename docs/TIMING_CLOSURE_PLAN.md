@@ -390,5 +390,33 @@ counts: `fp_arith` 54,842 → 55,497 (+1.2%); every other workload unchanged
 `synth_core.tcl` now also writes `path_groups_detail.txt`, the full
 cell-by-cell report of the worst path in each of the first 40 module pairs.
 
-**Next:** rerun `source tools/vivado/synth_core.tcl` on the Windows machine
-to measure these fixes and see the remaining groups in detail.
+### Retargeting to the Zybo Z7-20 (Zynq-7020)
+
+The board changed to a Zybo Z7-20 (`xc7z020clg400-1`, 53,200 LUTs, 106,400
+flip-flops). At 51,069 LUTs the core would fill 96% of it, so two blocks
+were shrunk, with no change in any workload's cycle count:
+
+- **ROB (15,644 LUTs in Vivado).** Every one of the 16 entries was a
+  360-bit record whose every bit had a six-way write multiplexer (hold, three
+  CDBs, two allocation ports) and two full-width 16:1 read trees. The 183
+  bits written only at allocation now live in two LUT RAM banks, even and
+  odd entries: allocation writes `tail` and `tail+1`, which always differ in
+  parity, so each bank needs one write port. The CDB-written fields were
+  narrowed: `cause` to 4 bits (synchronous exception codes are below 16), and
+  `tval` and `next_pc` share one field (only exceptions use `tval`; only the
+  branch unit, which never raises one, sets `next_pc`). A simulation check
+  enforces both. Yosys: 15.1k → 4.9k LUTs, 5,149 → 1,261 flip-flops.
+- **L2 (6,155 LUTs, 9,119 flip-flops).** Now optional (`-DOTTER_L2`) and
+  off by default: on-chip block RAM refills a line one word per cycle, as the
+  L2 did, so even the `l2_cache` regression test takes the same 427 cycles
+  without it.
+
+Estimated total: about 34,000 LUTs (64% of the 7020) and 22,500
+flip-flops. The Vivado scripts now default to the 7020. Verification: 23/23
+regression (with and without the L2), Spike lockstep (1,514 directed +
+random, 800 out-of-order stress, the shrunk build's 14 + 500), the CI
+container (46/46 coverage bins), identical cycle counts (snapshot "Z7-20
+prep").
+
+**Next:** `source tools/vivado/synth_core.tcl` on the Windows machine,
+which now targets the 7020, to measure fit and Fmax there.

@@ -5,16 +5,17 @@
 #
 # From the repository root:
 #   vivado -mode batch -source tools/vivado/synth_core.tcl
-#   vivado -mode batch -source tools/vivado/synth_core.tcl -tclargs part=xc7a100tcsg324-1 impl=0
+#   vivado -mode batch -source tools/vivado/synth_core.tcl -tclargs part=xc7a200tsbg484-1 impl=0
 #
 # Options (key=value after -tclargs, or set as variables before sourcing):
-#   part=<part>   FPGA part (default xc7a200tsbg484-1); a bare part name works too
+#   part=<part>   FPGA part (default xc7z020clg400-1); a bare part name works too
 #   impl=1        also place and route (default), so timing includes real wire
 #                 delays; impl=0 stops after synthesis (faster, optimistic)
 #
-# Default part: Artix-7 200T (Nexys Video). Other common parts:
+# Default part: Zynq-7020 (Zybo Z7-20; the core goes in the programmable
+# logic). Other parts:
+#   xc7a200tsbg484-1   Artix-7 200T (Nexys Video), the earlier target
 #   xc7a100tcsg324-1   Artix-7 100T (Nexys A7-100T, Arty A7-100T)
-#   xc7a35tcpg236-1    Artix-7 35T  (Basys 3)
 # Or from the Vivado Tcl Console: cd to the repository, then
 #   source tools/vivado/synth_core.tcl
 #
@@ -23,7 +24,7 @@
 # and route; summary.txt always holds the latest one. The full reports are written to
 # reports/vivado/<part>/, which is tracked by git, so pushing shares them.
 
-if {![info exists part]} { set part "xc7a200tsbg484-1" }
+if {![info exists part]} { set part "xc7z020clg400-1" }
 if {![info exists impl]} { set impl 1 }
 foreach arg [expr {[info exists argv] ? $argv : {}}] {
     if {[regexp {^part=(.+)$} $arg -> v]} { set part $v } \

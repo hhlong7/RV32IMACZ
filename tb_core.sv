@@ -391,9 +391,10 @@ module tb_core;
             // Rename table: a busy register names a live entry that writes it.
             for (int r = 1; r < 64; r++) begin
                 if (dut.OTTER_RAT.busy[r]) begin
+                    ooo_pkg::rob_entry_t re;
                     t = dut.OTTER_RAT.tags[r];
-                    if (!rob_live(t) || dut.OTTER_ROB.entries[t].rd != r[4:0] ||
-                        (r >= 32 ? !dut.OTTER_ROB.entries[t].wr_fp : !dut.OTTER_ROB.entries[t].wr_int))
+                    re = dut.OTTER_ROB.entry(t);
+                    if (!rob_live(t) || re.rd != r[4:0] || (r >= 32 ? !re.wr_fp : !re.wr_int))
                         inv_fail($sformatf("RAT reg %0d busy on tag %0d which does not write it", r, t));
                 end
             end
@@ -416,8 +417,10 @@ module tb_core;
             // Store queue: live stores, oldest first.
             for (int i = 0; i < dut.OTTER_LSU.sq_count; i++) begin
                 ooo_pkg::tag_t st;
+                ooo_pkg::rob_entry_t se;
                 st = dut.OTTER_LSU.sq[(int'(dut.OTTER_LSU.sq_head) + i) % $size(dut.OTTER_LSU.sq)].tag;
-                if (!rob_live(st) || !dut.OTTER_ROB.entries[st].is_store)
+                se = dut.OTTER_ROB.entry(st);
+                if (!rob_live(st) || !se.is_store)
                     inv_fail($sformatf("store queue entry %0d tag %0d is not a live store", i, st));
                 if (i > 0 && ooo_pkg::tag_age(st, dut.rob_head) <=
                     ooo_pkg::tag_age(dut.OTTER_LSU.sq[(int'(dut.OTTER_LSU.sq_head) + i - 1) % $size(dut.OTTER_LSU.sq)].tag, dut.rob_head))
@@ -439,9 +442,9 @@ module tb_core;
 
             // Checkpoints: held only by live, unresolved control instructions.
             for (int k = 0; k < ooo_pkg::CKPTS; k++) begin
-                if (dut.ckpt_used[k] && (!rob_live(dut.ckpt_owner[k]) ||
-                    !dut.OTTER_ROB.entries[dut.ckpt_owner[k]].is_control ||
-                    dut.OTTER_ROB.entries[dut.ckpt_owner[k]].done))
+                ooo_pkg::rob_entry_t ce;
+                ce = dut.OTTER_ROB.entry(dut.ckpt_owner[k]);
+                if (dut.ckpt_used[k] && (!rob_live(dut.ckpt_owner[k]) || !ce.is_control || ce.done))
                     inv_fail($sformatf("checkpoint %0d held by tag %0d, not a live unresolved branch", k, dut.ckpt_owner[k]));
             end
 
@@ -466,9 +469,10 @@ module tb_core;
         if (print_stats) begin
             $display("TB FINAL cycle=%0d last_sseg=0x%08x signed=%0d last_leds=0x%08x retired=%0d",
                      cycle_count, last_sseg, $signed(last_sseg), last_leds, dut.OTTER_CSR_FILE.counters[2]);
-            $display("TB STATS flushes=%0d mispredicts=%0d ic_fetch=%0d ic_fill=%0d ic_prefetch=%0d dc_hit=%0d dc_miss=%0d l2_hit=%0d",
+            $display("TB STATS flushes=%0d mispredicts=%0d ic_fetch=%0d ic_fill=%0d ic_prefetch=%0d dc_hit=%0d dc_miss=%0d l2_hit=%0d l2=%0d",
                      flush_count, mispredict_count, fetch_count, dut.OTTER_CSR_FILE.counters[5],
-                     dut.OTTER_CSR_FILE.counters[7], dcache_hit_count, l2_hit_count + l2_miss_count, l2_hit_count);
+                     dut.OTTER_CSR_FILE.counters[7], dcache_hit_count, l2_hit_count + l2_miss_count, l2_hit_count,
+                     otter_defs_pkg::L2_ENABLE);
             $display("TB LSU sb_enq=%0d sb_fwd=%0d sb_drain=%0d sb_full_stall=%0d sb_conflict_stall=%0d fence_wait=%0d sq_fwd=%0d",
                      storebuf_enqueue_count, storebuf_forward_count, storebuf_drain_count,
                      storebuf_full_cycles, storebuf_conflict_cycles, fence_wait_cycles, sq_forward_count);

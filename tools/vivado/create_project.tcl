@@ -11,7 +11,7 @@
 #   source tools/vivado/create_project.tcl
 #
 # Options (after -tclargs on the command line, or set before sourcing):
-#   part=<part>       FPGA part (default xc7a200tsbg484-1, Artix-7 200T)
+#   part=<part>       FPGA part (default xc7z020clg400-1, Zybo Z7-20)
 #   memories=stub     core only; the simulation memory models are
 #                     register-only stand-ins, so synthesis and
 #                     implementation run (default)
@@ -23,7 +23,7 @@
 # The project lands in vivado/otter_core/ (ignored by git). Running the
 # script again rebuilds it from scratch.
 
-if {![info exists part]}      { set part "xc7a200tsbg484-1" }
+if {![info exists part]}      { set part "xc7z020clg400-1" }
 if {![info exists memories]}  { set memories "stub" }
 if {![info exists elaborate]} { set elaborate 1 }
 foreach arg [expr {[info exists argv] ? $argv : {}}] {

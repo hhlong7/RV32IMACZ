@@ -94,7 +94,9 @@ def main() -> int:
         # Store-queue, FP-pipeline, and divider squashes are exercised by
         # test_files/lockstep/branch_recovery.s and the random lockstep runs.
         "early_recovery": nonzero_bins(merged["rec"], ["recoveries", "load_squash", "memq_squash", "rs_squash", "nested"]),
-        "cache_behavior": nonzero_bins(merged["stats"], ["ic_fetch", "ic_fill", "ic_prefetch", "dc_hit", "dc_miss", "l2_hit"]),
+        # l2_hit only counts when the L2 is built in (-DOTTER_L2; TB STATS l2=1).
+        "cache_behavior": nonzero_bins(merged["stats"], ["ic_fetch", "ic_fill", "ic_prefetch", "dc_hit", "dc_miss"] +
+                                       (["l2_hit"] if merged["stats"].get("l2", 0) > 0 else [])),
         "csr_trap": nonzero_bins(merged["ooo"], ["traps", "mrets"]),
         "memory_ordering": nonzero_bins(
             merged["lsu"],

@@ -269,28 +269,39 @@ module LoadStoreUnit
         .loadCacheable(dc_cacheable)
     );
 
-    l2cache L2CACHE (
-        .clk, .rst,
-        .queryAddr(ld.addr),
-        .queryValid(ld.valid && dc_cacheable && dc_miss && !sb_fwd_hit && !sb_fwd_conflict),
-        .lineReadAddr(ld.addr),
-        .lineReadSelect(dc_fill_select),
-        .fillAddr(ld.addr),
-        .fillWrite(l2_fill_write),
-        .fillSelect(l2_fill_select),
-        .fillLast(l2_fill_last),
-        .fillWordData(mem_dout2),
-        .drainStoreValid(sb_drain_accept),
-        .drainStoreAddr(sb_drain_addr),
-        .drainStoreData(sb_drain_data),
-        .drainStoreMask(sb_drain_mask),
-        .atomicInvalidateValid(atomic_write_intent),
-        .atomicInvalidateAddr(at_addr),
-        .queryHit(l2_hit),
-        .queryMiss(l2_miss),
-        .queryCacheable(l2_cacheable),
-        .lineReadData(l2_line_word)
-    );
+    // Optional L2 (otter_defs_pkg::L2_ENABLE). Without it every D-cache
+    // miss refills from memory.
+    generate
+        if (otter_defs_pkg::L2_ENABLE) begin : g_l2
+            l2cache L2CACHE (
+                .clk, .rst,
+                .queryAddr(ld.addr),
+                .queryValid(ld.valid && dc_cacheable && dc_miss && !sb_fwd_hit && !sb_fwd_conflict),
+                .lineReadAddr(ld.addr),
+                .lineReadSelect(dc_fill_select),
+                .fillAddr(ld.addr),
+                .fillWrite(l2_fill_write),
+                .fillSelect(l2_fill_select),
+                .fillLast(l2_fill_last),
+                .fillWordData(mem_dout2),
+                .drainStoreValid(sb_drain_accept),
+                .drainStoreAddr(sb_drain_addr),
+                .drainStoreData(sb_drain_data),
+                .drainStoreMask(sb_drain_mask),
+                .atomicInvalidateValid(atomic_write_intent),
+                .atomicInvalidateAddr(at_addr),
+                .queryHit(l2_hit),
+                .queryMiss(l2_miss),
+                .queryCacheable(l2_cacheable),
+                .lineReadData(l2_line_word)
+            );
+        end else begin : g_no_l2
+            assign l2_hit = 1'b0;
+            assign l2_miss = 1'b0;
+            assign l2_cacheable = 1'b0;
+            assign l2_line_word = 32'b0;
+        end
+    endgenerate
 
     assign dc_fill_word = l2_refill ? l2_line_word : mem_dout2;
 

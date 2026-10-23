@@ -19,8 +19,8 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
   single-precision F subset (`fadd/fsub/fmul/fdiv.s`, FP loads/stores, `fcsr`)
 - Branch prediction: 512-entry gshare (8-bit global history) with backward-taken defaults for cold branches, a 16-entry BTB for indirect jumps, and a 4-entry RAS
 - Fully associative caches with tree pseudo-LRU replacement: 16-line L1
-  I-cache with next-line prefetch, 16-line L1 D-cache, 32-line L2 (32-byte
-  lines), plus a store buffer
+  I-cache with next-line prefetch and 16-line L1 D-cache (32-byte lines),
+  plus a store buffer; an optional 32-line L2 (build with `-DOTTER_L2`)
 - Trap, CSR, timer-interrupt, and MMIO support
 - Verification: every retired instruction compared against Spike (the
   reference RISC-V simulator) in lockstep, directed and constrained-random
@@ -281,7 +281,7 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 - Directed regression suite: `23 / 23` passed
 - Legacy randomized tests: store-buffer, cache-tag, and FP-unit unit tests
   plus `16 / 16` seeded programs
-- Coverage report: 47 / 47 bins hit
+- Coverage report: 46 / 46 bins hit (47 with the optional L2)
 - Assembler cross-check: 6,000 random instructions, 0 encoding mismatches
 - Lockstep vs Spike: 14 directed + 200 random programs, ~144k retired
   instructions, 0 mismatches; across M4, an additional ~21,500 random
@@ -358,8 +358,8 @@ Windows or Linux, from the repository root:
 vivado -mode batch -source tools/vivado/synth_core.tcl
 ```
 
-The top is `OTTER_MCU`, the part defaults to the Artix-7 200T
-(`xc7a200tsbg484-1`; pass another part with `-tclargs`), the clock target is
+The top is `OTTER_MCU`, the part defaults to the Zynq-7020 on the Zybo
+Z7-20 (`xc7z020clg400-1`; pass another part with `-tclargs`), the clock target is
 50 MHz (`tools/vivado/core_ooc.xdc`). The console ends with a summary
 (resources, worst slack, estimated maximum clock, the five worst paths), and
 the full utilization and timing reports land in `reports/vivado/<part>/`,
@@ -373,8 +373,15 @@ slack of -101.7 ns at 50 MHz: about 8 MHz. After milestone 5, Yosys reports
 83,859 LUTs (from 90,742), 27,114 flip-flops, and 6 DSP slices; rerun the
 script for Vivado's post-route numbers.
 
-For reference, an Artix-7 100T (Nexys A7 / Arty A7) has 63,400 LUTs and a
-200T (Nexys Video) 133,800. All core logic, caches included, now runs on
+Post-route on the Artix-7 200T (after milestone 5 and the fixes in
+[docs/TIMING_CLOSURE_PLAN.md](docs/TIMING_CLOSURE_PLAN.md)): 51,069 LUTs,
+35,529 flip-flops, 6 DSP slices, 37.9 MHz. To fit the Zybo Z7-20 (Zynq-7020:
+53,200 LUTs, 106,400 flip-flops), the ROB keeps its allocation-only fields
+in LUT RAM (Vivado had it at 15,644 LUTs) and the L2 became optional and
+off, since on-chip block RAM refills a line as fast as the L2 did; neither
+changed any workload's cycle count. Estimated from Vivado's per-module
+numbers: about 34,000 LUTs (64% of the 7020) and 22,500 flip-flops; the next
+Vivado run measures it. All core logic, caches included, now runs on
 the rising edge (see [docs/TIMING_CLOSURE_PLAN.md](docs/TIMING_CLOSURE_PLAN.md)).
 Remaining FPGA work: Vivado post-route timing, and block-RAM or DRAM memory
 behind the caches for a board build (the core-only flow replaces the memory
