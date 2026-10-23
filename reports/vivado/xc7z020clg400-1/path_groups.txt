@@ -1,0 +1,32 @@
+Worst setup path per (start module -> end module), from the 5000 worst endpoints
+   slack  lvl  modules                                                       start pin -> end pin
+  -5.236   27  (core top) -> (core top)                                      pc_out_reg[13]/C -> pc_out_reg[1]_rep/D
+  -4.433   27  (core top) -> OTTER_BRANCH_PREDICTOR                          pc_out_reg[13]/C -> OTTER_BRANCH_PREDICTOR/ghr_spec_reg[0]/D
+  -2.252   24  OTTER_ROB -> RS_ALU                                           OTTER_ROB/head_reg[1]_rep__4/C -> RS_ALU/slots_reg[7][src2][12]/CE
+  -2.244   36  OTTER_FP_DIVIDER -> OTTER_FP_DIVIDER                          OTTER_FP_DIVIDER/quotient_reg[21]/C -> OTTER_FP_DIVIDER/rounded_q_reg[10]/D
+  -2.240   22  OTTER_ROB -> OTTER_LSU                                        OTTER_ROB/head_reg[0]_rep__2/C -> OTTER_LSU/out_q_reg[tag][0]/D
+  -1.518   36  OTTER_FP_MULTIPLIER -> OTTER_FP_MULTIPLIER                    OTTER_FP_MULTIPLIER/s3_flags_q[1]_i_575__0_psdsp/C -> OTTER_FP_MULTIPLIER/s3_result_q_reg[15]/D
+  -1.101   22  OTTER_ROB -> OTTER_LSU/MEMQ                                   OTTER_ROB/head_reg[0]_rep__2/C -> OTTER_LSU/MEMQ/slots_reg[0][valid]_rep__1/D
+  -0.909   21  OTTER_ROB -> (core top)                                       OTTER_ROB/head_reg[1]_rep__4/C -> if_id_reg[raw_ir][1]/CE
+  -0.573   19  (core top) -> RS_ALU                                          if1_if2_reg[ir][22]/C -> RS_ALU/slots_reg[4][src1_spec]/D
+  -0.439   22  OTTER_ROB -> OTTER_CSR_FILE                                   OTTER_ROB/head_reg[0]_rep__2/C -> OTTER_CSR_FILE/hpm_event_q_reg[14]/D
+  -0.387   16  (core top) -> OTTER_LSU/MEMQ                                  if1_if2_reg[ir][22]/C -> OTTER_LSU/MEMQ/slots_reg[2][src1][3]/D
+  -0.370   19  OTTER_ROB -> RS_BR                                            OTTER_ROB/head_reg[1]_rep__4/C -> RS_BR/slots_reg[0][src2_spec]/D
+  -0.339   20  OTTER_ROB -> RS_FMUL                                          OTTER_ROB/head_reg[1]_rep__4/C -> RS_FMUL/slots_reg[1][src2][28]/D
+  -0.299   20  OTTER_ROB -> OTTER_RAT                                        OTTER_ROB/head_reg[1]_rep__4/C -> OTTER_RAT/reg_g[33].ck_g[2].ck_busy_reg[2][33]/D
+  -0.254   16  (core top) -> RS_BR                                           if1_if2_reg[ir][22]/C -> RS_BR/slots_reg[1][src1][20]/D
+  -0.237   16  (core top) -> RS_FMUL                                         if1_if2_reg[ir][22]/C -> RS_FMUL/slots_reg[1][src1][12]/D
+  -0.202   20  OTTER_ROB -> RS_IDIV                                          OTTER_ROB/head_reg[1]_rep__4/C -> RS_IDIV/slots_reg[1][src2][7]/D
+  -0.154   20  OTTER_ROB -> RS_FADD                                          OTTER_ROB/head_reg[1]_rep__4/C -> RS_FADD/slots_reg[0][src2][20]/D
+  -0.066   20  OTTER_ROB -> RS_FDIV                                          OTTER_ROB/head_reg[1]_rep__4/C -> RS_FDIV/slots_reg[1][src2][25]/D
+  -0.028   21  OTTER_ROB -> RS_IMUL                                          OTTER_ROB/head_reg[1]_rep__4/C -> RS_IMUL/slots_reg[1][src2][31]/D
+  -0.024   16  (core top) -> RS_FADD                                         if1_if2_reg[ir][22]/C -> RS_FADD/slots_reg[1][src1][12]/D
+  -0.020   16  (core top) -> RS_IDIV                                         if1_if2_reg[ir][22]/C -> RS_IDIV/slots_reg[1][src1][12]/D
+   0.123   16  (core top) -> RS_FDIV                                         if1_if2_reg[ir][22]/C -> RS_FDIV/slots_reg[1][src1][12]/D
+   0.248   21  OTTER_ROB -> OTTER_FP_ADDER                                   OTTER_ROB/head_reg[3]_rep__5/C -> OTTER_FP_ADDER/s1_q_reg[small_sig][38]/D
+   0.637   13  OTTER_ROB -> OTTER_INT_MULTIPLIER                             OTTER_ROB/head_reg[2]_rep__3/C -> OTTER_INT_MULTIPLIER/s2_product_reg__0/B[8]
+   0.743   17  OTTER_ROB -> OTTER_ROB                                        OTTER_ROB/head_reg[1]_rep__4/C -> OTTER_ROB/entries_reg[12][value][1]/CE
+   0.818   22  OTTER_ROB -> OTTER_FP_DIVIDER                                 OTTER_ROB/head_reg[0]_rep__0/C -> OTTER_FP_DIVIDER/divisor_reg[2]/D
+   0.839   23  (core top) -> OTTER_CACHE/TAGS                                pc_out_reg[7]/C -> OTTER_CACHE/TAGS/g_plru.tree_reg[5]/D
+   0.869   17  (core top) -> RS_IMUL                                         if1_if2_reg[ir][22]/C -> RS_IMUL/slots_reg[0][src1][10]/D
+   0.940   15  OTTER_LSU/STORE_BUFFER -> OTTER_LSU/DCACHE                    OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_LSU/DCACHE/data_reg[15][7][10]/D

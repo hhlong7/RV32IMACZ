@@ -1,0 +1,1825 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2026.1 (win64) Build 6511674 Tue Jun 16 11:02:23 MDT 2026
+| Date         : Fri Oct 23 14:23:45 2026
+| Host         : L-Zenbook running 64-bit major release  (build 9200)
+| Command      : report_timing_summary -max_paths 10 -file C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/xc7z020clg400-1/timing_summary_synth.txt
+| Design       : OTTER_MCU
+| Device       : 7z020-clg400
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+| Design State : Synthesized
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (34)
+6. checking no_output_delay (65)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (34)
+-------------------------------
+ There are 34 input ports with no input delay specified. (HIGH)
+
+ There are 0 input ports with no input delay but user has a false path constraint.
+
+
+6. checking no_output_delay (65)
+--------------------------------
+ There are 65 ports with no output delay specified. (HIGH)
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+     -0.554      -11.039                     30                53146        0.189        0.000                      0                53146        8.750        0.000                       0                 24544  
+
+
+Timing constraints are not met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock  Waveform(ns)       Period(ns)      Frequency(MHz)
+-----  ------------       ----------      --------------
+clk    {0.000 10.000}     20.000          50.000          
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+clk                -0.554      -11.039                     30                53146        0.189        0.000                      0                53146        8.750        0.000                       0                 24544  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  clk
+  To Clock:  clk
+
+Setup :           30  Failing Endpoints,  Worst Slack       -0.554ns,  Total Violation      -11.039ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.189ns,  Total Violation        0.000ns
+PW    :            0  Failing Endpoints,  Worst Slack        8.750ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -0.554ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[0]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.547ns  (logic 6.509ns (31.679%)  route 14.038ns (68.321%))
+  Logic Levels:           32  (CARRY4=8 LUT2=1 LUT3=1 LUT4=1 LUT5=2 LUT6=17 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 f  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 f  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 f  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 f  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 f  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 f  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 f  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 f  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 f  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 r  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 r  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 r  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 r  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT2 (Prop_lut2_I0_O)        0.124    18.573 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_10/O
+                         net (fo=32, unplaced)        0.520    19.093    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_10_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    19.217 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][0]_i_7/O
+                         net (fo=1, unplaced)         0.449    19.666    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][0]_i_7_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.790 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][0]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.250    OTTER_BRANCH_PREDICTOR/pc_out_reg[0]
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.374 r  OTTER_BRANCH_PREDICTOR/pc_out[0]_i_11/O
+                         net (fo=1, unplaced)         0.449    20.823    OTTER_CACHE/TAGS/pc_out_reg[0]_3
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.947 r  OTTER_CACHE/TAGS/pc_out[0]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.396    OTTER_ROB/pc_out_reg[0]_2
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.520 r  OTTER_ROB/pc_out[0]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.520    OTTER_ROB_n_4552
+                         FDRE                                         r  pc_out_reg[0]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[0]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[0]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.520    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.554    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[10]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][10]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_9
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[10]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[10]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[10]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[10]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[10]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4542
+                         FDRE                                         r  pc_out_reg[10]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[10]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[10]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[11]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][11]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_10
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[11]_i_11/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[11]_4
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[11]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[11]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[11]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4541
+                         FDRE                                         r  pc_out_reg[11]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[11]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[11]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[12]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][12]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_11
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[12]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[12]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[12]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[12]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[12]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4540
+                         FDRE                                         r  pc_out_reg[12]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[12]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[12]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[13]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][13]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_12
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[13]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[13]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[13]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[13]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[13]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4539
+                         FDRE                                         r  pc_out_reg[13]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[13]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[13]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[14]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][14]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_13
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[14]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[14]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[14]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[14]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[14]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4538
+                         FDRE                                         r  pc_out_reg[14]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[14]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[14]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[15]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][15]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_14
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[15]_i_11/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[15]_4
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[15]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[15]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[15]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4537
+                         FDRE                                         r  pc_out_reg[15]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[15]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[15]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[16]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][16]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_15
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[16]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[16]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[16]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[16]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[16]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4536
+                         FDRE                                         r  pc_out_reg[16]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[16]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[16]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[17]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][17]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_16
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[17]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[17]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[17]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[17]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[17]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4535
+                         FDRE                                         r  pc_out_reg[17]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[17]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[17]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+Slack (VIOLATED) :        -0.435ns  (required time - arrival time)
+  Source:                 pc_out_reg[4]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            pc_out_reg[18]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            20.000ns  (clk rise@20.000ns - clk rise@0.000ns)
+  Data Path Delay:        20.428ns  (logic 6.385ns (31.256%)  route 14.043ns (68.744%))
+  Logic Levels:           31  (CARRY4=8 LUT3=2 LUT4=1 LUT5=2 LUT6=16 MUXF7=1 MUXF8=1)
+  Clock Path Skew:        -0.049ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.924ns = ( 20.924 - 20.000 ) 
+    Source Clock Delay      (SCD):    0.973ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.973     0.973    CLK
+                         FDRE                                         r  pc_out_reg[4]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.518     1.491 r  pc_out_reg[4]/Q
+                         net (fo=175, unplaced)       1.097     2.588    OTTER_BRANCH_PREDICTOR/if1_if2_reg[pc][4]
+                         CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.671     3.259 r  OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6/CO[3]
+                         net (fo=1, unplaced)         0.009     3.268    OTTER_BRANCH_PREDICTOR/if_id_reg[ir][19]_i_6_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.385 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69/CO[3]
+                         net (fo=1, unplaced)         0.000     3.385    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_69_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.502 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68/CO[3]
+                         net (fo=1, unplaced)         0.000     3.502    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_68_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.619 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67/CO[3]
+                         net (fo=1, unplaced)         0.000     3.619    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_67_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117     3.736 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40/CO[3]
+                         net (fo=1, unplaced)         0.000     3.736    OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_40_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.337     4.073 r  OTTER_BRANCH_PREDICTOR/FSM_sequential_PS_reg_i_39/O[1]
+                         net (fo=17, unplaced)        0.667     4.740    OTTER_CACHE/TAGS/next_fetch_tag[17]
+                         LUT6 (Prop_lut6_I0_O)        0.306     5.046 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_91/O
+                         net (fo=1, unplaced)         0.000     5.046    OTTER_CACHE/TAGS/FSM_sequential_PS_i_91_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533     5.579 r  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52/CO[3]
+                         net (fo=1, unplaced)         0.000     5.579    OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_52_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281     5.860 f  OTTER_CACHE/TAGS/FSM_sequential_PS_reg_i_26/CO[0]
+                         net (fo=1, unplaced)         0.741     6.601    OTTER_CACHE/TAGS/lookup_hit23_out
+                         LUT6 (Prop_lut6_I1_O)        0.367     6.968 r  OTTER_CACHE/TAGS/FSM_sequential_PS_i_12/O
+                         net (fo=4, unplaced)         1.135     8.103    OTTER_CACHE/TAGS/FSM_sequential_PS_i_12_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     8.227 f  OTTER_CACHE/TAGS/if_id[ir][19]_i_80/O
+                         net (fo=16, unplaced)        0.503     8.730    OTTER_CACHE/TAGS/if_id[ir][19]_i_80_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     8.854 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66/O
+                         net (fo=64, unplaced)        0.537     9.391    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_66_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124     9.515 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50/O
+                         net (fo=1, unplaced)         0.000     9.515    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_50_n_0
+                         MUXF7 (Prop_muxf7_I1_O)      0.247     9.762 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25/O
+                         net (fo=1, unplaced)         0.000     9.762    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_25_n_0
+                         MUXF8 (Prop_muxf8_I0_O)      0.098     9.860 r  OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11/O
+                         net (fo=1, unplaced)         0.717    10.577    OTTER_CACHE/TAGS/if_id_reg[raw_ir][26]_i_11_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.319    10.896 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5/O
+                         net (fo=1, unplaced)         0.449    11.345    OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_5_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    11.469 r  OTTER_CACHE/TAGS/if_id[raw_ir][26]_i_3/O
+                         net (fo=6, unplaced)         0.481    11.950    OTTER_CACHE/TAGS/p_1_in[26]
+                         LUT5 (Prop_lut5_I2_O)        0.124    12.074 r  OTTER_CACHE/TAGS/if1_if2[raw_ir][10]_i_2/O
+                         net (fo=26, unplaced)        0.968    13.042    OTTER_CACHE/TAGS/fetch_slot1_window[10]
+                         LUT4 (Prop_lut4_I1_O)        0.148    13.190 r  OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8/O
+                         net (fo=5, unplaced)         0.477    13.667    OTTER_CACHE/TAGS/if1_if2[rd_is_link]_i_8_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    13.791 r  OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5/O
+                         net (fo=16, unplaced)        0.503    14.294    OTTER_CACHE/TAGS/if1_if2[ir][1]_i_5_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.116    14.410 r  OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4/O
+                         net (fo=3, unplaced)         0.467    14.877    OTTER_CACHE/TAGS/if1_if2[ir][3]_i_4_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    15.001 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6/O
+                         net (fo=1, unplaced)         0.449    15.450    OTTER_CACHE/TAGS/if1_if2[ir][6]_i_6_n_0
+                         LUT6 (Prop_lut6_I5_O)        0.124    15.574 f  OTTER_CACHE/TAGS/if1_if2[ir][6]_i_2/O
+                         net (fo=4, unplaced)         1.135    16.709    OTTER_CACHE/TAGS/fetch_slot1_ir[6]
+                         LUT6 (Prop_lut6_I2_O)        0.124    16.833 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13/O
+                         net (fo=1, unplaced)         0.449    17.282    OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_13_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.116    17.398 f  OTTER_CACHE/TAGS/if1_if2[is_jalr]_i_6/O
+                         net (fo=3, unplaced)         0.467    17.865    OTTER_BRANCH_PREDICTOR/fetch_slot1[is_jalr]
+                         LUT6 (Prop_lut6_I0_O)        0.124    17.989 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7/O
+                         net (fo=2, unplaced)         0.460    18.449    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_n_0
+                         LUT3 (Prop_lut3_I2_O)        0.124    18.573 f  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_4/O
+                         net (fo=33, unplaced)        0.974    19.547    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_taken]_i_7_0
+                         LUT6 (Prop_lut6_I1_O)        0.124    19.671 r  OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][18]_i_4/O
+                         net (fo=2, unplaced)         0.460    20.131    OTTER_BRANCH_PREDICTOR/if1_if2[predicted_target][31]_i_13_17
+                         LUT6 (Prop_lut6_I1_O)        0.124    20.255 r  OTTER_BRANCH_PREDICTOR/pc_out[18]_i_10/O
+                         net (fo=1, unplaced)         0.449    20.704    OTTER_CACHE/TAGS/pc_out_reg[18]
+                         LUT6 (Prop_lut6_I5_O)        0.124    20.828 r  OTTER_CACHE/TAGS/pc_out[18]_i_4/O
+                         net (fo=1, unplaced)         0.449    21.277    OTTER_ROB/pc_out_reg[18]_1
+                         LUT6 (Prop_lut6_I4_O)        0.124    21.401 r  OTTER_ROB/pc_out[18]_i_1/O
+                         net (fo=1, unplaced)         0.000    21.401    OTTER_ROB_n_4534
+                         FDRE                                         r  pc_out_reg[18]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       20.000    20.000 r  <hidden>
+                                                      0.000    20.000 r  CLK
+                         net (fo=24546, unset)        0.924    20.924    CLK
+                         FDRE                                         r  pc_out_reg[18]/C
+                         clock pessimism              0.000    20.924    <hidden>
+                         clock uncertainty           -0.035    20.889    <hidden>
+                         FDRE (Setup_fdre_C_D)        0.077    20.966    pc_out_reg[18]
+  -------------------------------------------------------------------
+                         required time                         20.966    <hidden>
+                         arrival time                         -21.401    <hidden>
+  -------------------------------------------------------------------
+                         slack                                 -0.435    <hidden>
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[9]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[10]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[9]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[9]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[9]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[12]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[10]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[10]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[10]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[10]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[11]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[12]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[11]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[11]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[11]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[12]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[12]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[12]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[12]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[12]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[13]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[14]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[13]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[13]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[13]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[16]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[14]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[14]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[14]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[14]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[15]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[16]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[15]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[15]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[16]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[16]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[16]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[16]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[16]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[17]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[18]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[17]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[17]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[17]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[20]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[18]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[18]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[18]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[18]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[19]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[20]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[19]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[19]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[19]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[20]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[20]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[20]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[20]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[20]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[21]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[22]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[21]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[21]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[21]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[24]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[22]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[22]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[22]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[22]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[23]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[24]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[23]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[23]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[23]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[24]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[24]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[24]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[24]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[24]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[25]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[26]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[25]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[25]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[25]
+                         CARRY4 (Prop_carry4_DI[0]_O[1])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[28]_i_1/O[1]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[26]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[26]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[26]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[26]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+Slack (MET) :             0.189ns  (arrival time - required time)
+  Source:                 OTTER_FP_DIVIDER/count_reg[27]/C
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            OTTER_FP_DIVIDER/count_reg[28]/D
+                            (rising edge-triggered cell FDRE clocked by clk  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        0.345ns  (logic 0.256ns (74.306%)  route 0.089ns (25.694%))
+  Logic Levels:           1  (CARRY4=1)
+  Clock Path Skew:        0.022ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.432ns
+    Source Clock Delay      (SCD):    0.410ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.410     0.410    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[27]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.164     0.574 r  OTTER_FP_DIVIDER/count_reg[27]/Q
+                         net (fo=3, unplaced)         0.089     0.663    OTTER_FP_DIVIDER/count_reg_n_0_[27]
+                         CARRY4 (Prop_carry4_DI[2]_O[3])
+                                                      0.092     0.755 r  OTTER_FP_DIVIDER/count_reg[28]_i_1/O[3]
+                         net (fo=1, unplaced)         0.000     0.755    OTTER_FP_DIVIDER/in15[28]
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[28]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  <hidden>
+                                                      0.000     0.000 r  CLK
+                         net (fo=24546, unset)        0.432     0.432    OTTER_FP_DIVIDER/CLK
+                         FDRE                                         r  OTTER_FP_DIVIDER/count_reg[28]/C
+                         clock pessimism              0.000     0.432    <hidden>
+                         FDRE (Hold_fdre_C_D)         0.134     0.566    OTTER_FP_DIVIDER/count_reg[28]
+  -------------------------------------------------------------------
+                         required time                         -0.566    <hidden>
+                         arrival time                           0.755    <hidden>
+  -------------------------------------------------------------------
+                         slack                                  0.189    <hidden>
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         clk
+Waveform(ns):       { 0.000 10.000 }
+Period(ns):         20.000
+Sources:            { CLK }
+
+Check Type        Corner  Lib Pin      Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
+Min Period        n/a     DSP48E1/CLK  n/a            3.884         20.000      16.116               OTTER_FP_MULTIPLIER/s2_q_reg[product]/CLK
+Min Period        n/a     DSP48E1/CLK  n/a            3.884         20.000      16.116               OTTER_INT_MULTIPLIER/s2_product_reg/CLK
+Min Period        n/a     DSP48E1/CLK  n/a            3.687         20.000      16.313               OTTER_INT_MULTIPLIER/s2_product_reg__0/CLK
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][0]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][1]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][2]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][3]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_fun][4]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_src_a]/C
+Min Period        n/a     FDRE/C       n/a            1.000         20.000      19.000               alu1_e_reg[alu_src_b][0]/C
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+Low Pulse Width   Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+Low Pulse Width   Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.HIGH/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/DP.LOW/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.HIGH/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_0_0/SP.LOW/CLK
+High Pulse Width  Slow    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+High Pulse Width  Fast    RAMD64E/CLK  n/a            1.250         10.000      8.750                OTTER_BRANCH_PREDICTOR/bht_reg_0_127_1_1/DP.HIGH/CLK
+
+
+

@@ -1,0 +1,22 @@
+==================== OTTER_MCU summary (xc7z020clg400-1, after place and route) ====================
+LUTs (total)         41808
+  LUT as Logic       41266
+  LUT as Memory        542
+Flip-flops           23600
+DSP48 slices             6
+Block RAM tiles          0
+Clock target        20.000 ns (50.0 MHz)
+Worst setup slack   -5.236 ns  -> FAILED
+Estimated Fmax        39.6 MHz (after place and route)
+Worst path per module pair (slack ns, logic levels, modules); all in path_groups.txt:
+    -5.236   27  (core top) -> (core top)                                      pc_o
+    -4.433   27  (core top) -> OTTER_BRANCH_PREDICTOR                          pc_o
+    -2.252   24  OTTER_ROB -> RS_ALU                                           OTTE
+    -2.244   36  OTTER_FP_DIVIDER -> OTTER_FP_DIVIDER                          OTTE
+    -2.240   22  OTTER_ROB -> OTTER_LSU                                        OTTE
+    -1.518   36  OTTER_FP_MULTIPLIER -> OTTER_FP_MULTIPLIER                    OTTE
+    -1.101   22  OTTER_ROB -> OTTER_LSU/MEMQ                                   OTTE
+    -0.909   21  OTTER_ROB -> (core top)                                       OTTE
+    -0.573   19  (core top) -> RS_ALU                                          if1_
+    -0.439   22  OTTER_ROB -> OTTER_CSR_FILE                                   OTTE
+Full reports: C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/xc7z020clg400-1
