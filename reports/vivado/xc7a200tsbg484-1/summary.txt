@@ -1,16 +1,22 @@
-==================== OTTER_MCU synthesis summary (xc7a200tsbg484-1) ====================
-LUTs (logic)             0
-LUTs as memory           0
-Flip-flops               0
-DSP48 slices            10
+==================== OTTER_MCU summary (xc7a200tsbg484-1, after place and route) ====================
+LUTs (total)         51069
+  LUT as Logic       50783
+  LUT as Memory        286
+Flip-flops           35529
+DSP48 slices             6
 Block RAM tiles          0
 Clock target        20.000 ns (50.0 MHz)
-Worst setup slack -101.748 ns  -> FAILED
-Estimated Fmax         8.2 MHz (synthesis estimate, before placement)
-Worst paths (slack ns, logic levels, start -> end):
-  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[0][src1][22]/D
-  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[1][src1][22]/D
-  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[2][src1][22]/D
-  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[3][src1][22]/D
-  -101.748  337  OTTER_ROB/head_reg[2]_rep__7/C -> OTTER_LSU/MEMQ/slots_reg[4][src1][22]/D
+Worst setup slack   -6.384 ns  -> FAILED
+Estimated Fmax        37.9 MHz (after place and route)
+Worst path per module pair (slack ns, logic levels, modules); all in path_groups.txt:
+    -6.384   42  OTTER_FP_MULTIPLIER -> OTTER_INT_MULTIPLIER                   OTTE
+    -6.306   43  OTTER_FP_MULTIPLIER -> OTTER_LSU/MEMQ                         OTTE
+    -6.256   43  OTTER_FP_MULTIPLIER -> RS_FMUL                                OTTE
+    -6.238   43  OTTER_FP_MULTIPLIER -> RS_BR                                  OTTE
+    -6.204   43  OTTER_FP_MULTIPLIER -> RS_IDIV                                OTTE
+    -6.171   42  OTTER_FP_MULTIPLIER -> RS_IMUL                                OTTE
+    -6.132   41  OTTER_FP_DIVIDER -> OTTER_LSU/MEMQ                            OTTE
+    -6.098   43  OTTER_FP_MULTIPLIER -> RS_FDIV                                OTTE
+    -6.056   43  OTTER_FP_MULTIPLIER -> RS_ALU                                 OTTE
+    -6.026   41  OTTER_FP_DIVIDER -> RS_ALU                                    OTTE
 Full reports: C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/xc7a200tsbg484-1

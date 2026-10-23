@@ -1,0 +1,46 @@
+Worst setup path per (start module -> end module), from the 5000 worst endpoints
+   slack  lvl  modules                                                       start pin -> end pin
+  -6.384   42  OTTER_FP_MULTIPLIER -> OTTER_INT_MULTIPLIER                   OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> OTTER_INT_MULTIPLIER/s2_product0__0/A[15]
+  -6.306   43  OTTER_FP_MULTIPLIER -> OTTER_LSU/MEMQ                         OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> OTTER_LSU/MEMQ/slots_reg[3][src1][9]/D
+  -6.256   43  OTTER_FP_MULTIPLIER -> RS_FMUL                                OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_FMUL/slots_reg[1][src1][9]/D
+  -6.238   43  OTTER_FP_MULTIPLIER -> RS_BR                                  OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_BR/slots_reg[0][src1][4]/D
+  -6.204   43  OTTER_FP_MULTIPLIER -> RS_IDIV                                OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_IDIV/slots_reg[1][src1][4]/D
+  -6.171   42  OTTER_FP_MULTIPLIER -> RS_IMUL                                OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_IMUL/s2_product0_i_17_psdsp_1/D
+  -6.132   41  OTTER_FP_DIVIDER -> OTTER_LSU/MEMQ                            OTTER_FP_DIVIDER/quotient_reg[21]/C -> OTTER_LSU/MEMQ/slots_reg[4][src1][1]/D
+  -6.098   43  OTTER_FP_MULTIPLIER -> RS_FDIV                                OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_FDIV/slots_reg[0][src1][9]/D
+  -6.056   43  OTTER_FP_MULTIPLIER -> RS_ALU                                 OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_ALU/slots_reg[3][src1][4]/D
+  -6.026   41  OTTER_FP_DIVIDER -> RS_ALU                                    OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_ALU/slots_reg[4][src2][1]/D
+  -5.985   42  OTTER_FP_DIVIDER -> RS_BR                                     OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_BR/slots_reg[1][src2][5]/D
+  -5.937   40  OTTER_FP_DIVIDER -> OTTER_INT_MULTIPLIER                      OTTER_FP_DIVIDER/quotient_reg[21]/C -> OTTER_INT_MULTIPLIER/s2_product0__0/A[1]
+  -5.928   42  OTTER_FP_DIVIDER -> RS_FDIV                                   OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_FDIV/slots_reg[1][src1][5]/D
+  -5.921   41  OTTER_FP_DIVIDER -> RS_FMUL                                   OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_FMUL/slots_reg[1][src1][1]/D
+  -5.911   41  OTTER_FP_DIVIDER -> RS_IDIV                                   OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_IDIV/slots_reg[0][src1][1]/D
+  -5.531   43  OTTER_FP_MULTIPLIER -> RS_FADD                                OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> RS_FADD/slots_reg[0][src2][4]/D
+  -5.404   42  OTTER_FP_DIVIDER -> RS_FADD                                   OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_FADD/slots_reg[1][src1][5]/D
+  -5.343   41  OTTER_FP_DIVIDER -> RS_IMUL                                   OTTER_FP_DIVIDER/quotient_reg[21]/C -> RS_IMUL/s2_product0_i_28_psdsp_1/D
+  -5.271   29  OTTER_LSU/STORE_BUFFER -> OTTER_BRANCH_PREDICTOR              OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_BRANCH_PREDICTOR/ghr_spec_reg[0]/D
+  -5.221   40  OTTER_FP_DIVIDER -> (core top)                                OTTER_FP_DIVIDER/quotient_reg[21]/C -> alu_e_reg[src1][1]/D
+  -5.206   23  OTTER_LSU/STORE_BUFFER -> OTTER_LSU/MEMQ                      OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_LSU/MEMQ/slots_reg[0][src1][26]/D
+  -5.202   27  OTTER_LSU/STORE_BUFFER -> (core top)                          OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> pc_out_reg[5]/D
+  -5.107   36  (core top) -> (core top)                                      pc_out_reg[1]_rep__1/C -> pc_out_reg[31]/D
+  -5.104   22  OTTER_LSU/STORE_BUFFER -> RS_ALU                              OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_ALU/slots_reg[7][src1][31]/D
+  -5.093   23  OTTER_LSU/STORE_BUFFER -> RS_FDIV                             OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_FDIV/slots_reg[0][src2][26]/D
+  -5.038   41  OTTER_FP_MULTIPLIER -> (core top)                             OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> alu_e_reg[src2][15]/D
+  -4.900   23  OTTER_LSU/STORE_BUFFER -> RS_IDIV                             OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_IDIV/slots_reg[0][src2][31]/D
+  -4.881   41  OTTER_FP_MULTIPLIER -> OTTER_ROB                              OTTER_FP_MULTIPLIER/s2_q_reg[product][13]/C -> OTTER_ROB/entries_reg[14][value][14]/D
+  -4.830   22  OTTER_LSU/STORE_BUFFER -> RS_BR                               OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_BR/slots_reg[1][src1][31]/D
+  -4.609   40  OTTER_FP_DIVIDER -> OTTER_ROB                                 OTTER_FP_DIVIDER/quotient_reg[21]/C -> OTTER_ROB/entries_reg[10][value][5]/D
+  -4.584   29  OTTER_ROB -> OTTER_LSU                                        OTTER_ROB/head_reg[1]_rep__4/C -> OTTER_LSU/out_q_reg[value][11]/D
+  -4.500   23  OTTER_LSU/STORE_BUFFER -> RS_FMUL                             OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_FMUL/slots_reg[1][src2][31]/D
+  -4.431   23  OTTER_LSU/STORE_BUFFER -> RS_IMUL                             OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_IMUL/slots_reg[1][src2][30]/D
+  -3.942   22  OTTER_LSU/STORE_BUFFER -> OTTER_ROB                           OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_ROB/entries_reg[2][csr_src][6]/D
+  -3.650   22  OTTER_LSU/STORE_BUFFER -> RS_FADD                             OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> RS_FADD/slots_reg[1][src2][31]/D
+  -3.390   23  OTTER_LSU/STORE_BUFFER -> OTTER_RAT                           OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_RAT/reg_g[44].ck_g[2].ck_busy_reg[2][44]/D
+  -2.738   18  OTTER_ROB -> OTTER_FP_ADDER                                   OTTER_ROB/head_reg[3]_rep__1/C -> OTTER_FP_ADDER/s1_q_reg[small_sig][38]/D
+  -2.611   19  OTTER_LSU/STORE_BUFFER -> OTTER_REG_FILE                      OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_REG_FILE/ram_reg[25][24]/D
+  -2.602   24  OTTER_LSU/STORE_BUFFER -> OTTER_LSU/L2CACHE                   OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_LSU/L2CACHE/TAGS/g_plru.tree_reg[0]/D
+  -2.540   17  OTTER_LSU/STORE_BUFFER -> OTTER_FP_DIVIDER                    OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_FP_DIVIDER/rm_reg[0]/CE
+  -2.454   23  OTTER_LSU/STORE_BUFFER -> OTTER_CACHE_FSM                     OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_CACHE_FSM/FSM_sequential_PS_reg_rep__1/D
+  -2.452   26  OTTER_ROB -> OTTER_LSU/MEMQ                                   OTTER_ROB/head_reg[1]_rep__4/C -> OTTER_LSU/MEMQ/slots_reg[5][valid]_rep__0/D
+  -2.371   16  OTTER_LSU -> OTTER_LSU/DCACHE                                 OTTER_LSU/ld_reg[addr][6]/C -> OTTER_LSU/DCACHE/data_reg[8][0][7]/D
+  -2.362   20  OTTER_ROB -> RS_BR                                            OTTER_ROB/entries_reg[9][valid]/C -> RS_BR/slots_reg[0][src2_spec]/D
