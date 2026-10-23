@@ -288,6 +288,35 @@ Not done in this pass:
   FreeRTOS + CoreMark because instructions now stay in flight one cycle
   longer; a 32-entry ROB would likely recover part of the 6.8%.
 
+### First Vivado run after the four steps
+
+Vivado synthesis (before place and route) of the step-4 design reported a
+worst setup slack of **-17.1 ns** at 50 MHz (37.0 ns path, 47 logic levels,
+about 27 MHz), down from -101.7 ns (8 MHz). The worst path had moved to
+instruction selection:
+
+```text
+ROB head ─► ALU station: pick the oldest ready entry, then the second-oldest
+         ─► speculative wake-up tag ─► "ready" bit of a waiting entry
+```
+
+Selection was written as a serial "oldest so far" loop over the 8 entries,
+which synthesizes into a chain of compare-and-update stages, and the second
+issue port ran a second chain after the first. It is now parallel: each
+entry's age is computed once, its rank is the number of older candidates
+(ties to the lower index), and the ports take ranks 0 and 1. This is step 3's
+age item, done with parallel age compares instead of a stored age matrix.
+
+Verification: a Yosys sequential equivalence proof (`equiv_make`,
+`equiv_simple`, `equiv_induct`) shows the new and old stations produce
+identical outputs in every cycle from reset, for the 8-entry two-port
+station with speculative wake-up, the 8-entry in-order memory queue, and a
+2-entry station (3,860 of 3,860 equivalence points proven in each 8-entry
+configuration). Spike lockstep (directed, 1,500 random, 800 stress, and the
+shrunk build), the CI container, and identical cycle counts on all seven
+workloads confirm it.
+
 **Final verification still to run:** Vivado post-route timing on the Windows
-machine (`source tools/vivado/synth_core.tcl`, which now places and routes by
-default). That run replaces every Fmax estimate above with a measurement.
+machine (`source tools/vivado/synth_core.tcl`, which places and routes by
+default; let it run to the summary block at the end). That run replaces every
+Fmax estimate above with a measurement.

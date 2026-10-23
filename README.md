@@ -592,6 +592,10 @@ Together the steps cost 9% of the cycles (8% IPC) on FreeRTOS + CoreMark, in
 exchange for a much shorter clock period: the longest path in the Yosys
 logic-depth proxy fell from 267 to 44 LUT levels. Vivado post-route timing
 gives the real clock speed (see [FPGA Synthesis Estimate](#fpga-synthesis-estimate)).
+The first Vivado synthesis after these steps measured -17.1 ns of slack at
+50 MHz (about 27 MHz, from 8 MHz); its worst path was instruction selection,
+which was then rewritten as parallel age compares and proven equivalent to
+the old selection with a Yosys sequential equivalence check.
 A measured trade-off: the small `system_workload` programs and the
 divide-heavy `rv32im_alu` test now take more cycles than on the old in-order
 core (932 vs 902, 1,040 vs 984, 14,504 vs 5,586), while FreeRTOS + CoreMark

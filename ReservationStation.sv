@@ -70,42 +70,57 @@ module ReservationStation
             if (!slots[i].valid) free_count++;
     end
 
-    // Offer the oldest ready entry (IN_ORDER: the oldest entry, if ready).
+    // Selection, in parallel: every entry's age (ROB distance from the head)
+    // is computed once; an entry's rank is how many candidates are older than
+    // it (ties go to the lower index). Port 0 offers the rank-0 candidate,
+    // port 1 the rank-1 candidate. A serial "oldest so far" loop would chain
+    // all the comparisons one after another (two chains for two ports), which
+    // made selection the longest path on the FPGA.
+    // Candidates: valid and ready (IN_ORDER: valid; only offered if ready).
+    localparam int RANK_BITS = $clog2(ENTRIES + 1);
+    tag_t [ENTRIES-1:0] age;
+    logic [ENTRIES-1:0] cand, ready, first, second;
+    logic [ENTRIES-1:0][RANK_BITS-1:0] rank;
+
     always_comb begin
-        tag_t best_age;
-        logic found;
-        best_age = '1;
-        found = 1'b0;
-        issue_idx = '0;
         for (int i = 0; i < ENTRIES; i++) begin
-            if (slots[i].valid && (!found || tag_age(slots[i].tag, rob_head) < best_age)) begin
-                if (IN_ORDER || (slots[i].src1_ready && slots[i].src2_ready)) begin
-                    found = 1'b1;
-                    best_age = tag_age(slots[i].tag, rob_head);
-                    issue_idx = IDX_BITS'(i);
-                end
-            end
+            age[i] = tag_age(slots[i].tag, rob_head);
+            ready[i] = slots[i].valid && slots[i].src1_ready && slots[i].src2_ready;
+            cand[i] = IN_ORDER ? slots[i].valid : ready[i];
         end
-        issue_valid = found && slots[issue_idx].src1_ready && slots[issue_idx].src2_ready;
     end
 
-    // Second-oldest ready entry (never in IN_ORDER mode).
     always_comb begin
-        tag_t best_age;
-        logic found;
-        best_age = '1;
-        found = 1'b0;
-        issue1_idx = '0;
         for (int i = 0; i < ENTRIES; i++) begin
-            if (!IN_ORDER && issue_valid && IDX_BITS'(i) != issue_idx &&
-                slots[i].valid && slots[i].src1_ready && slots[i].src2_ready &&
-                (!found || tag_age(slots[i].tag, rob_head) < best_age)) begin
-                found = 1'b1;
-                best_age = tag_age(slots[i].tag, rob_head);
-                issue1_idx = IDX_BITS'(i);
-            end
+            logic [RANK_BITS-1:0] n;
+            n = '0;
+            for (int j = 0; j < ENTRIES; j++)
+                if (j != i && cand[j] && (age[j] < age[i] || (age[j] == age[i] && j < i)))
+                    n = n + 1'b1;
+            rank[i] = n;
         end
-        issue1_valid = found;
+    end
+
+    always_comb begin
+        for (int i = 0; i < ENTRIES; i++) begin
+            first[i] = cand[i] && (rank[i] == RANK_BITS'(0));
+            second[i] = !IN_ORDER && cand[i] && (rank[i] == RANK_BITS'(1));
+        end
+    end
+
+    // One-hot to index (0 when nothing is selected).
+    always_comb begin
+        logic [IDX_BITS-1:0] i0, i1;
+        i0 = '0;
+        i1 = '0;
+        for (int i = 0; i < ENTRIES; i++) begin
+            i0 = i0 | ({IDX_BITS{first[i]}} & IDX_BITS'(i));
+            i1 = i1 | ({IDX_BITS{second[i]}} & IDX_BITS'(i));
+        end
+        issue_idx = i0;
+        issue1_idx = i1;
+        issue_valid = |(first & ready);
+        issue1_valid = |second;
     end
 
     // The offered entries, with any speculatively woken operand taken from
