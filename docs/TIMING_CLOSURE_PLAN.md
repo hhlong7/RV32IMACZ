@@ -362,7 +362,33 @@ leaves current numbers. `path_groups.txt` lists the worst path for each pair
 of start and end modules, so one slow block can no longer fill the whole
 top-10 list.
 
-**Final verification still to run:** Vivado post-route timing on the Windows
-machine (`source tools/vivado/synth_core.tcl`; let it run to the
-"after place and route" summary). That run replaces every Fmax estimate above
-with a measurement.
+### Third Vivado run: first post-route result
+
+The memory stand-ins used to be empty black boxes, which synthesis accepts
+but `opt_design` rejects (DRC INBB-3), so no earlier run reached place and
+route. They now register their ports like a block RAM (`memory_stubs.sv`).
+
+First post-route numbers (Artix-7 200T, out of context): 51,069 LUTs, 35,529
+flip-flops, 6 DSP slices, worst setup slack **-6.38 ns** at 50 MHz, so
+**37.9 MHz** (from 8.2 MHz at the start of this plan). Routing is 64% of the
+worst path's delay. The failing groups and their fixes:
+
+| Slack (ns) | Path | Fix | Cost |
+| ---: | --- | --- | --- |
+| -6.38 | FP multiplier product register ─► normalize and round (four carry chains) ─► CDB ─► every station | Rounding gets its own pipeline register (S3); the core tracks a third tag/live stage | fadd/fmul latency 2 → 3 |
+| -6.13 | FP divider quotient ─► round ─► CDB | New ROUND state registers the result | fdiv +1 cycle |
+| -5.27 | store-buffer head ─► forwarding compare ─► D-cache FSM `busy` ─► `drained` ─► fence commit ─► redirect, GHR, every station | `busy` is the refill and uncached-read registers only; its other terms need a load in flight, which `drained` already excludes | none |
+| -5.11 | PC ─► I-cache ─► slot 0 length ─► PC+2/+4 ─► BHT/BTB lookup ─► next PC | Both slot-1 PCs and their predictor lookups are computed in parallel; the length only selects | one extra BHT/BTB read port |
+| -4.58 | ROB head ─► LSU output buffer | not yet: the next run's detail report will show the path | |
+
+Verification: 23/23 regression; the FP unit test; Spike lockstep with 1,514
+directed + random programs, 800 out-of-order stress programs, and the
+shrunk-structure build (14 + 500), all matching; the CI container. Cycle
+counts: `fp_arith` 54,842 → 55,497 (+1.2%); every other workload unchanged
+(snapshot "M5.6").
+
+`synth_core.tcl` now also writes `path_groups_detail.txt`, the full
+cell-by-cell report of the worst path in each of the first 40 module pairs.
+
+**Next:** rerun `source tools/vivado/synth_core.tcl` on the Windows machine
+to measure these fixes and see the remaining groups in detail.

@@ -6,9 +6,11 @@
 //   Three stages, one new operation per cycle:
 //     S1  unpack, special cases, order operands by magnitude, align
 //     S2  add or subtract, normalize
-//     S3  round (combinational output from the S2 register)
+//     S3  round, into the output register
 //   An operation presented while in_valid is high produces out_valid,
-//   result, and flags two `advance` edges later. When advance is low every
+//   result, and flags three `advance` edges later. Rounding has its own
+//   cycle so the carry chains of normalize-and-round never share a cycle
+//   with the common data bus. When advance is low every
 //   stage holds, so the unit can stall in lockstep with the pipeline.
 //////////////////////////////////////////////////////////////////////////////////
 module fp_adder (
@@ -162,6 +164,10 @@ module fp_adder (
     end
 
     // ---- S3 ------------------------------------------------------------------
+    logic        s3_valid_d, s3_valid_q;
+    logic [31:0] s3_result_d, s3_result_q;
+    logic [4:0]  s3_flags_d, s3_flags_q;
+
     // always @* rather than always_comb: Icarus 12 makes an always_comb block
     // sensitive to the local variables of the functions it calls, so blocks
     // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
@@ -169,26 +175,36 @@ module fp_adder (
         logic [36:0] packed_result;
         packed_result = round_pack(s2_q.sign, s2_q.exp, s2_q.sig, s2_q.rm);
 
-        out_valid = s2_q.valid;
+        s3_valid_d = s2_q.valid;
         if (s2_q.special) begin
-            out_result = s2_q.special_result;
-            out_flags = s2_q.special_flags;
+            s3_result_d = s2_q.special_result;
+            s3_flags_d = s2_q.special_flags;
         end else if (s2_q.zero) begin
-            out_result = {s2_q.zero_sign, 31'b0};
-            out_flags = 5'b0;
+            s3_result_d = {s2_q.zero_sign, 31'b0};
+            s3_flags_d = 5'b0;
         end else begin
-            out_result = packed_result[31:0];
-            out_flags = packed_result[36:32];
+            s3_result_d = packed_result[31:0];
+            s3_flags_d = packed_result[36:32];
         end
     end
+
+    assign out_valid = s3_valid_q;
+    assign out_result = s3_result_q;
+    assign out_flags = s3_flags_q;
 
     always_ff @(posedge clk) begin
         if (rst) begin
             s1_q <= '0;
             s2_q <= '0;
+            s3_valid_q <= 1'b0;
+            s3_result_q <= '0;
+            s3_flags_q <= '0;
         end else if (advance) begin
             s1_q <= s1_d;
             s2_q <= s2_d;
+            s3_valid_q <= s3_valid_d;
+            s3_result_q <= s3_result_d;
+            s3_flags_q <= s3_flags_d;
         end
     end
 endmodule

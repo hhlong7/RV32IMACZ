@@ -7,6 +7,8 @@
 //     start   in_valid while idle: special cases, normalize subnormal
 //             significands, set up the remainder (1 cycle)
 //     run     27 quotient bits, one per cycle
+//     round   round the quotient into the result register (1 cycle, so
+//             rounding never shares a cycle with the common data bus)
 //     done    out_valid stays high with the rounded result until `ack`
 //   Special cases (NaN, infinity, zero, divide by zero) skip the run phase.
 //////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +31,7 @@ module fp_divider (
 
     localparam int QUOTIENT_BITS = 27;
 
-    typedef enum logic [1:0] { IDLE, RUN, DONE } state_t;
+    typedef enum logic [1:0] { IDLE, RUN, ROUND, DONE } state_t;
     state_t state;
 
     logic [2:0] rm;
@@ -42,11 +44,13 @@ module fp_divider (
     logic special;
     logic [31:0] special_result;
     logic [4:0] special_flags;
+    logic [31:0] rounded_d, rounded_q;
+    logic [4:0] rounded_flags_d, rounded_flags_q;
 
     assign busy = (state != IDLE);
     assign out_valid = (state == DONE);
 
-    // Rounding of the finished quotient (only meaningful in DONE).
+    // Rounding of the finished quotient (registered in ROUND).
     // always @* rather than always_comb: Icarus 12 makes an always_comb block
     // sensitive to the local variables of the functions it calls, so blocks
     // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
@@ -56,14 +60,12 @@ module fp_divider (
         msb = leading_one(64'(quotient));
         packed_result = round_pack(sign, exp + msb - 26,
                                    to_sig27(64'(quotient), msb, remainder != 0), rm);
-        if (special) begin
-            out_result = special_result;
-            out_flags = special_flags;
-        end else begin
-            out_result = packed_result[31:0];
-            out_flags = packed_result[36:32];
-        end
+        rounded_d = packed_result[31:0];
+        rounded_flags_d = packed_result[36:32];
     end
+
+    assign out_result = special ? special_result : rounded_q;
+    assign out_flags = special ? special_flags : rounded_flags_q;
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -126,7 +128,13 @@ module fp_divider (
                     end
                     count <= count - 1;
                     if (count == 1)
-                        state <= DONE;
+                        state <= ROUND;
+                end
+
+                ROUND: begin
+                    rounded_q <= rounded_d;
+                    rounded_flags_q <= rounded_flags_d;
+                    state <= DONE;
                 end
 
                 DONE: if (ack) begin

@@ -228,8 +228,10 @@ module tb_core;
                 hd = dut.rob_head;
                 if (dut.OTTER_LSU.sq_keep < dut.OTTER_LSU.sq_count) rec_store_squash <= rec_store_squash + 1;
                 if (dut.OTTER_LSU.ld.valid && tag_younger(dut.OTTER_LSU.ld.tag, rt, hd)) rec_load_squash <= rec_load_squash + 1;
-                if ((dut.fadd_live1 && tag_younger(dut.fadd_tag1, rt, hd)) || (dut.fadd_valid && dut.fadd_live2 && tag_younger(dut.fadd_tag2, rt, hd)) ||
-                    (dut.fmul_live1 && tag_younger(dut.fmul_tag1, rt, hd)) || (dut.fmul_valid && dut.fmul_live2 && tag_younger(dut.fmul_tag2, rt, hd)))
+                if ((dut.fadd_live1 && tag_younger(dut.fadd_tag1, rt, hd)) || (dut.fadd_live2 && tag_younger(dut.fadd_tag2, rt, hd)) ||
+                    (dut.fadd_valid && dut.fadd_live3 && tag_younger(dut.fadd_tag3, rt, hd)) ||
+                    (dut.fmul_live1 && tag_younger(dut.fmul_tag1, rt, hd)) || (dut.fmul_live2 && tag_younger(dut.fmul_tag2, rt, hd)) ||
+                    (dut.fmul_valid && dut.fmul_live3 && tag_younger(dut.fmul_tag3, rt, hd)))
                     rec_fp_squash <= rec_fp_squash + 1;
                 if (dut.fdiv_kill) rec_fdiv_kill <= rec_fdiv_kill + 1;
                 memq = 1'b0;

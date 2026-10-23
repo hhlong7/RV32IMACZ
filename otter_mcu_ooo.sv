@@ -67,7 +67,7 @@ module OTTER_MCU
     frontend_t fetch_slot0, fetch_slot1;
     frontend_t if_id_after_dispatch, if1_if2_after_dispatch;
     frontend_t if_id_next, if1_if2_next;
-    logic [31:0] pc_out, fetch_slot1_pc, pc_next_fill;
+    logic [31:0] pc_out, fetch_slot1_pc, fetch_slot1_pc_after16, fetch_slot1_pc_after32, pc_next_fill;
     logic pc_write_fill, fetch_request, fetch_crossword_wait;
     logic ic_stall, pc_stall_cache;
     logic redirect_valid;
@@ -165,10 +165,10 @@ module OTTER_MCU
     logic fadd_valid, fmul_valid, fdiv_busy, fdiv_valid;
     logic [31:0] fadd_result, fmul_result, fdiv_result;
     logic [4:0] fadd_flags, fmul_flags, fdiv_flags;
-    tag_t fadd_tag1, fadd_tag2, fmul_tag1, fmul_tag2, fdiv_tag;
+    tag_t fadd_tag1, fadd_tag2, fadd_tag3, fmul_tag1, fmul_tag2, fmul_tag3, fdiv_tag;
     // Live bits beside the tag shadows: cleared when a recovery squashes the
     // operation, which then drains out of the pipeline without a CDB request.
-    logic fadd_live1, fadd_live2, fmul_live1, fmul_live2;
+    logic fadd_live1, fadd_live2, fadd_live3, fmul_live1, fmul_live2, fmul_live3;
     logic fdiv_kill, fdiv_start;
 
     // Commit / system
@@ -230,7 +230,11 @@ module OTTER_MCU
     //   word        16-bit      {next[15:0], this[31:16]}     next word unless 16-bit
     //   halfword    16-bit      next word                     next word
     //   halfword    32-bit      next[31:16]                   next word, and 16-bit
-    assign fetch_slot1_pc = pc_out + (fetch_slot0_is_compressed ? 32'd2 : 32'd4);
+    // Both candidates come straight from pc_out, so the adds overlap the
+    // I-cache read; the length decode only drives the select.
+    assign fetch_slot1_pc_after16 = pc_out + 32'd2;
+    assign fetch_slot1_pc_after32 = pc_out + 32'd4;
+    assign fetch_slot1_pc = fetch_slot0_is_compressed ? fetch_slot1_pc_after16 : fetch_slot1_pc_after32;
     always_comb begin
         unique case ({pc_out[1], fetch_slot0_is_compressed})
             2'b00: fetch_slot1_window = rd_next;
@@ -286,7 +290,9 @@ module OTTER_MCU
         .fetch0_bht_weak(bht_weak_if0),
         .fetch0_btb_hit(btb_hit_if0),
         .fetch0_btb_target(btb_target_if0),
-        .fetch1_pc(fetch_slot1_pc),
+        .fetch1_pc_after16(fetch_slot1_pc_after16),
+        .fetch1_pc_after32(fetch_slot1_pc_after32),
+        .fetch1_compressed0(fetch_slot0_is_compressed),
         .fetch1_bht_taken(bht_taken_if1),
         .fetch1_bht_weak(bht_weak_if1),
         .fetch1_btb_hit(btb_hit_if1),
@@ -1296,20 +1302,26 @@ module OTTER_MCU
         if (fadd_advance) begin
             fadd_tag1 <= fadd_e.tag;
             fadd_tag2 <= fadd_tag1;
+            fadd_tag3 <= fadd_tag2;
             fadd_live1 <= fadd_issue && !(sq && tag_younger(fadd_e.tag, recover_tag, rob_head));
             fadd_live2 <= fadd_live1 && !(sq && tag_younger(fadd_tag1, recover_tag, rob_head));
+            fadd_live3 <= fadd_live2 && !(sq && tag_younger(fadd_tag2, recover_tag, rob_head));
         end else if (sq) begin
             fadd_live1 <= fadd_live1 && !tag_younger(fadd_tag1, recover_tag, rob_head);
             fadd_live2 <= fadd_live2 && !tag_younger(fadd_tag2, recover_tag, rob_head);
+            fadd_live3 <= fadd_live3 && !tag_younger(fadd_tag3, recover_tag, rob_head);
         end
         if (fmul_advance) begin
             fmul_tag1 <= fmul_e.tag;
             fmul_tag2 <= fmul_tag1;
+            fmul_tag3 <= fmul_tag2;
             fmul_live1 <= fmul_issue && !(sq && tag_younger(fmul_e.tag, recover_tag, rob_head));
             fmul_live2 <= fmul_live1 && !(sq && tag_younger(fmul_tag1, recover_tag, rob_head));
+            fmul_live3 <= fmul_live2 && !(sq && tag_younger(fmul_tag2, recover_tag, rob_head));
         end else if (sq) begin
             fmul_live1 <= fmul_live1 && !tag_younger(fmul_tag1, recover_tag, rob_head);
             fmul_live2 <= fmul_live2 && !tag_younger(fmul_tag2, recover_tag, rob_head);
+            fmul_live3 <= fmul_live3 && !tag_younger(fmul_tag3, recover_tag, rob_head);
         end
         if (fdiv_start)
             fdiv_tag <= fdiv_e.tag;
@@ -1317,14 +1329,14 @@ module OTTER_MCU
 
     always_comb begin
         cdb_fadd = '0;
-        cdb_fadd.valid = fadd_valid && fadd_live2;
-        cdb_fadd.tag = fadd_tag2;
+        cdb_fadd.valid = fadd_valid && fadd_live3;
+        cdb_fadd.tag = fadd_tag3;
         cdb_fadd.value = fadd_result;
         cdb_fadd.fp_flags = fadd_flags;
 
         cdb_fmul = '0;
-        cdb_fmul.valid = fmul_valid && fmul_live2;
-        cdb_fmul.tag = fmul_tag2;
+        cdb_fmul.valid = fmul_valid && fmul_live3;
+        cdb_fmul.tag = fmul_tag3;
         cdb_fmul.value = fmul_result;
         cdb_fmul.fp_flags = fmul_flags;
 

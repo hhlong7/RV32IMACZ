@@ -6,8 +6,8 @@
 //   one new operation per cycle:
 //     S1  unpack, special cases, sign and exponent
 //     S2  24x24 significand multiply (exact 48-bit product)
-//     S3  normalize and round (combinational output from the S2 register)
-//   Same timing and `advance` stall behavior as fp_adder.
+//     S3  normalize and round, into the output register
+//   Same timing (three `advance` edges) and stall behavior as fp_adder.
 //////////////////////////////////////////////////////////////////////////////////
 module fp_multiplier (
     input  logic        clk,
@@ -98,6 +98,10 @@ module fp_multiplier (
     end
 
     // ---- S3 ------------------------------------------------------------------
+    logic        s3_valid_d, s3_valid_q;
+    logic [31:0] s3_result_d, s3_result_q;
+    logic [4:0]  s3_flags_d, s3_flags_q;
+
     // always @* rather than always_comb: Icarus 12 makes an always_comb block
     // sensitive to the local variables of the functions it calls, so blocks
     // sharing the fpu_pkg helpers re-trigger each other forever at time 0.
@@ -110,23 +114,33 @@ module fp_multiplier (
         packed_result = round_pack(s2_q.sign, s2_q.exp + msb - 46,
                                    to_sig27(64'(s2_q.product), msb, 1'b0), s2_q.rm);
 
-        out_valid = s2_q.valid;
+        s3_valid_d = s2_q.valid;
         if (s2_q.special) begin
-            out_result = s2_q.special_result;
-            out_flags = s2_q.special_flags;
+            s3_result_d = s2_q.special_result;
+            s3_flags_d = s2_q.special_flags;
         end else begin
-            out_result = packed_result[31:0];
-            out_flags = packed_result[36:32];
+            s3_result_d = packed_result[31:0];
+            s3_flags_d = packed_result[36:32];
         end
     end
+
+    assign out_valid = s3_valid_q;
+    assign out_result = s3_result_q;
+    assign out_flags = s3_flags_q;
 
     always_ff @(posedge clk) begin
         if (rst) begin
             s1_q <= '0;
             s2_q <= '0;
+            s3_valid_q <= 1'b0;
+            s3_result_q <= '0;
+            s3_flags_q <= '0;
         end else if (advance) begin
             s1_q <= s1_d;
             s2_q <= s2_d;
+            s3_valid_q <= s3_valid_d;
+            s3_result_q <= s3_result_d;
+            s3_flags_q <= s3_flags_d;
         end
     end
 endmodule

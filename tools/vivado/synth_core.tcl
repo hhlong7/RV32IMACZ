@@ -61,9 +61,11 @@ proc module_of {pin} {
 # The worst path for each (start module, end module) pair among the N worst
 # endpoints. One slow block (say a cache) fills the plain top-10 list with
 # copies of a single path; this table shows every distinct block that fails.
+# <file>_detail.txt has the full cell-by-cell report of the first 40 groups.
 proc report_path_groups {file n} {
     set seen [dict create]
     set rows {}
+    set group_paths {}
     foreach p [get_timing_paths -setup -max_paths $n -nworst 1 -quiet] {
         set s [get_property STARTPOINT_PIN $p]
         set e [get_property ENDPOINT_PIN $p]
@@ -72,6 +74,13 @@ proc report_path_groups {file n} {
         dict set seen $key 1
         lappend rows [format "%8.3f  %3s  %-60s  %s -> %s" [get_property SLACK $p] \
                           [get_property LOGIC_LEVELS $p] $key $s $e]
+        lappend group_paths $p
+    }
+    # Cell-by-cell detail of each group's worst path, worst first.
+    set detail [file rootname $file]_detail.txt
+    file delete -force $detail
+    foreach p [lrange $group_paths 0 39] {
+        report_timing -of_objects $p -file $detail -append
     }
     set fh [open $file w]
     puts $fh "Worst setup path per (start module -> end module), from the $n worst endpoints"

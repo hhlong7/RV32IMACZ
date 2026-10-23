@@ -105,7 +105,12 @@ module datacachefsm(
                          ~uncached_wait;
 
     assign miss_start = start_fill;
-    assign busy = fill_cache || uncached_wait || ~storebufEmpty || start_fill || start_uncached_load;
+    // Registered only: a refill or uncached read is under way. Callers also
+    // require an empty store buffer and no load in flight, and without a load
+    // start_fill / start_uncached_load cannot be set, so leaving them (and the
+    // store-buffer forwarding compare behind them) out keeps fence and atomic
+    // decisions off that path.
+    assign busy = fill_cache || uncached_wait;
     assign storebufDrainAccept = drain_issue;
     assign drain_event = drain_issue;
 

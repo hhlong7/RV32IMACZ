@@ -13,6 +13,11 @@
 //   Targets     conditional branches and jal compute their targets from the
 //               instruction (FrontendPacketBuilder); the BTB holds indirect
 //               jalr targets, and the RAS predicts returns.
+//
+//   Slot 1 starts 2 or 4 bytes after slot 0, depending on whether slot 0 is
+//   compressed, which is known only after the I-cache read. Both candidate
+//   PCs are looked up in parallel and fetch1_compressed0 picks one, so the
+//   lookup never waits for the cache read and the length decode.
 //////////////////////////////////////////////////////////////////////////////////
 module BranchPredictor #(
     parameter int BHT_ENTRIES = 512,
@@ -30,7 +35,9 @@ module BranchPredictor #(
     output logic fetch0_btb_hit,
     output logic [31:0] fetch0_btb_target,
 
-    input logic [31:0] fetch1_pc,
+    input logic [31:0] fetch1_pc_after16,    // slot 1 PC if slot 0 is compressed
+    input logic [31:0] fetch1_pc_after32,    // slot 1 PC if slot 0 is 32-bit
+    input logic fetch1_compressed0,           // slot 0 is compressed
     output logic fetch1_bht_taken,
     output logic fetch1_bht_weak,
     output logic fetch1_btb_hit,
@@ -80,8 +87,9 @@ module BranchPredictor #(
     logic [RAS_COUNT_WIDTH-1:0] ras_count;
     logic [GHR_BITS-1:0] ghr_spec, ghr_retired;
 
-    logic [BHT_INDEX_WIDTH-1:0] bht_ridx0, bht_ridx1, bht_widx;
-    logic [BTB_INDEX_WIDTH-1:0] btb_ridx0, btb_ridx1, btb_widx;
+    logic [BHT_INDEX_WIDTH-1:0] bht_ridx0, bht_ridx1a, bht_ridx1b, bht_widx;
+    logic [BTB_INDEX_WIDTH-1:0] btb_ridx0, btb_ridx1a, btb_ridx1b, btb_widx;
+    logic btb_hit1a, btb_hit1b;
     integer pred_i;
 
     // gshare index: halfword PC bits XOR the history (zero-extended).
@@ -91,10 +99,12 @@ module BranchPredictor #(
 
     assign ghr = ghr_spec;
     assign bht_ridx0 = gshare(fetch0_pc, ghr_spec);
-    assign bht_ridx1 = gshare(fetch1_pc, ghr_spec);
+    assign bht_ridx1a = gshare(fetch1_pc_after16, ghr_spec);
+    assign bht_ridx1b = gshare(fetch1_pc_after32, ghr_spec);
     assign bht_widx = gshare(branch_pc, branch_ghr);
     assign btb_ridx0 = fetch0_pc[BTB_INDEX_WIDTH:1];
-    assign btb_ridx1 = fetch1_pc[BTB_INDEX_WIDTH:1];
+    assign btb_ridx1a = fetch1_pc_after16[BTB_INDEX_WIDTH:1];
+    assign btb_ridx1b = fetch1_pc_after32[BTB_INDEX_WIDTH:1];
     assign btb_widx = btb_update_pc[BTB_INDEX_WIDTH:1];
 
     assign fetch0_bht_taken = bht[bht_ridx0][1];
@@ -102,10 +112,13 @@ module BranchPredictor #(
     assign fetch0_btb_hit = btb_valid[btb_ridx0] && (btb_pc[btb_ridx0] == fetch0_pc);
     assign fetch0_btb_target = btb_target_mem[btb_ridx0];
 
-    assign fetch1_bht_taken = bht[bht_ridx1][1];
-    assign fetch1_bht_weak = (bht[bht_ridx1] == BHT_RESET_VALUE);
-    assign fetch1_btb_hit = btb_valid[btb_ridx1] && (btb_pc[btb_ridx1] == fetch1_pc);
-    assign fetch1_btb_target = btb_target_mem[btb_ridx1];
+    assign btb_hit1a = btb_valid[btb_ridx1a] && (btb_pc[btb_ridx1a] == fetch1_pc_after16);
+    assign btb_hit1b = btb_valid[btb_ridx1b] && (btb_pc[btb_ridx1b] == fetch1_pc_after32);
+    assign fetch1_bht_taken = fetch1_compressed0 ? bht[bht_ridx1a][1] : bht[bht_ridx1b][1];
+    assign fetch1_bht_weak = fetch1_compressed0 ? (bht[bht_ridx1a] == BHT_RESET_VALUE) :
+                                                  (bht[bht_ridx1b] == BHT_RESET_VALUE);
+    assign fetch1_btb_hit = fetch1_compressed0 ? btb_hit1a : btb_hit1b;
+    assign fetch1_btb_target = fetch1_compressed0 ? btb_target_mem[btb_ridx1a] : btb_target_mem[btb_ridx1b];
 
     assign ras_valid = (ras_count != '0);
     assign ras_top = ras_stack[(ras_sp == '0) ? LAST_RAS_ENTRY : (ras_sp - 1'b1)];
