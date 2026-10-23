@@ -140,7 +140,7 @@ module datacache #(
 
     // The pipeline is stalled during a refill, so loadAddr (and therefore the
     // victim) stays put for every beat.
-    always_ff @(negedge clk) begin
+    always_ff @(posedge clk) begin
         if (enable_write)
             data[victim_line][select] <= word_data;
         else if (drain_slot)

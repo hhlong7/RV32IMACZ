@@ -276,11 +276,8 @@ Size (Yosys, Xilinx 7-series): 90,742 → 83,859 LUTs, 25,367 → 27,114
 flip-flops, 13 → 6 DSP slices.
 
 Not done in this pass:
-- **Caches still update on the falling edge** (L1 I/D, L2, tag and
-  replacement logic: 6,236 flip-flops). They are tied into the memory models'
-  falling-edge timing and refill handshakes, and that subsystem is rebuilt
-  anyway when the core moves to real block RAM or DRAM on a board. Convert
-  them if Vivado shows those half-cycle paths limiting the clock.
+- ~~Caches still update on the falling edge~~: done after the first Vivado
+  run; see "Second Vivado run" below.
 - **Age matrices** (step 3, item 4): the ROB-head age subtraction is a 4-bit
   operation per entry and is no longer on a chain with execution, so it was
   left as is; revisit only if Vivado reports select as critical.
@@ -316,7 +313,56 @@ configuration). Spike lockstep (directed, 1,500 random, 800 stress, and the
 shrunk build), the CI container, and identical cycle counts on all seven
 workloads confirm it.
 
+### Second Vivado run: rising-edge caches and memory
+
+With parallel selection, Vivado synthesis reported **-9.40 ns** at 50 MHz,
+but the worst path was no longer in the core:
+
+```text
+store buffer head (rising edge) ─► L2 tag compare ─► replacement-tree update
+                                   (falling edge: only 10 ns of the 20 ns cycle)
+```
+
+All ten listed paths were copies of it (25 logic levels, 19.35 ns). A full
+cycle would have just met timing, so the fix was to remove the falling edge:
+
+- **Caches on the rising edge.** `cache_tags`, the L1 I-cache and D-cache,
+  and the L2 now update on the rising edge. A refill writes its last beat at
+  the end of the stalled cycle, so lines still become visible in the same
+  cycle as before.
+- **Memory model, imem and MMIO on the rising edge.** Memory read data now
+  arrives one full cycle after the request, which is the cycle the D-cache
+  refill and uncached-load handshakes already sampled it in. The atomic
+  commit record is registered one cycle later; the reservation it sets or
+  clears is not needed until the atomic retires, several cycles later.
+- **Prefetch HPM events** no longer need a falling-edge capture register.
+
+The second fix was to find the core's own worst full-cycle path, which the
+cache path had hidden. The Yosys depth proxy now registers the memory
+ports, because a black box let paths run straight through the memory model.
+It found three paths, each fixed without an IPC cost:
+
+| Depth (LUT levels) | Path | Fix |
+| ---: | --- | --- |
+| 50 | ALU result ─► store-forward event ─► 64-bit HPM counter add | HPM events are registered before the counters (counted one cycle late; lockstep excludes counters) |
+| 41 | CDB value ─► memory-queue operand ─► address add ─► store-queue forward ─► LSU output | The station's CDB-value mux exists only with `SPEC_WAKE`; the memory queue never sets the speculative bits, but synthesis could not prove it |
+| — | load tag lookup ─► `drain_issue` ─► L2 replacement update | `drain_issue` dropped two terms that need an empty store buffer while a drain needs a non-empty one |
+| **24** | ALU execute register ─► ALU station wake-up | (current worst) |
+
+Verification on the final RTL: 23/23 regression; Spike lockstep with 1,514
+directed + random programs, 800 out-of-order stress programs, and the
+shrunk-structure build (14 directed + 500 random), all matching; the CI
+container; the cache-tags unit test (its stimulus now changes between clock
+edges). Cycle counts: FreeRTOS + CoreMark 300,367 → 300,393 (+0.01%), every
+other workload within 2 cycles (snapshot "M5.5").
+
+The Vivado script also reports more now. `summary.txt` is written after
+synthesis and again after place and route, so a run stopped early still
+leaves current numbers. `path_groups.txt` lists the worst path for each pair
+of start and end modules, so one slow block can no longer fill the whole
+top-10 list.
+
 **Final verification still to run:** Vivado post-route timing on the Windows
-machine (`source tools/vivado/synth_core.tcl`, which places and routes by
-default; let it run to the summary block at the end). That run replaces every
-Fmax estimate above with a measurement.
+machine (`source tools/vivado/synth_core.tcl`; let it run to the
+"after place and route" summary). That run replaces every Fmax estimate above
+with a measurement.

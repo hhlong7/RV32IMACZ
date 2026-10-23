@@ -124,16 +124,17 @@ module ReservationStation
     end
 
     // The offered entries, with any speculatively woken operand taken from
-    // the CDB that carries it this cycle. always @* (not always_comb): Icarus
+    // the CDB that carries it this cycle (only stations built with SPEC_WAKE
+    // have the CDB-value mux; synthesis cannot tell the spec bits stay 0). always @* (not always_comb): Icarus
     // 12 makes always_comb blocks that share a function re-trigger each other.
     function automatic rs_entry_t resolve(input rs_entry_t e, input cdb_t c0, input cdb_t c1, input cdb_t c2);
         resolve = e;
-        if (e.src1_spec) begin
+        if (SPEC_WAKE && e.src1_spec) begin
             if (c0.valid && c0.tag == e.src1_tag) resolve.src1 = c0.value;
             else if (c1.valid && c1.tag == e.src1_tag) resolve.src1 = c1.value;
             else if (c2.valid && c2.tag == e.src1_tag) resolve.src1 = c2.value;
         end
-        if (e.src2_spec) begin
+        if (SPEC_WAKE && e.src2_spec) begin
             if (c0.valid && c0.tag == e.src2_tag) resolve.src2 = c0.value;
             else if (c1.valid && c1.tag == e.src2_tag) resolve.src2 = c1.value;
             else if (c2.valid && c2.tag == e.src2_tag) resolve.src2 = c2.value;

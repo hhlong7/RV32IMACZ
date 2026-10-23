@@ -128,7 +128,8 @@ module tb_cache_tags;
         rst = 0;
 
         for (int op = 0; op < OPS; op++) begin
-            @(posedge clk);
+            // Drive between edges; the tags update on the rising edge.
+            @(negedge clk);
             lookup_tag[0] = pick_tag();
             lookup_tag[1] = pick_tag();
             flush = '0; fill_en = '0; inval_en = '0; touch_en = '0;
@@ -155,7 +156,7 @@ module tb_cache_tags;
             check_outputs(0, hit[0], line[0], victim[0]);
             check_outputs(1, hit[1], line[1], victim[1]);
 
-            @(negedge clk); #1;
+            @(posedge clk); #1;
             for (int p = 0; p < 2; p++) begin
                 if (flush[p]) begin
                     model_reset(p);

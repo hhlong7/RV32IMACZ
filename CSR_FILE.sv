@@ -116,7 +116,17 @@ module CSR_FILE(
     logic [2:0] frm_reg;
 
     logic [63:0] counters [0:LAST_COUNTER];
-    logic [LAST_COUNTER:FIRST_HPM] hpm_event;
+    logic [LAST_COUNTER:FIRST_HPM] hpm_event, hpm_event_q;
+
+    // Events are registered before they reach the 64-bit counters, so the
+    // event logic (cache lookups, store-buffer compares, ...) and the counter
+    // adders sit in different cycles. Each event is counted one cycle late.
+    always_ff @(posedge CLK) begin
+        if (RST)
+            hpm_event_q <= '0;
+        else
+            hpm_event_q <= hpm_event;
+    end
 
     assign hpm_event = {
         fence_wait_event,             // 17
@@ -211,7 +221,7 @@ module CSR_FILE(
         else if (idx == 2)
             counter_increment = 64'(retire_count);      // minstret
         else
-            counter_increment = 64'(hpm_event[idx]);
+            counter_increment = 64'(hpm_event_q[idx]);
     endfunction
 
     always_ff @(posedge CLK) begin

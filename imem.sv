@@ -53,7 +53,7 @@ module imem(
     assign w6 = ram[addr+6];
     assign w7 = ram[addr+7];
 
-    always_ff @(negedge CLK) begin
+    always_ff @(posedge CLK) begin
         logic [31:0] old_atomic_word;
         logic [31:0] new_atomic_word;
         logic atomic_do_write;

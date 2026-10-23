@@ -108,7 +108,7 @@ module l2cache #(
     assign lineReadData = tag_hit[PORT_LINE_READ] ? data[tag_line[PORT_LINE_READ]][lineReadSelect] : 32'b0;
 
     // The refill address is stable for all beats, so the victim is too.
-    always_ff @(negedge clk) begin
+    always_ff @(posedge clk) begin
         if (fillWrite)
             data[victim_line][fillSelect] <= fillWordData;
         else if (drain_slot)

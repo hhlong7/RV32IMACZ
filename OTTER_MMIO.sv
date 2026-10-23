@@ -53,7 +53,7 @@ module OTTER_MMIO(
     // FreeRTOS uses the standard mtime >= mtimecmp condition to request a tick.
     assign TIMER_INTERRUPT = (mtime_reg >= mtimecmp_reg);
 
-    always_ff @(negedge CLK) begin
+    always_ff @(posedge CLK) begin
         if (RST) begin
             ioBuffer <= 32'b0;
             timerReadWord <= 32'b0;

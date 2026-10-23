@@ -372,10 +372,11 @@ slack of -101.7 ns at 50 MHz: about 8 MHz. After milestone 5, Yosys reports
 script for Vivado's post-route numbers.
 
 For reference, an Artix-7 100T (Nexys A7 / Arty A7) has 63,400 LUTs and a
-200T (Nexys Video) 133,800. Remaining FPGA work: a multi-cycle integer
-divider (both ALUs divide in one cycle), rising-edge register-file writes
-(they write on the falling edge), block-RAM or DRAM memory behind the
-caches, and Vivado timing; Yosys reports no timing for Xilinx parts.
+200T (Nexys Video) 133,800. All core logic, caches included, now runs on
+the rising edge (see [docs/TIMING_CLOSURE_PLAN.md](docs/TIMING_CLOSURE_PLAN.md)).
+Remaining FPGA work: Vivado post-route timing, and block-RAM or DRAM memory
+behind the caches for a board build (the memory models are black boxes in
+the core-only synthesis).
 
 ## Trying To Break The Out-Of-Order Core
 

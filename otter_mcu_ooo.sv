@@ -387,17 +387,10 @@ module OTTER_MCU
     assign hit = fetch_request && fetch_slot0_ready;
     assign miss = fetch_request && miss_raw;
 
-    // The I-cache updates on the negedge (a prefetch hit promotes its line
-    // there), so capture these events at that edge for the HPM counters.
-    always_ff @(negedge CLK) begin
-        if (RESET) begin
-            prefetch_hit_event <= 1'b0;
-            prefetch_useless_event <= 1'b0;
-        end else begin
-            prefetch_hit_event <= hit && prefetch_hit_event_raw;
-            prefetch_useless_event <= prefetch_useless_event_raw;
-        end
-    end
+    // The I-cache updates at the clock edge, so its prefetch events are
+    // stable for the whole cycle and feed the HPM counters directly.
+    assign prefetch_hit_event = hit && prefetch_hit_event_raw;
+    assign prefetch_useless_event = prefetch_useless_event_raw;
 
     always_comb begin
         if_id_next = if_id_after_dispatch;

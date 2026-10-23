@@ -17,8 +17,9 @@
 # Or from the Vivado Tcl Console: cd to the repository, then
 #   source tools/vivado/synth_core.tcl
 #
-# The console ends with a summary (resources, worst slack, estimated
-# maximum clock, worst paths). The full reports are written to
+# The console prints a summary (resources, worst slack, estimated maximum
+# clock, worst path per module pair) after synthesis and again after place
+# and route; summary.txt always holds the latest one. The full reports are written to
 # reports/vivado/<part>/, which is tracked by git, so pushing shares them.
 
 if {![info exists part]} { set part "xc7a200tsbg484-1" }
@@ -48,9 +49,75 @@ lappend sources [file join $here memory_stubs.sv]
 read_verilog -sv $sources
 read_xdc -mode out_of_context [file join $here core_ooc.xdc]
 
+# Hierarchy of a timing pin, at most two levels deep, without the register
+# and pin names: OTTER_LSU/STORE_BUFFER/head_q_reg[0]/C -> OTTER_LSU/STORE_BUFFER.
+proc module_of {pin} {
+    set parts [lrange [split $pin "/"] 0 end-2]
+    if {[llength $parts] == 0} { return "(core top)" }
+    return [join [lrange $parts 0 1] "/"]
+}
+
+# The worst path for each (start module, end module) pair among the N worst
+# endpoints. One slow block (say a cache) fills the plain top-10 list with
+# copies of a single path; this table shows every distinct block that fails.
+proc report_path_groups {file n} {
+    set seen [dict create]
+    set rows {}
+    foreach p [get_timing_paths -setup -max_paths $n -nworst 1 -quiet] {
+        set s [get_property STARTPOINT_PIN $p]
+        set e [get_property ENDPOINT_PIN $p]
+        set key "[module_of $s] -> [module_of $e]"
+        if {[dict exists $seen $key]} { continue }
+        dict set seen $key 1
+        lappend rows [format "%8.3f  %3s  %-60s  %s -> %s" [get_property SLACK $p] \
+                          [get_property LOGIC_LEVELS $p] $key $s $e]
+    }
+    set fh [open $file w]
+    puts $fh "Worst setup path per (start module -> end module), from the $n worst endpoints"
+    puts $fh "   slack  lvl  modules                                                       start pin -> end pin"
+    puts $fh [join $rows "\n"]
+    close $fh
+    return [lrange $rows 0 9]
+}
+
+# Resource totals, worst slack, and the per-module worst paths; written to
+# summary.txt and the console after each stage, so a run stopped early still
+# leaves current numbers.
+proc write_summary {part stage out} {
+    set period [get_property PERIOD [get_clocks clk]]
+    set worst [get_timing_paths -setup -max_paths 1 -nworst 1 -quiet]
+    set summary {}
+    lappend summary "==================== OTTER_MCU summary ($part, $stage) ===================="
+    # Totals straight from the utilization report (cell-type names differ
+    # between Vivado versions, the report rows do not).
+    set util [report_utilization -return_string]
+    foreach {label row} {"LUTs (total)" "Slice LUTs" "  LUT as Logic" "LUT as Logic" "  LUT as Memory" "LUT as Memory"
+                         "Flip-flops" "Slice Registers" "DSP48 slices" "DSPs" "Block RAM tiles" "Block RAM Tile"} {
+        set used "?"
+        regexp "\\|\\s*${row}\\*?\\s*\\|\\s*(\\d+)" $util -> used
+        lappend summary [format "%-17s %8s" $label $used]
+    }
+    if {[llength $worst] > 0} {
+        set wns [get_property SLACK $worst]
+        lappend summary [format "Clock target      %8.3f ns (%.1f MHz)" $period [expr {1000.0 / $period}]]
+        lappend summary [format "Worst setup slack %8.3f ns  -> %s" $wns [expr {$wns >= 0 ? "MET" : "FAILED"}]]
+        lappend summary [format "Estimated Fmax    %8.1f MHz (%s)" \
+                             [expr {1000.0 / ($period - $wns)}] $stage]
+        lappend summary "Worst path per module pair (slack ns, logic levels, modules); all in path_groups.txt:"
+        foreach row [report_path_groups [file join $out path_groups.txt] 5000] {
+            lappend summary "  [string range $row 0 80]"
+        }
+    }
+    lappend summary "Full reports: $out"
+    set fh [open [file join $out summary.txt] w]
+    puts $fh [join $summary "\n"]
+    close $fh
+    puts [join $summary "\n"]
+}
+
 synth_design -top OTTER_MCU -part $part -mode out_of_context
 report_timing_summary -max_paths 10 -file [file join $out timing_summary_synth.txt]
-set stage "after synthesis"
+write_summary $part "after synthesis" $out
 
 if {$impl} {
     # Out-of-context place and route: real placement and wire delays.
@@ -58,43 +125,13 @@ if {$impl} {
     place_design
     phys_opt_design
     route_design
-    set stage "after place and route"
-}
 
-report_utilization -file [file join $out utilization.txt]
-report_utilization -hierarchical -hierarchical_depth 2 -file [file join $out utilization_hier.txt]
-report_timing_summary -max_paths 10 -file [file join $out timing_summary.txt]
-report_timing -max_paths 20 -sort_by group -file [file join $out timing_paths.txt]
-
-# ---- Console summary --------------------------------------------------------
-set period [get_property PERIOD [get_clocks clk]]
-set worst [get_timing_paths -setup -max_paths 1 -nworst 1 -quiet]
-set summary {}
-lappend summary "==================== OTTER_MCU summary ($part, $stage) ===================="
-# Totals straight from the utilization report (cell-type names differ
-# between Vivado versions, the report rows do not).
-set util [report_utilization -return_string]
-foreach {label row} {"LUTs (total)" "Slice LUTs" "  LUT as Logic" "LUT as Logic" "  LUT as Memory" "LUT as Memory"
-                     "Flip-flops" "Slice Registers" "DSP48 slices" "DSPs" "Block RAM tiles" "Block RAM Tile"} {
-    set used "?"
-    regexp "\\|\\s*${row}\\*?\\s*\\|\\s*(\\d+)" $util -> used
-    lappend summary [format "%-17s %8s" $label $used]
+    report_utilization -file [file join $out utilization.txt]
+    report_utilization -hierarchical -hierarchical_depth 2 -file [file join $out utilization_hier.txt]
+    report_timing_summary -max_paths 10 -file [file join $out timing_summary.txt]
+    report_timing -max_paths 20 -sort_by group -file [file join $out timing_paths.txt]
+    write_summary $part "after place and route" $out
+} else {
+    report_utilization -file [file join $out utilization.txt]
+    report_utilization -hierarchical -hierarchical_depth 2 -file [file join $out utilization_hier.txt]
 }
-if {[llength $worst] > 0} {
-    set wns [get_property SLACK $worst]
-    lappend summary [format "Clock target      %8.3f ns (%.1f MHz)" $period [expr {1000.0 / $period}]]
-    lappend summary [format "Worst setup slack %8.3f ns  -> %s" $wns [expr {$wns >= 0 ? "MET" : "FAILED"}]]
-    lappend summary [format "Estimated Fmax    %8.1f MHz (%s)" \
-                         [expr {1000.0 / ($period - $wns)}] $stage]
-    lappend summary "Worst paths (slack ns, logic levels, start -> end):"
-    foreach p [get_timing_paths -setup -max_paths 5 -nworst 1 -quiet] {
-        lappend summary [format "  %8.3f  %3s  %s -> %s" [get_property SLACK $p] \
-                             [get_property LOGIC_LEVELS $p] \
-                             [get_property STARTPOINT_PIN $p] [get_property ENDPOINT_PIN $p]]
-    }
-}
-lappend summary "Full reports: $out"
-set fh [open [file join $out summary.txt] w]
-puts $fh [join $summary "\n"]
-close $fh
-puts [join $summary "\n"]

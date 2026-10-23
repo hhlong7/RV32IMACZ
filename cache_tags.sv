@@ -13,7 +13,7 @@
 //   Victim: the lowest-numbered invalid line if there is one, otherwise the
 //   line chosen by the replacement policy.
 //
-//   Updates (falling edge, like the caches' data arrays), highest priority
+//   Updates (rising edge, like the caches' data arrays), highest priority
 //   first; the owning cache drives at most one of these per cycle:
 //     flush       invalidate every line (reset, fence.i)
 //     fill_en     install fill_tag in the victim line and mark it used
@@ -111,7 +111,7 @@ module cache_tags #(
                 policy_victim = LINE_BITS'(node - (LINES - 1));
             end
 
-            always_ff @(negedge clk) begin
+            always_ff @(posedge clk) begin
                 if (rst || flush) begin
                     tree <= '0;
                 end else if (touch_now) begin
@@ -137,7 +137,7 @@ module cache_tags #(
                         policy_victim = LINE_BITS'(l);
             end
 
-            always_ff @(negedge clk) begin
+            always_ff @(posedge clk) begin
                 if (rst || flush) begin
                     for (int l = 0; l < LINES; l++)
                         age[l] <= LINE_BITS'(l);
@@ -153,7 +153,7 @@ module cache_tags #(
         end
     endgenerate
 
-    always_ff @(negedge clk) begin
+    always_ff @(posedge clk) begin
         if (rst || flush) begin
             valid <= '0;
         end else if (fill_en) begin

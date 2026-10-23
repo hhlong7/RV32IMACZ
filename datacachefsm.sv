@@ -97,11 +97,12 @@ module datacachefsm(
     // in a cycle where a new store arrives (the buffer enqueues and drains in
     // the same cycle). Holding drains back during a store burst only filled
     // the buffer and stalled commit: two-wide commit releases stores in bursts.
+    // A drain needs a non-empty buffer and start_fill / start_uncached_load
+    // need an empty one, so neither is checked here: that keeps the load's
+    // tag lookup off the drain -> cache-update path.
     assign drain_issue = storebufDrainValid &&
                          ~fill_cache &&
-                         ~start_fill &&
-                         ~uncached_wait &&
-                         ~start_uncached_load;
+                         ~uncached_wait;
 
     assign miss_start = start_fill;
     assign busy = fill_cache || uncached_wait || ~storebufEmpty || start_fill || start_uncached_load;

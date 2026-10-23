@@ -125,7 +125,7 @@
     //                || MEM_ADDR1[1:0] != 2'b0 || MEM_ADDR2[1:0] !=2'b0)? 1 : 0;
             
     // BRAM requires all reads and writes to occur synchronously
-    always_ff @(negedge MEM_CLK) begin
+    always_ff @(posedge MEM_CLK) begin
       logic [31:0] oldAtomicWord;
       logic [31:0] newAtomicWord;
       logic atomicDoWrite;

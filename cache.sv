@@ -134,7 +134,7 @@ module Cache #(
             rd_next = prefetch_data[next_fetch_offset];
     end
 
-    always_ff @(negedge CLK) begin
+    always_ff @(posedge CLK) begin
         if (RST || invalidate) begin
             prefetch_valid <= 1'b0;
             prefetch_tag <= '0;
