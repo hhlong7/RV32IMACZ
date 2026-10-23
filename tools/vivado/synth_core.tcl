@@ -1,6 +1,7 @@
 # Core-only (out-of-context) Vivado synthesis of OTTER_MCU, for LUT/FF/BRAM
 # counts and timing without a board. The simulation memory models are
-# replaced by black-box stubs (see memory_stubs.sv).
+# replaced by register-only stand-ins (see memory_stubs.sv); empty black
+# boxes would stop place and route (DRC INBB-3).
 #
 # From the repository root:
 #   vivado -mode batch -source tools/vivado/synth_core.tcl

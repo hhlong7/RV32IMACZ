@@ -12,8 +12,9 @@
 #
 # Options (after -tclargs on the command line, or set before sourcing):
 #   part=<part>       FPGA part (default xc7a200tsbg484-1, Artix-7 200T)
-#   memories=stub     core only; the simulation memory models are black-box
-#                     stubs, so synthesis runs (default)
+#   memories=stub     core only; the simulation memory models are
+#                     register-only stand-ins, so synthesis and
+#                     implementation run (default)
 #   memories=real     the real simulation memory models, for viewing the
 #                     full elaborated design (synthesis will fail on them:
 #                     they model external RAM and cannot be built from BRAM)

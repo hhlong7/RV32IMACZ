@@ -342,14 +342,16 @@ vivado -source tools/vivado/create_project.tcl
 ```
 
 This builds `vivado/otter_core/otter_core.xpr` from `rtl.f` with `OTTER_MCU`
-as the top and the memory models as black-box stubs, sets out-of-context
+as the top and the memory models as register-only stand-ins, sets out-of-context
 synthesis, adds `tb_core.sv` as the simulation top, and opens the elaborated
 design. Options go after `-tclargs`: `part=xc7a100tcsg324-1` for another FPGA,
 `memories=real` to view the full design with the real memory models (that
 version cannot be synthesized), `elaborate=0` to only create the project.
 
 To get Vivado's own numbers and timing, synthesize the core out of context
-(no board, no pins) with the memory models replaced by black-box stubs; on
+(no board, no pins) with the memory models replaced by stand-ins that only
+register their ports, like a block RAM (empty black boxes cannot be placed
+and routed); on
 Windows or Linux, from the repository root:
 
 ```bash
@@ -375,8 +377,8 @@ For reference, an Artix-7 100T (Nexys A7 / Arty A7) has 63,400 LUTs and a
 200T (Nexys Video) 133,800. All core logic, caches included, now runs on
 the rising edge (see [docs/TIMING_CLOSURE_PLAN.md](docs/TIMING_CLOSURE_PLAN.md)).
 Remaining FPGA work: Vivado post-route timing, and block-RAM or DRAM memory
-behind the caches for a board build (the memory models are black boxes in
-the core-only synthesis).
+behind the caches for a board build (the core-only flow replaces the memory
+models with register-only stand-ins).
 
 ## Trying To Break The Out-Of-Order Core
 
