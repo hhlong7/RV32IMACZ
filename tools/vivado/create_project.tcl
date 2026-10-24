@@ -11,74 +11,68 @@
 #   source tools/vivado/create_project.tcl
 #
 # Options (after -tclargs on the command line, or set before sourcing):
-#   part=<part>       FPGA part (default xc7z020clg400-1, Zybo Z7-20)
-#   memories=stub     core only; the simulation memory models are
-#                     register-only stand-ins, so synthesis and
-#                     implementation run (default)
-#   memories=real     the real simulation memory models, for viewing the
-#                     full elaborated design (synthesis will fail on them:
-#                     they model external RAM and cannot be built from BRAM)
+#   core=0            the Zybo Z7-20 board design, top zybo_top with its pin
+#                     constraints: Run Synthesis / Implementation / Generate
+#                     Bitstream work from the GUI (default)
+#   core=1            the core alone, top OTTER_MCU, out-of-context at 50 MHz
+#   program=<file>    memory image (default board/zybo/zybo_hello.mem)
 #   elaborate=0       create the project without opening the elaborated design
 #
 # The project lands in vivado/otter_core/ (ignored by git). Running the
 # script again rebuilds it from scratch.
 
-if {![info exists part]}      { set part "xc7z020clg400-1" }
-if {![info exists memories]}  { set memories "stub" }
+if {![info exists core]}      { set core 0 }
 if {![info exists elaborate]} { set elaborate 1 }
 foreach arg [expr {[info exists argv] ? $argv : {}}] {
-    if {[regexp {^part=(.+)$} $arg -> v]}      { set part $v }
-    if {[regexp {^memories=(.+)$} $arg -> v]}  { set memories $v }
+    if {[regexp {^core=(.+)$} $arg -> v]}      { set core $v }
+    if {[regexp {^program=(.+)$} $arg -> v]}   { set program [file normalize $v] }
     if {[regexp {^elaborate=(.+)$} $arg -> v]} { set elaborate $v }
 }
-if {$memories ni {stub real}} { error "memories must be stub or real, got '$memories'" }
 
 set here [file dirname [file normalize [info script]]]
-set root [file normalize [file join $here .. ..]]
+source [file join $here otter_common.tcl]
+set root $otter_root
+if {![info exists program]} { set program [file join $root board zybo zybo_hello.mem] }
+set part xc7z020clg400-1
 set proj_dir [file join $root vivado otter_core]
 
 if {[llength [get_projects -quiet]] > 0} { close_project }
 create_project otter_core $proj_dir -part $part -force
 set_property target_language Verilog [current_project]
 
-# Design sources: every file in rtl.f (packages first, as listed there).
-set sources {}
-set fh [open [file join $root rtl.f] r]
-foreach line [split [read $fh] "\n"] {
-    set f [string trim $line]
-    if {$f eq "" || [string index $f 0] eq "#"} { continue }
-    if {$memories eq "stub" && $f in {otter_memory_v1_07.sv imem.sv}} { continue }
-    lappend sources [file join $root $f]
-}
-close $fh
-if {$memories eq "stub"} {
-    lappend sources [file join $here memory_stubs.sv]
+# Design sources: every file in rtl.f (packages first, as listed there), and
+# the board top for the board design.
+set sources [otter_sources]
+if {!$core} {
+    lappend sources [file join $root board uart.sv] [file join $root board zybo zybo_top.sv]
 }
 add_files -norecurse -fileset sources_1 $sources
 set_property file_type SystemVerilog [get_files -of_objects [get_filesets sources_1]]
-# The simulation memories load the program image at elaboration.
-if {$memories eq "real" && [file exists [file join $root Test_All.mem]]} {
-    add_files -norecurse -fileset sources_1 [file join $root Test_All.mem]
-}
+set_property verilog_define SYNTHESIS [get_filesets sources_1]
 
-# Automatic compile order puts the packages (otter_defs_pkg, fpu_pkg,
-# ooo_pkg) ahead of the modules that import them.
-set_property top OTTER_MCU [get_filesets sources_1]
+# Memory images (imem.sv and otter_memory_v1_07.sv read them at synthesis).
+add_files -norecurse -fileset sources_1 [otter_prepare_mem $program [file join $proj_dir mem]]
+
+if {$core} {
+    set_property top OTTER_MCU [get_filesets sources_1]
+    add_files -norecurse -fileset constrs_1 [file join $here core_ooc.xdc]
+    set_property USED_IN {synthesis out_of_context} [get_files core_ooc.xdc]
+    set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} \
+        -value {-mode out_of_context} -objects [get_runs synth_1]
+} else {
+    set_property top zybo_top [get_filesets sources_1]
+    add_files -norecurse -fileset constrs_1 [file join $root board zybo zybo.xdc]
+}
 update_compile_order -fileset sources_1
 
-# Core-only (out-of-context) constraints and synthesis: no board pins yet.
-add_files -norecurse -fileset constrs_1 [file join $here core_ooc.xdc]
-set_property USED_IN {synthesis out_of_context} [get_files core_ooc.xdc]
-set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} \
-    -value {-mode out_of_context} -objects [get_runs synth_1]
+# Testbenches for Vivado's simulator (xsim): tb_core (core alone) and
+# tb_zybo (board). Both load Test_All.mem from the simulation directory.
+add_files -norecurse -fileset sim_1 [list [file join $root tb_core.sv] \
+    [file join $root board zybo tb_zybo.sv]]
+set_property file_type SystemVerilog [get_files -of_objects [get_filesets sim_1] *.sv]
+set_property top [expr {$core ? "tb_core" : "tb_zybo"}] [get_filesets sim_1]
 
-# Testbench for Vivado's simulator (xsim). It loads Test_All.mem from the
-# simulation directory; copy a program image there before running.
-add_files -norecurse -fileset sim_1 [file join $root tb_core.sv]
-set_property file_type SystemVerilog [get_files tb_core.sv]
-set_property top tb_core [get_filesets sim_1]
-
-puts "Project created: [file join $proj_dir otter_core.xpr] (part $part, memories $memories)"
+puts "Project created: [file join $proj_dir otter_core.xpr] (part $part, top [get_property top [get_filesets sources_1]])"
 
 if {$elaborate} {
     # Same as Flow Navigator > RTL Analysis > Open Elaborated Design.

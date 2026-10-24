@@ -190,9 +190,7 @@ module OTTER_MCU
     logic [31:0] mem_addr2_dc, mem_din2_dc, mem_dout2_mem;
     logic [1:0] mem_size_dc;
     logic lsu_commit_store, lsu_sb_full, lsu_drained, lsu_busy;
-    logic atomic_valid, atomic_sc_ok, atomic_write_intent;
-    logic [3:0] atomic_op;
-    logic [31:0] atomic_addr, atomic_wdata, atomic_preview_word, atomic_sc_result;
+    logic [26:0] imem_line, prefetch_line;
     logic atomic_commit_valid, atomic_commit_write, atomic_commit_sc_success;
     logic [3:0] atomic_commit_op;
     logic [31:0] atomic_commit_addr, atomic_commit_old_word, atomic_commit_new_word;
@@ -478,11 +476,7 @@ module OTTER_MCU
         .snoop_addr(mem_addr2_dc),
         .snoop_wdata(mem_din2_dc),
         .snoop_size(mem_size_dc),
-        .atomic_valid(atomic_write_intent),
-        .atomic_op(atomic_op),
-        .atomic_sc_ok(atomic_sc_ok),
-        .atomic_addr(atomic_addr),
-        .atomic_wdata(atomic_wdata),
+        .line_q(imem_line),
         .w0(w0), .w1(w1), .w2(w2), .w3(w3), .w4(w4), .w5(w5), .w6(w6), .w7(w7)
     );
 
@@ -493,11 +487,7 @@ module OTTER_MCU
         .snoop_addr(mem_addr2_dc),
         .snoop_wdata(mem_din2_dc),
         .snoop_size(mem_size_dc),
-        .atomic_valid(atomic_write_intent),
-        .atomic_op(atomic_op),
-        .atomic_sc_ok(atomic_sc_ok),
-        .atomic_addr(atomic_addr),
-        .atomic_wdata(atomic_wdata),
+        .line_q(prefetch_line),
         .w0(pw0), .w1(pw1), .w2(pw2), .w3(pw3), .w4(pw4), .w5(pw5), .w6(pw6), .w7(pw7)
     );
 
@@ -509,6 +499,7 @@ module OTTER_MCU
         .invalidate(icache_invalidate),
         .w0(w0), .w1(w1), .w2(w2), .w3(w3), .w4(w4), .w5(w5), .w6(w6), .w7(w7),
         .pw0(pw0), .pw1(pw1), .pw2(pw2), .pw3(pw3), .pw4(pw4), .pw5(pw5), .pw6(pw6), .pw7(pw7),
+        .pw_line(prefetch_line),
         .rd(rd),
         .rd_next(rd_next),
         .hit(hit_raw),
@@ -517,6 +508,15 @@ module OTTER_MCU
         .prefetch_hit_event(prefetch_hit_event_raw),
         .prefetch_useless_event(prefetch_useless_event_raw)
     );
+
+    // The instruction memories are synchronous: a refill writes the line read
+    // in the miss cycle, which is the current PC's line because the PC holds
+    // during a miss.
+    // synthesis translate_off
+    always @(posedge CLK)
+        if (!RESET && cache_update && imem_line != pc_out[31:5])
+            $fatal(1, "I-cache refill: imem holds line %h, PC is %h", imem_line, pc_out);
+    // synthesis translate_on
 
     CacheFSM OTTER_CACHE_FSM(
         .hit(hit),
@@ -1110,17 +1110,13 @@ module OTTER_MCU
         .mem_size(mem_size_dc),
         .mem_sign(mem_sign_dc),
         .mem_dout2(mem_dout2_mem),
-        .atomic_valid(atomic_valid),
-        .atomic_op(atomic_op),
-        .atomic_sc_ok(atomic_sc_ok),
-        .atomic_addr(atomic_addr),
-        .atomic_wdata(atomic_wdata),
-        .atomic_write_intent(atomic_write_intent),
-        .atomic_preview_word(atomic_preview_word),
-        .atomic_sc_result(atomic_sc_result),
         .atomic_commit_valid(atomic_commit_valid),
+        .atomic_commit_write(atomic_commit_write),
         .atomic_commit_op(atomic_commit_op),
+        .atomic_commit_sc_success(atomic_commit_sc_success),
         .atomic_commit_addr(atomic_commit_addr),
+        .atomic_commit_old_word(atomic_commit_old_word),
+        .atomic_commit_new_word(atomic_commit_new_word),
         .storebuf_enqueue_event(storebuf_enqueue_event),
         .storebuf_forward_event(storebuf_forward_event),
         .storebuf_conflict_event(storebuf_conflict_event),
@@ -1516,33 +1512,15 @@ module OTTER_MCU
     Memory OTTER_MEMORY(
         .MEM_RST(RESET),
         .MEM_CLK(CLK),
-        .MEM_RDEN1(1'b0),
         .MEM_RDEN2(mem_rden2_dc),
         .MEM_WE2(mem_we2_dc),
-        .MEM_ADDR1(14'd0),
         .MEM_ADDR2(mem_addr2_dc),
         .MEM_DIN2(mem_din2_dc),
         .MEM_SIZE(mem_size_dc),
         .MEM_SIGN(mem_sign_dc),
-        .MEM_ATOMIC_VALID(atomic_valid),
-        .MEM_ATOMIC_OP(atomic_op),
-        .MEM_ATOMIC_SC_OK(atomic_sc_ok),
-        .MEM_ATOMIC_ADDR(atomic_addr),
-        .MEM_ATOMIC_DIN(atomic_wdata),
-        .MEM_ATOMIC_PREVIEW_ADDR(atomic_addr),
         .IO_IN(IOBUS_IN),
         .IO_WR(IOBUS_WR),
-        .MEM_DOUT1(),
         .MEM_DOUT2(mem_dout2_mem),
-        .MEM_ATOMIC_PREVIEW_WORD(atomic_preview_word),
-        .MEM_ATOMIC_RESULT(atomic_sc_result),
-        .MEM_ATOMIC_COMMIT_VALID(atomic_commit_valid),
-        .MEM_ATOMIC_COMMIT_WRITE(atomic_commit_write),
-        .MEM_ATOMIC_COMMIT_OP(atomic_commit_op),
-        .MEM_ATOMIC_COMMIT_SC_SUCCESS(atomic_commit_sc_success),
-        .MEM_ATOMIC_COMMIT_ADDR(atomic_commit_addr),
-        .MEM_ATOMIC_COMMIT_OLD_WORD(atomic_commit_old_word),
-        .MEM_ATOMIC_COMMIT_NEW_WORD(atomic_commit_new_word),
         .MEM_TIMER_INTERRUPT(timer_interrupt_pending)
     );
 

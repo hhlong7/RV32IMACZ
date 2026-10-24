@@ -108,7 +108,7 @@ Other useful files:
 - `CSR_FILE.sv`, `AtomicDecode.sv` for system and atomic support (atomics
   execute in `LoadStoreUnit.sv`)
 - `docs/diagrams/*.dot`: Graphviz sources of the diagrams above
-- `OTTER_Wrapper_v1_03.sv` and `Basys3_Master.xdc` for board-level integration
+- `board/zybo/` (top, pins, board testbench) and `board/uart.sv` for the Zybo Z7-20; `OTTER_Wrapper_v1_03.sv` and `Basys3_Master.xdc` are the original Basys 3 wrapper (the core no longer fits a Basys 3)
 
 ## How To Use It
 
@@ -311,6 +311,22 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 - A trap could overtake an older in-flight `csrw` to `mcause`/`mtval`
 - `tools/run_regression.sh` printed results but never failed on a failing test
 
+## Running On A Zybo Z7-20
+
+The core runs on a Digilent Zybo Z7-20 at 37.5 MHz with 64 KB of block RAM,
+LEDs, switches, and a UART terminal on Pmod JE. The demo program
+(`software/zybo_hello`) prints a banner, echoes what you type, and shows the
+switches on the LEDs. In the Vivado Tcl Console:
+
+```text
+source tools/vivado/build_zybo.tcl
+source tools/vivado/program_zybo.tcl
+```
+
+Wiring, the memory map, and running other programs:
+[docs/BOARD_ZYBO.md](docs/BOARD_ZYBO.md). `tools/run_board_test.sh`
+simulates the whole board with a terminal model.
+
 ## FPGA Synthesis Estimate
 
 The core (`OTTER_MCU`, with the 64 KB memory and the two `imem` memory
@@ -341,18 +357,17 @@ absolute paths and machine-specific caches):
 vivado -source tools/vivado/create_project.tcl
 ```
 
-This builds `vivado/otter_core/otter_core.xpr` from `rtl.f` with `OTTER_MCU`
-as the top and the memory models as register-only stand-ins, sets out-of-context
-synthesis, adds `tb_core.sv` as the simulation top, and opens the elaborated
-design. Options go after `-tclargs`: `part=xc7a100tcsg324-1` for another FPGA,
-`memories=real` to view the full design with the real memory models (that
-version cannot be synthesized), `elaborate=0` to only create the project.
+This builds `vivado/otter_core/otter_core.xpr` for the Zybo Z7-20 board
+design (top `zybo_top`, pin constraints, the demo program in the
+memories, `tb_zybo` as the simulation top) and opens the elaborated design;
+Run Synthesis, Run Implementation, and Generate Bitstream then work from
+the GUI. Options go after `-tclargs`: `core=1` for the core alone
+(`OTTER_MCU`, out of context), `program=<file>` for another memory image,
+`elaborate=0` to only create the project.
 
-To get Vivado's own numbers and timing, synthesize the core out of context
-(no board, no pins) with the memory models replaced by stand-ins that only
-register their ports, like a block RAM (empty black boxes cannot be placed
-and routed); on
-Windows or Linux, from the repository root:
+To get Vivado's numbers and timing for the core alone against the 50 MHz
+goal, synthesize it out of context (no board, no pins); on Windows or Linux,
+from the repository root:
 
 ```bash
 vivado -mode batch -source tools/vivado/synth_core.tcl
@@ -363,9 +378,7 @@ Z7-20 (`xc7z020clg400-1`; pass another part with `-tclargs`), the clock target i
 50 MHz (`tools/vivado/core_ooc.xdc`). The console ends with a summary
 (resources, worst slack, estimated maximum clock, the five worst paths), and
 the full utilization and timing reports land in `reports/vivado/<part>/`,
-which is tracked, so a `git push` from the Vivado machine shares them. Using the board wrapper (`OTTER_Wrapper`) as
-the top fails with Synth 8-3391 on the memory models, since they cannot be
-built from FPGA block RAM.
+which is tracked, so a `git push` from the Vivado machine shares them.
 
 The first Vivado run (before milestone 5, synthesis only) reported 52,826
 LUTs (39% of the 200T), 33,595 flip-flops, 10 DSP slices, and a worst setup
@@ -380,12 +393,11 @@ Post-route on the Artix-7 200T (after milestone 5 and the fixes in
 in LUT RAM (Vivado had it at 15,644 LUTs) and the L2 became optional and
 off, since on-chip block RAM refills a line as fast as the L2 did; neither
 changed any workload's cycle count. Estimated from Vivado's per-module
-numbers: about 34,000 LUTs (64% of the 7020) and 22,500 flip-flops; the next
-Vivado run measures it. All core logic, caches included, now runs on
+numbers: about 34,000 LUTs; Vivado measured 41,808 LUTs (79% of the 7020)
+and 23,600 flip-flops post-route, closing at 39.6 MHz. All core logic, caches included, now runs on
 the rising edge (see [docs/TIMING_CLOSURE_PLAN.md](docs/TIMING_CLOSURE_PLAN.md)).
-Remaining FPGA work: Vivado post-route timing, and block-RAM or DRAM memory
-behind the caches for a board build (the core-only flow replaces the memory
-models with register-only stand-ins).
+The memories are synchronous block RAM (`imem.sv`, `otter_memory_v1_07.sv`),
+the same RTL in simulation and on the FPGA.
 
 ## Trying To Break The Out-Of-Order Core
 

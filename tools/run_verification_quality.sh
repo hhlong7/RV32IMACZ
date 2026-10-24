@@ -17,19 +17,22 @@ fi
 
 cd "$ROOT"
 
-echo "== 1/5 Directed regression =="
+echo "== 1/6 Directed regression =="
 VERIF_LOG_DIR="$LOG_DIR" bash tools/run_regression.sh | tee "$LOG_DIR/regression.log"
 
-echo; echo "== 2/5 Legacy random tests =="
+echo; echo "== 2/6 Legacy random tests =="
 VERIF_LOG_DIR="$LOG_DIR" python3 tools/run_random_tests.py | tee "$LOG_DIR/random.log"
 
-echo; echo "== 3/5 Coverage report =="
+echo; echo "== 3/6 Coverage report =="
 python3 tools/verification_report.py --logs "$LOG_DIR" --out-json "$LOG_DIR/verification_summary.json" | tee "$LOG_DIR/summary.log"
 
-echo; echo "== 4/5 Assembler cross-check (repo assembler vs GNU as) =="
+echo; echo "== 4/6 Assembler cross-check (repo assembler vs GNU as) =="
 python3 tools/check_assembler.py ${REQUIRE_TOOLS[@]+"${REQUIRE_TOOLS[@]}"} | tee "$LOG_DIR/assembler_check.txt"
 
-echo; echo "== 5/5 Lockstep vs Spike (directed + ${LOCKSTEP_RANDOM:-200} random programs) =="
+echo; echo "== 5/6 Lockstep vs Spike (directed + ${LOCKSTEP_RANDOM:-200} random programs) =="
 python3 tools/lockstep.py --random "${LOCKSTEP_RANDOM:-200}" ${REQUIRE_TOOLS[@]+"${REQUIRE_TOOLS[@]}"} | tee "$LOG_DIR/lockstep.txt"
+
+echo; echo "== 6/6 Zybo board simulation (UART terminal, LEDs, switches) =="
+bash tools/run_board_test.sh | tee "$LOG_DIR/board.log"
 
 echo; echo "All checks passed. Logs: $LOG_DIR"

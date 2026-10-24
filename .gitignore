@@ -26,3 +26,6 @@ simv
 vivado*.jou
 vivado*.log
 vivado*.str
+
+# Vivado build products (bitstreams, memory images): build_zybo.tcl, synth_core.tcl
+/build/

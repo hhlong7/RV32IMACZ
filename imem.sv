@@ -4,20 +4,28 @@
 // Engineer: Long Ho
 // Create Date: 02/23/2023 09:39:49 AM
 // Module Name: imem
+// Description:
+//   64 KB instruction memory that returns a whole 32-byte cache line per read.
+//   It is eight word banks (bank b holds the words whose address bits [4:2]
+//   are b), each a 2048 x 32 block RAM with:
+//     a synchronous read of line a[15:5]: w0..w7 hold that line from the next
+//       cycle on, and line_q names the line they hold
+//     a byte-enabled write mirroring data-side stores (snoop_*), so code
+//       written by stores is fetched correctly after fence.i
+//   Simulation loads the banks from MEM_FILE; synthesis loads bank b from
+//   MEM_FILE.bank<b> (tools/vivado/build_zybo.tcl writes those files).
 //////////////////////////////////////////////////////////////////////////////////
-module imem(
+module imem #(
+    parameter MEM_FILE = "Test_All.mem"
+) (
     input logic CLK,
-    input logic [31:0] a, // address from ex_mem for snooping
-    input logic snoop_we, // write enable for snooping (data-side stores)
-    input logic [31:0] snoop_addr, // address for snooping (data-side stores)
-    input logic [31:0] snoop_wdata, // write data for snooping (data-side stores)
-    input logic [1:0] snoop_size, // size for snooping (data-side stores) 
-    input logic atomic_valid, // atomic write intent from the LSU
-    input logic [3:0] atomic_op,
-    input logic atomic_sc_ok,
-    input logic [31:0] atomic_addr,
-    input logic [31:0] atomic_wdata,
-    output logic [31:0] w0, // word-aligned instruction outputs for the addressed block
+    input logic [31:0] a,               // byte address; its line is read
+    input logic snoop_we,               // data-side store
+    input logic [31:0] snoop_addr,
+    input logic [31:0] snoop_wdata,
+    input logic [1:0] snoop_size,
+    output logic [26:0] line_q,         // line address of w0..w7
+    output logic [31:0] w0,
     output logic [31:0] w1,
     output logic [31:0] w2,
     output logic [31:0] w3,
@@ -26,70 +34,77 @@ module imem(
     output logic [31:0] w6,
     output logic [31:0] w7
 );
+    logic [10:0] read_line;
+    logic [10:0] snoop_line;
+    logic [2:0] snoop_bank;
+    logic [3:0] byte_enable;
+    logic [31:0] write_word;
+    logic snoop_in_ram;
 
-    import otter_defs_pkg::*;
+    assign read_line = a[15:5];
+    assign snoop_line = snoop_addr[15:5];
+    assign snoop_bank = snoop_addr[4:2];
+    assign snoop_in_ram = snoop_we && (snoop_addr < 32'h0001_0000);
 
-    // 64KB instruction RAM, word-addressable for simplicity (256K total bytes).
-    logic [31:0] ram[0:16383];
-    logic [29:0] addr; // word-aligned address (ignore bottom 2 bits since instructions are 4 bytes)
-    logic [13:0] snoop_word_addr; // word-aligned address for snooping (ignore bottom 2 bits since instructions are 4 bytes)
-    logic [1:0] snoop_byte_offset; // byte offset within the word for snooping
-    logic [13:0] atomic_word_addr; // word-aligned address for mirrored atomic writes
-
-    // The I$ reads whole 8-word aligned blocks at a time for fills and next-line prefetch.
-    assign addr = {a[31:5], 3'b000};
-    assign snoop_word_addr = snoop_addr[15:2];
-    assign snoop_byte_offset = snoop_addr[1:0];
-    assign atomic_word_addr = atomic_addr[15:2];
-
-    initial $readmemh("Test_All.mem", ram, 0, 16383);
-
-    assign w0 = ram[addr+0];
-    assign w1 = ram[addr+1];
-    assign w2 = ram[addr+2];
-    assign w3 = ram[addr+3];
-    assign w4 = ram[addr+4];
-    assign w5 = ram[addr+5];
-    assign w6 = ram[addr+6];
-    assign w7 = ram[addr+7];
-
-    always_ff @(posedge CLK) begin
-        logic [31:0] old_atomic_word;
-        logic [31:0] new_atomic_word;
-        logic atomic_do_write;
-
-        // Mirror data-side stores into the backing instruction RAM so self-modifying
-        // code becomes visible after fence.i invalidates stale I$ contents.
-        if (snoop_we && (snoop_addr < 32'h0001_0000)) begin
-            unique case ({snoop_size, snoop_byte_offset}) // handle byte, halfword, and word stores
-                4'b0000: ram[snoop_word_addr][7:0] <= snoop_wdata[7:0];
-                4'b0001: ram[snoop_word_addr][15:8] <= snoop_wdata[7:0];
-                4'b0010: ram[snoop_word_addr][23:16] <= snoop_wdata[7:0];
-                4'b0011: ram[snoop_word_addr][31:24] <= snoop_wdata[7:0];
-                4'b0100: ram[snoop_word_addr][15:0] <= snoop_wdata[15:0];
-                4'b0101: ram[snoop_word_addr][23:8] <= snoop_wdata[15:0];
-                4'b0110: ram[snoop_word_addr][31:16] <= snoop_wdata[15:0];
-                4'b1000: ram[snoop_word_addr] <= snoop_wdata;
-                default: ;
-            endcase
-        end
-
-        if (atomic_valid && (atomic_addr < 32'h0001_0000)) begin
-            old_atomic_word = ram[atomic_word_addr];
-            new_atomic_word = atomic_new_word(atomic_op, old_atomic_word, atomic_wdata);
-            atomic_do_write = atomic_op_writes(atomic_op, atomic_sc_ok);
-
-            if (atomic_do_write)
-                ram[atomic_word_addr] <= new_atomic_word;
-        end
+    // Store data arrives in the low bytes; place it in its byte lanes.
+    always_comb begin
+        byte_enable = 4'b0000;
+        write_word = 32'b0;
+        unique case ({snoop_size, snoop_addr[1:0]})
+            4'b0000: begin byte_enable = 4'b0001; write_word = {24'b0, snoop_wdata[7:0]}; end
+            4'b0001: begin byte_enable = 4'b0010; write_word = {16'b0, snoop_wdata[7:0], 8'b0}; end
+            4'b0010: begin byte_enable = 4'b0100; write_word = {8'b0, snoop_wdata[7:0], 16'b0}; end
+            4'b0011: begin byte_enable = 4'b1000; write_word = {snoop_wdata[7:0], 24'b0}; end
+            4'b0100: begin byte_enable = 4'b0011; write_word = {16'b0, snoop_wdata[15:0]}; end
+            4'b0101: begin byte_enable = 4'b0110; write_word = {8'b0, snoop_wdata[15:0], 8'b0}; end
+            4'b0110: begin byte_enable = 4'b1100; write_word = {snoop_wdata[15:0], 16'b0}; end
+            4'b1000: begin byte_enable = 4'b1111; write_word = snoop_wdata; end
+            default: ;
+        endcase
     end
 
-    // Simulation-only check; misaligned atomics trap before reaching memory.
-    // synthesis translate_off
-    always @(negedge CLK) begin
-        if (atomic_valid && (atomic_addr < 32'h0001_0000) && (atomic_addr[1:0] != 2'b00))
-            $fatal(1, "imem atomic mirror saw misaligned word address 0x%08x", atomic_addr);
-    end
-    // synthesis translate_on
+`ifndef SYNTHESIS
+    // Simulation: one linear image, dealt out to the banks below.
+    logic [31:0] image [0:16383];
+    initial $readmemh(MEM_FILE, image, 0, 16383);
+`endif
+
+    generate
+        for (genvar b = 0; b < 8; b++) begin : g_bank
+            (* ram_style = "block" *) logic [31:0] ram [0:2047];
+            logic [31:0] q;                 // registered read data
+`ifdef SYNTHESIS
+            localparam logic [7:0] DIGIT = 8'h30 + b;
+            initial $readmemh({MEM_FILE, ".bank", DIGIT}, ram);
+`else
+            initial begin
+                #0;     // after the image is loaded
+                for (int l = 0; l < 2048; l++)
+                    ram[l] = image[l * 8 + b];
+            end
+`endif
+
+            always_ff @(posedge CLK) begin
+                if (snoop_in_ram && snoop_bank == 3'(b)) begin
+                    for (int i = 0; i < 4; i++)
+                        if (byte_enable[i])
+                            ram[snoop_line][i*8 +: 8] <= write_word[i*8 +: 8];
+                end
+                q <= ram[read_line];
+            end
+        end
+    endgenerate
+
+    always_ff @(posedge CLK)
+        line_q <= a[31:5];
+
+    assign w0 = g_bank[0].q;
+    assign w1 = g_bank[1].q;
+    assign w2 = g_bank[2].q;
+    assign w3 = g_bank[3].q;
+    assign w4 = g_bank[4].q;
+    assign w5 = g_bank[5].q;
+    assign w6 = g_bank[6].q;
+    assign w7 = g_bank[7].q;
 endmodule
 // i love cpe333

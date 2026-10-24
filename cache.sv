@@ -10,7 +10,10 @@
 //   Each cycle it looks up PC and PC+4 (for the two fetch slots). A miss
 //   fills a whole line at once from imem (`update`). A hit in the prefetch
 //   buffer that misses the cache promotes the buffered line into the cache.
-//   Every real access refreshes the prefetch buffer with the next line.
+//   Every real access refreshes the prefetch buffer from the prefetch
+//   memory, which reads the line after the PC one cycle earlier (it is a
+//   synchronous block RAM), so the buffer takes its tag from pw_line, the
+//   line actually read, rather than from the current PC.
 //////////////////////////////////////////////////////////////////////////////////
 module Cache #(
     parameter int LINES = 16
@@ -36,6 +39,7 @@ module Cache #(
     input logic [31:0] pw5,
     input logic [31:0] pw6,
     input logic [31:0] pw7,
+    input logic [otter_defs_pkg::CACHE_TAG_BITS-1:0] pw_line,  // line address of pw0..pw7
     output logic [31:0] rd,
     output logic [31:0] rd_next,
     output logic hit,
@@ -60,7 +64,7 @@ module Cache #(
     logic prefetch_used;
 
     logic [31:0] next_pc;
-    logic [CACHE_TAG_BITS-1:0] pc_tag, next_fetch_tag, next_line_tag;
+    logic [CACHE_TAG_BITS-1:0] pc_tag, next_fetch_tag;
     logic [2:0] pc_offset, next_fetch_offset;
 
     logic [1:0] tag_hit;
@@ -77,7 +81,6 @@ module Cache #(
     assign pc_offset = PC[4:2];
     assign next_fetch_tag = next_pc[31:5];
     assign next_fetch_offset = next_pc[4:2];
-    assign next_line_tag = PC[31:5] + 1'b1;   // the sequentially next line
 
     // Port 0 looks up PC; port 1 looks up PC+4 for the younger fetch slot.
     cache_tags #(
@@ -156,7 +159,7 @@ module Cache #(
 
             if (prefetch_refresh) begin
                 prefetch_valid <= 1'b1;
-                prefetch_tag <= next_line_tag;
+                prefetch_tag <= pw_line;
                 prefetch_used <= 1'b0;
                 prefetch_data[0] <= pw0;
                 prefetch_data[1] <= pw1;

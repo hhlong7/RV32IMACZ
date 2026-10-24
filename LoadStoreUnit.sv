@@ -70,18 +70,15 @@ module LoadStoreUnit
     output logic        mem_sign,
     input  logic [31:0] mem_dout2,
 
-    // Atomic port of the data memory.
-    output logic        atomic_valid,
-    output logic [3:0]  atomic_op,
-    output logic        atomic_sc_ok,
-    output logic [31:0] atomic_addr,
-    output logic [31:0] atomic_wdata,
-    output logic        atomic_write_intent,
-    input  logic [31:0] atomic_preview_word,
-    input  logic [31:0] atomic_sc_result,
-    input  logic        atomic_commit_valid,
-    input  logic [3:0]  atomic_commit_op,
-    input  logic [31:0] atomic_commit_addr,
+    // Each finished atomic, the cycle after its write (testbench and the
+    // reservation).
+    output logic        atomic_commit_valid,
+    output logic        atomic_commit_write,
+    output logic [3:0]  atomic_commit_op,
+    output logic        atomic_commit_sc_success,
+    output logic [31:0] atomic_commit_addr,
+    output logic [31:0] atomic_commit_old_word,
+    output logic [31:0] atomic_commit_new_word,
 
     // Events for the performance counters and testbench.
     output logic storebuf_enqueue_event,
@@ -198,11 +195,20 @@ module LoadStoreUnit
 
     load_t ld;
 
-    typedef enum logic [1:0] { AT_IDLE, AT_READ, AT_WRITE } atomic_state_t;
+    // Atomics use the data port like a load and then a store: AT_READ issues
+    // the read, AT_WAIT captures the old word (the memory is synchronous),
+    // AT_WRITE writes the new word and completes.
+    typedef enum logic [1:0] { AT_IDLE, AT_READ, AT_WAIT, AT_WRITE } atomic_state_t;
     atomic_state_t at_state;
     tag_t at_tag;
     logic [31:0] at_addr, at_wdata, at_old;
     logic [3:0] at_op;
+    logic atomic_valid, atomic_sc_ok, atomic_write_intent;
+    logic [31:0] at_new;
+    // The D-cache FSM's memory port; atomics take it over while they run.
+    logic        fsm_mem_rden2, fsm_mem_we2, fsm_mem_sign;
+    logic [31:0] fsm_mem_addr2, fsm_mem_din2;
+    logic [1:0]  fsm_mem_size;
 
     // ---- D-side datapath ---------------------------------------------------
     logic dc_hit, dc_miss, dc_cacheable, dc_enable_write, dc_last;
@@ -331,12 +337,12 @@ module LoadStoreUnit
         .l2_fill_write(l2_fill_write),
         .l2_fill_select(l2_fill_select),
         .l2_fill_last(l2_fill_last),
-        .mem_rden2(mem_rden2),
-        .mem_we2(mem_we2),
-        .mem_addr2(mem_addr2),
-        .mem_din2(mem_din2),
-        .mem_size(mem_size),
-        .mem_sign(mem_sign),
+        .mem_rden2(fsm_mem_rden2),
+        .mem_we2(fsm_mem_we2),
+        .mem_addr2(fsm_mem_addr2),
+        .mem_din2(fsm_mem_din2),
+        .mem_size(fsm_mem_size),
+        .mem_sign(fsm_mem_sign),
         .storebufDrainAccept(sb_drain_accept),
         .miss_start(dcache_miss_start),
         .busy(fsm_busy),
@@ -355,9 +361,7 @@ module LoadStoreUnit
 
     // ---- atomics -----------------------------------------------------------
     assign atomic_valid = (at_state == AT_WRITE);
-    assign atomic_op = at_op;
-    assign atomic_addr = at_addr;
-    assign atomic_wdata = at_wdata;
+    assign at_new = atomic_new_word(at_op, at_old, at_wdata);
     assign atomic_sc_ok = reservation_q && (at_op == ATOMIC_SC) &&
                           (reservation_addr_q == at_addr[31:2]);
     assign atomic_write_intent = atomic_valid &&
@@ -370,6 +374,42 @@ module LoadStoreUnit
                                      (commit_store && reservation_q &&
                                       (reservation_addr_q == sq_oldest.addr[31:2]));
     assign reservation_valid = reservation_q;
+
+    // Memory port: the D-cache FSM, or the running atomic. An atomic starts
+    // only with the store buffer empty and no load in flight, so the FSM is
+    // idle while it runs.
+    always_comb begin
+        mem_rden2 = fsm_mem_rden2;
+        mem_we2 = fsm_mem_we2;
+        mem_addr2 = fsm_mem_addr2;
+        mem_din2 = fsm_mem_din2;
+        mem_size = fsm_mem_size;
+        mem_sign = fsm_mem_sign;
+        if (at_state != AT_IDLE) begin
+            mem_rden2 = (at_state == AT_READ);
+            mem_we2 = atomic_write_intent;
+            mem_addr2 = at_addr;
+            mem_din2 = at_new;
+            mem_size = 2'd2;
+            mem_sign = 1'b0;    // the memory's word read is coded with sign 0
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            atomic_commit_valid <= 1'b0;
+        end else begin
+            atomic_commit_valid <= atomic_valid;
+            if (atomic_valid) begin
+                atomic_commit_write <= atomic_write_intent;
+                atomic_commit_op <= at_op;
+                atomic_commit_sc_success <= (at_op == ATOMIC_SC) && atomic_write_intent;
+                atomic_commit_addr <= at_addr;
+                atomic_commit_old_word <= at_old;
+                atomic_commit_new_word <= at_new;
+            end
+        end
+    end
 
     // Store-queue entries older than a squashing branch.
     logic [SQ_BITS:0] sq_keep;
@@ -524,12 +564,13 @@ module LoadStoreUnit
 
                 // Atomic sequence: read the old word, then write.
                 unique case (at_state)
-                    AT_READ: begin
-                        at_old <= atomic_preview_word;
+                    AT_READ: at_state <= AT_WAIT;
+                    AT_WAIT: begin
+                        at_old <= mem_dout2;
                         if (!out_q.valid) at_state <= AT_WRITE;
                     end
                     AT_WRITE: begin
-                        out_q <= completion(at_tag, (at_op == ATOMIC_SC) ? atomic_sc_result : at_old);
+                        out_q <= completion(at_tag, atomic_result_word(at_op, at_old, atomic_sc_ok));
                         at_state <= AT_IDLE;
                     end
                     default: ;
