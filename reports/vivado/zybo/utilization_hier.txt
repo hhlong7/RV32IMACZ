@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2026.1 (win64) Build 6511674 Tue Jun 16 11:02:23 MDT 2026
-| Date         : Sat Oct 24 19:04:49 2026
+| Date         : Sat Oct 24 23:46:01 2026
 | Host         : L-Zenbook running 64-bit major release  (build 9200)
 | Command      : report_utilization -hierarchical -hierarchical_depth 3 -file C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/zybo/utilization_hier.txt
 | Design       : zybo_top
@@ -22,52 +22,52 @@ Table of Contents
 +----------------------------+--------------------------------------+------------+------------+---------+------+-------+--------+--------+------------+
 |          Instance          |                Module                | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs  | RAMB36 | RAMB18 | DSP Blocks |
 +----------------------------+--------------------------------------+------------+------------+---------+------+-------+--------+--------+------------+
-| zybo_top                   |                                (top) |      41985 |      41437 |     548 |    0 | 22860 |     48 |      0 |          6 |
+| zybo_top                   |                                (top) |      41959 |      41411 |     548 |    0 | 22859 |     48 |      0 |          6 |
 |   (zybo_top)               |                                (top) |          1 |          1 |       0 |    0 |    26 |      0 |      0 |          0 |
-|   CPU                      |                            OTTER_MCU |      41917 |      41375 |     542 |    0 | 22771 |     48 |      0 |          6 |
-|     (CPU)                  |                            OTTER_MCU |         98 |         98 |       0 |    0 |   994 |      0 |      0 |          0 |
-|     FETCH_SLOT0_EXPANDER   |                          RVCExpander |        199 |        199 |       0 |    0 |     0 |      0 |      0 |          0 |
+|   CPU                      |                            OTTER_MCU |      41889 |      41347 |     542 |    0 | 22770 |     48 |      0 |          6 |
+|     (CPU)                  |                            OTTER_MCU |         98 |         98 |       0 |    0 |   993 |      0 |      0 |          0 |
+|     FETCH_SLOT0_EXPANDER   |                          RVCExpander |        198 |        198 |       0 |    0 |     0 |      0 |      0 |          0 |
 |     FETCH_SLOT1_BUILDER    |              FrontendPacketBuilder_0 |         74 |         74 |       0 |    0 |     0 |      0 |      0 |          0 |
-|     FETCH_SLOT1_EXPANDER   |                        RVCExpander_1 |        190 |        190 |       0 |    0 |     0 |      0 |      0 |          0 |
+|     FETCH_SLOT1_EXPANDER   |                        RVCExpander_1 |        180 |        180 |       0 |    0 |     0 |      0 |      0 |          0 |
 |     OTTER_ALU              |                                  ALU |        229 |        229 |       0 |    0 |     0 |      0 |      0 |          0 |
 |     OTTER_ALU1             |                                ALU_2 |        229 |        229 |       0 |    0 |     0 |      0 |      0 |          0 |
-|     OTTER_BRANCH_GEN       |                      BranchGenerator |        198 |        198 |       0 |    0 |     0 |      0 |      0 |          0 |
+|     OTTER_BRANCH_GEN       |                      BranchGenerator |        199 |        199 |       0 |    0 |     0 |      0 |      0 |          0 |
 |       (OTTER_BRANCH_GEN)   |                      BranchGenerator |         65 |         65 |       0 |    0 |     0 |      0 |      0 |          0 |
 |       branch_addr_gen      |                                  BAG |         69 |         69 |       0 |    0 |     0 |      0 |      0 |          0 |
-|       branch_comp          |                                  BCG |         65 |         65 |       0 |    0 |     0 |      0 |      0 |          0 |
-|     OTTER_BRANCH_PREDICTOR |                      BranchPredictor |       1059 |        963 |      96 |    0 |  1189 |      0 |      0 |          0 |
-|     OTTER_CACHE            |                                Cache |       3620 |       3620 |       0 |    0 |  4588 |      0 |      0 |          0 |
+|       branch_comp          |                                  BCG |         66 |         66 |       0 |    0 |     0 |      0 |      0 |          0 |
+|     OTTER_BRANCH_PREDICTOR |                      BranchPredictor |       1057 |        961 |      96 |    0 |  1189 |      0 |      0 |          0 |
+|     OTTER_CACHE            |                                Cache |       3593 |       3593 |       0 |    0 |  4588 |      0 |      0 |          0 |
 |       (OTTER_CACHE)        |                                Cache |         10 |         10 |       0 |    0 |  4125 |      0 |      0 |          0 |
-|       TAGS                 |                           cache_tags |       3610 |       3610 |       0 |    0 |   463 |      0 |      0 |          0 |
+|       TAGS                 |                           cache_tags |       3583 |       3583 |       0 |    0 |   463 |      0 |      0 |          0 |
 |     OTTER_CDB_ARBITER      |                           CdbArbiter |        419 |        419 |       0 |    0 |     0 |      0 |      0 |          0 |
-|     OTTER_CSR_FILE         |                             CSR_FILE |        631 |        631 |       0 |    0 |  1337 |      0 |      0 |          0 |
-|     OTTER_FP_ADDER         |                             fp_adder |       1150 |       1150 |       0 |    0 |   185 |      0 |      0 |          0 |
+|     OTTER_CSR_FILE         |                             CSR_FILE |        630 |        630 |       0 |    0 |  1337 |      0 |      0 |          0 |
+|     OTTER_FP_ADDER         |                             fp_adder |       1148 |       1148 |       0 |    0 |   185 |      0 |      0 |          0 |
 |     OTTER_FP_DIVIDER       |                           fp_divider |       1074 |       1074 |       0 |    0 |   188 |      0 |      0 |          0 |
-|     OTTER_FP_MULTIPLIER    |                        fp_multiplier |       1041 |       1041 |       0 |    0 |    94 |      0 |      0 |          2 |
+|     OTTER_FP_MULTIPLIER    |                        fp_multiplier |       1046 |       1046 |       0 |    0 |    94 |      0 |      0 |          2 |
 |     OTTER_FP_REG_FILE      |                          FP_REG_FILE |       1408 |       1408 |       0 |    0 |  1024 |      0 |      0 |          0 |
 |     OTTER_IMEM             |                                 imem |        129 |        129 |       0 |    0 |     0 |     16 |      0 |          0 |
 |     OTTER_IMEM_PREFETCH    |                               imem_3 |        128 |        128 |       0 |    0 |    27 |     16 |      0 |          0 |
 |     OTTER_INT_DIVIDER      |                           IntDivider |        205 |        205 |       0 |    0 |   139 |      0 |      0 |          0 |
 |     OTTER_INT_MULTIPLIER   |                        IntMultiplier |         73 |         73 |       0 |    0 |    71 |      0 |      0 |          4 |
-|     OTTER_LSU              |                        LoadStoreUnit |       7698 |       7476 |     222 |    0 |  6005 |      0 |      0 |          0 |
+|     OTTER_LSU              |                        LoadStoreUnit |       7692 |       7470 |     222 |    0 |  6005 |      0 |      0 |          0 |
 |       (OTTER_LSU)          |                        LoadStoreUnit |       1075 |       1075 |       0 |    0 |   571 |      0 |      0 |          0 |
 |       DCACHE               |                            datacache |       3054 |       3054 |       0 |    0 |  4559 |      0 |      0 |          0 |
-|       DCACHE_FSM           |                         datacachefsm |        451 |        451 |       0 |    0 |     8 |      0 |      0 |          0 |
-|       MEMQ                 |   ReservationStation__parameterized1 |       2092 |       2092 |       0 |    0 |   860 |      0 |      0 |          0 |
-|       STORE_BUFFER         |                          StoreBuffer |       1037 |        815 |     222 |    0 |     7 |      0 |      0 |          0 |
-|     OTTER_MEMORY           |                               Memory |         47 |         47 |       0 |    0 |   168 |     16 |      0 |          0 |
+|       DCACHE_FSM           |                         datacachefsm |        449 |        449 |       0 |    0 |     8 |      0 |      0 |          0 |
+|       MEMQ                 |   ReservationStation__parameterized1 |       2091 |       2091 |       0 |    0 |   860 |      0 |      0 |          0 |
+|       STORE_BUFFER         |                          StoreBuffer |       1038 |        816 |     222 |    0 |     7 |      0 |      0 |          0 |
+|     OTTER_MEMORY           |                               Memory |         48 |         48 |       0 |    0 |   168 |     16 |      0 |          0 |
 |       MMIO_BLOCK           |                           OTTER_MMIO |         32 |         32 |       0 |    0 |   168 |      0 |      0 |          0 |
-|     OTTER_RAT              |                          RenameTable |       2387 |       2387 |       0 |    0 |  1600 |      0 |      0 |          0 |
+|     OTTER_RAT              |                          RenameTable |       2388 |       2388 |       0 |    0 |  1600 |      0 |      0 |          0 |
 |     OTTER_REG_FILE         |                             REG_FILE |       1536 |       1536 |       0 |    0 |   992 |      0 |      0 |          0 |
-|     OTTER_ROB              |                        ReorderBuffer |      11239 |      11015 |     224 |    0 |  1300 |      0 |      0 |          0 |
-|     RS_ALU                 |                   ReservationStation |       3235 |       3235 |       0 |    0 |  1168 |      0 |      0 |          0 |
-|     RS_BR                  |   ReservationStation__parameterized0 |       1398 |       1398 |       0 |    0 |   876 |      0 |      0 |          0 |
-|     RS_FADD                |   ReservationStation__parameterized2 |        611 |        611 |       0 |    0 |   166 |      0 |      0 |          0 |
-|     RS_FDIV                | ReservationStation__parameterized2_4 |        622 |        622 |       0 |    0 |   164 |      0 |      0 |          0 |
-|     RS_FMUL                | ReservationStation__parameterized2_5 |        252 |        252 |       0 |    0 |   164 |      0 |      0 |          0 |
+|     OTTER_ROB              |                        ReorderBuffer |      11244 |      11020 |     224 |    0 |  1300 |      0 |      0 |          0 |
+|     RS_ALU                 |                   ReservationStation |       3236 |       3236 |       0 |    0 |  1168 |      0 |      0 |          0 |
+|     RS_BR                  |   ReservationStation__parameterized0 |       1397 |       1397 |       0 |    0 |   876 |      0 |      0 |          0 |
+|     RS_FADD                |   ReservationStation__parameterized2 |        613 |        613 |       0 |    0 |   166 |      0 |      0 |          0 |
+|     RS_FDIV                | ReservationStation__parameterized2_4 |        624 |        624 |       0 |    0 |   164 |      0 |      0 |          0 |
+|     RS_FMUL                | ReservationStation__parameterized2_5 |        250 |        250 |       0 |    0 |   164 |      0 |      0 |          0 |
 |     RS_IDIV                | ReservationStation__parameterized2_6 |        381 |        381 |       0 |    0 |   162 |      0 |      0 |          0 |
 |     RS_IMUL                |   ReservationStation__parameterized3 |        379 |        379 |       0 |    0 |   166 |      0 |      0 |          0 |
-|   UART                     |                                 uart |         68 |         62 |       6 |    0 |    63 |      0 |      0 |          0 |
+|   UART                     |                                 uart |         69 |         63 |       6 |    0 |    63 |      0 |      0 |          0 |
 +----------------------------+--------------------------------------+------------+------------+---------+------+-------+--------+--------+------------+
 * Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
 
