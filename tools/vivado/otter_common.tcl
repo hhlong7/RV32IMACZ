@@ -4,10 +4,23 @@ set otter_root [file normalize [file join [file dirname [info script]] .. ..]]
 
 # Start from a clean slate: in non-project mode Vivado keeps every file read
 # and the last design in memory across `source` runs in the same session, so
-# a later run would otherwise also compile the earlier run's files.
+# a later run would otherwise also compile the earlier run's files. Only
+# close what is open: Vivado reports "No open project" as an error even
+# inside catch, and that stops a sourced script.
 proc otter_reset_session {} {
-    catch {close_design}
-    catch {close_project}
+    if {[llength [get_projects -quiet]] > 0} { close_project }
+    if {[llength [current_design -quiet]] > 0} { close_design }
+}
+
+# A memory image given as a full path, a path relative to the current
+# directory or to the repository, or a bare file name in board/zybo.
+proc otter_find_program {program} {
+    global otter_root
+    foreach candidate [list $program [file join $otter_root $program] \
+                           [file join $otter_root board zybo $program]] {
+        if {[file isfile $candidate]} { return [file normalize $candidate] }
+    }
+    error "Program image '$program' not found (tried it as given, under $otter_root, and in board/zybo)."
 }
 
 # Every RTL file in rtl.f, in order (packages first), as absolute paths.

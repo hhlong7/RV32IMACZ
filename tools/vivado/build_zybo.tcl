@@ -10,7 +10,8 @@
 #
 # Options (key=value after -tclargs, or set as variables before sourcing):
 #   program=<file>   memory image to load (default board/zybo/zybo_hello.mem,
-#                    built from software/zybo_hello)
+#                    built from software/zybo_hello); a full path, a path in
+#                    the repository, or a name in board/zybo (coremark.mem)
 #   impl=0           stop after synthesis (resources and estimated timing,
 #                    no bitstream); default impl=1 builds the bitstream
 #
@@ -32,6 +33,8 @@ foreach arg [expr {[info exists argv] ? $argv : {}}] {
     if {[regexp {^program=(.+)$} $arg -> v]} { set program [file normalize $v] }
     if {[regexp {^impl=(.+)$} $arg -> v]} { set impl $v }
 }
+set program [otter_find_program $program]
+puts "Program image: $program"
 otter_reset_session
 set part xc7z020clg400-1
 set build [file join $root build zybo]
