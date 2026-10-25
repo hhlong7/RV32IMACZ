@@ -34,6 +34,19 @@ uint64_t platform_read_mtime(void)
     return ((uint64_t) hi_after << 32) | lo;
 }
 
+#ifdef OTTER_BOARD_ZYBO
+void platform_uart_putc(char c)
+{
+    volatile uint32_t * const data = (volatile uint32_t *) OTTER_MMIO_UART_DATA_ADDR;
+    volatile uint32_t * const status = (volatile uint32_t *) OTTER_MMIO_UART_STATUS_ADDR;
+
+    /* Status bit 0: the transmitter can take a byte. */
+    while ((*status & 1U) == 0U) {
+    }
+    *data = (uint8_t) c;
+}
+#endif
+
 void platform_install_trap_vector(void *handler)
 {
     uintptr_t base = (uintptr_t) handler;

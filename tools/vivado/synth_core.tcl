@@ -33,6 +33,7 @@ foreach arg [expr {[info exists argv] ? $argv : {}}] {
 }
 set here [file dirname [file normalize [info script]]]
 source [file join $here otter_common.tcl]
+otter_reset_session
 set root $otter_root
 set out  [file join $root reports vivado $part]
 file mkdir $out

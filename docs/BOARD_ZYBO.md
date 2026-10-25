@@ -10,6 +10,7 @@ Z7-20 (Zynq-7020, `xc7z020clg400-1`). The ARM processing system is not used.
 | Serial port, 115200 8N1, 16-byte receive queue | `board/uart.sv` |
 | Demo program (source) | `software/zybo_hello/main.c` |
 | Demo program (memory image the build loads) | `board/zybo/zybo_hello.mem` |
+| FreeRTOS + CoreMark for the board | `board/zybo/coremark.mem` (`make zybo` in `software/freertos_coremark`) |
 | Build to bitstream | `tools/vivado/build_zybo.tcl` |
 | Load the bitstream onto the board | `tools/vivado/program_zybo.tcl` |
 | Board-level simulation | `tools/run_board_test.sh` (`board/zybo/tb_zybo.sv`) |
@@ -99,6 +100,32 @@ BTN0 restarts the program. The design is lost at power-off; program it again.
 To open the design in the Vivado GUI instead (elaborated schematic, then
 Run Synthesis / Implementation / Generate Bitstream from the Flow Navigator):
 `source tools/vivado/create_project.tcl`.
+
+## Running CoreMark on the board
+
+`board/zybo/coremark.mem` is the FreeRTOS + CoreMark program built for the
+board (`make zybo` in `software/freertos_coremark`). CoreMark calibrates
+itself to a valid timed run of at least 10 seconds. Build the bitstream with it:
+
+```text
+set program C:/Users/hhlon/Documents/RV32IMACZ/board/zybo/coremark.mem
+source tools/vivado/build_zybo.tcl
+source tools/vivado/program_zybo.tcl
+```
+
+| LEDs | Meaning |
+| --- | --- |
+| LD6 solid blue | CoreMark is running (about 30 seconds: 10 of calibration, then the timed run) |
+| Everything blinking (LD0-LD3, LD5 and LD6 green) | finished, and CoreMark validated its results |
+| Everything blinking, LD5 and LD6 red | finished, but CoreMark reported errors |
+
+With a terminal connected, CoreMark's full report appears, followed by the
+score (`CoreMark/MHz`, iterations per second at 37.5 MHz). BTN0 runs it
+again. Vivado keeps `program` set for the rest of the session; `unset
+program` (or restarting Vivado) returns to the demo.
+
+`tools/run_board_test.sh coremark` simulates this on the board top with a
+pretend 20 kHz clock, so the 10-second run fits in a short simulation.
 
 ## Running another program
 

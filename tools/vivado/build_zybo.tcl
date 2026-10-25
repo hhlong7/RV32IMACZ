@@ -11,6 +11,12 @@
 # Options (key=value after -tclargs, or set as variables before sourcing):
 #   program=<file>   memory image to load (default board/zybo/zybo_hello.mem,
 #                    built from software/zybo_hello)
+#   impl=0           stop after synthesis (resources and estimated timing,
+#                    no bitstream); default impl=1 builds the bitstream
+#
+# For example, synthesis only, from the Tcl Console:
+#   set impl 0
+#   source tools/vivado/build_zybo.tcl
 #
 # Writes build/zybo/zybo_top.bit (not tracked by git) and the reports to
 # reports/vivado/zybo/ (tracked). Then load the bitstream onto the board with
@@ -21,9 +27,12 @@ source [file join $here otter_common.tcl]
 set root $otter_root
 
 if {![info exists program]} { set program [file join $root board zybo zybo_hello.mem] }
+if {![info exists impl]} { set impl 1 }
 foreach arg [expr {[info exists argv] ? $argv : {}}] {
     if {[regexp {^program=(.+)$} $arg -> v]} { set program [file normalize $v] }
+    if {[regexp {^impl=(.+)$} $arg -> v]} { set impl $v }
 }
+otter_reset_session
 set part xc7z020clg400-1
 set build [file join $root build zybo]
 set out [file join $root reports vivado zybo]
@@ -39,6 +48,15 @@ read_xdc [file join $root board zybo zybo.xdc]
 
 synth_design -top zybo_top -part $part -verilog_define SYNTHESIS
 write_summary "Zybo Z7-20 build" "after synthesis" $out
+
+if {!$impl} {
+    report_utilization -file [file join $out utilization_synth.txt]
+    report_utilization -hierarchical -hierarchical_depth 3 -file [file join $out utilization_hier_synth.txt]
+    report_timing_summary -max_paths 10 -file [file join $out timing_summary_synth.txt]
+    cd $root
+    puts "Synthesis done (impl=0). Reports: $out"
+    return
+}
 
 opt_design
 place_design

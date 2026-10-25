@@ -3,9 +3,15 @@
 
 #include <stdint.h>
 
+/* The timer counts core clock cycles (see platform.h; also included from
+ * assembly, so no platform.h here). */
+#ifndef OTTER_CPU_CLOCK_HZ
+#define OTTER_CPU_CLOCK_HZ 100000000ULL
+#endif
+
 #define configUSE_PREEMPTION                     1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
-#define configCPU_CLOCK_HZ                      100000000UL
+#define configCPU_CLOCK_HZ                      OTTER_CPU_CLOCK_HZ
 #define configTICK_RATE_HZ                      10
 #define configMAX_PRIORITIES                    4
 #define configMINIMAL_STACK_SIZE                256

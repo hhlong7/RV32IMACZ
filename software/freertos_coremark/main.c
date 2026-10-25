@@ -8,6 +8,72 @@
 extern void freertos_risc_v_trap_handler(void);
 extern int coremark_main(void);
 
+#ifdef OTTER_BOARD_ZYBO
+/* CoreMark's verdict and run length, captured by ee_printf (core_portme.c). */
+extern volatile int otter_coremark_validated;
+extern volatile int otter_coremark_errors;
+extern volatile uint32_t otter_coremark_iterations;
+extern uint32_t get_time(void);
+
+static void print(const char *s)
+{
+    while (*s) {
+        if (*s == '\n') {
+            platform_uart_putc('\r');
+        }
+        platform_uart_putc(*s++);
+    }
+}
+
+static void print_fixed3(uint64_t thousandths)
+{
+    char buf[24];
+    int n = 0;
+    uint64_t whole = thousandths / 1000U;
+
+    do {
+        buf[n++] = (char) ('0' + whole % 10U);
+        whole /= 10U;
+    } while (whole != 0U);
+    while (n > 0) {
+        platform_uart_putc(buf[--n]);
+    }
+    platform_uart_putc('.');
+    platform_uart_putc((char) ('0' + (thousandths / 100U) % 10U));
+    platform_uart_putc((char) ('0' + (thousandths / 10U) % 10U));
+    platform_uart_putc((char) ('0' + thousandths % 10U));
+}
+
+/* Report the score over the UART, then blink every LED forever: green if
+ * CoreMark validated its results, red if it found errors. */
+static void board_finish(void)
+{
+    int passed = otter_coremark_validated && !otter_coremark_errors;
+    uint32_t ticks = get_time();
+    uint32_t blink = OTTER_LED_LD0_3 |
+                     (passed ? (OTTER_LED5_GREEN | OTTER_LED6_GREEN) : (OTTER_LED5_RED | OTTER_LED6_RED));
+    uint32_t leds = blink;
+    uint64_t next = platform_read_mtime();
+
+    if (ticks != 0U) {
+        print("\nCoreMark/MHz    : ");
+        print_fixed3((uint64_t) otter_coremark_iterations * 1000000000ULL / ticks);
+        print("\nIterations/Sec  : ");
+        print_fixed3((uint64_t) otter_coremark_iterations * OTTER_CPU_CLOCK_HZ * 1000ULL / ticks);
+        print("\n");
+    }
+    print(passed ? "CoreMark PASSED on the OTTER core.\n" : "CoreMark FAILED.\n");
+
+    for (;;) {
+        platform_write_leds(leds);
+        next += OTTER_CPU_CLOCK_HZ / 4U;        /* 4 changes a second */
+        while (platform_read_mtime() < next) {
+        }
+        leds ^= blink;
+    }
+}
+#endif
+
 /* Route unexpected synchronous exceptions to a visible failure code so the
  * RTL testbench can distinguish trap-entry bugs from software failures. */
 void freertos_risc_v_application_exception_handler(void)
@@ -44,9 +110,23 @@ static void coremark_task(void *context)
 
     (void) context;
 
+#ifdef OTTER_BOARD_ZYBO
+    /* LD6 blue while the benchmark runs: about 10 seconds of calibration, then
+     * the timed run of at least 10 seconds (about 30 seconds at 37.5 MHz). */
+    platform_write_leds(OTTER_LED6_BLUE);
+    print("\n\nOTTER RV32IMAC on a Zybo Z7-20: running CoreMark (about 30 seconds)...\n");
+#endif
+
     start_cycles = platform_read_mtime();
     result = coremark_main();
     end_cycles = platform_read_mtime();
+
+#ifdef OTTER_BOARD_ZYBO
+    (void) start_cycles;
+    (void) end_cycles;
+    (void) result;
+    board_finish();
+#endif
 
     /* Reuse LEDs as a cheap cycle-count output for the simulation transcript. */
     platform_write_leds((uint32_t) (end_cycles - start_cycles));

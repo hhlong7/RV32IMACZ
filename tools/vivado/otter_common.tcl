@@ -2,6 +2,14 @@
 
 set otter_root [file normalize [file join [file dirname [info script]] .. ..]]
 
+# Start from a clean slate: in non-project mode Vivado keeps every file read
+# and the last design in memory across `source` runs in the same session, so
+# a later run would otherwise also compile the earlier run's files.
+proc otter_reset_session {} {
+    catch {close_design}
+    catch {close_project}
+}
+
 # Every RTL file in rtl.f, in order (packages first), as absolute paths.
 proc otter_sources {} {
     global otter_root

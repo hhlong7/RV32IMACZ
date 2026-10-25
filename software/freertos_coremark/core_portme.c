@@ -58,12 +58,130 @@ void portable_free(void *p)
     (void) p;
 }
 
+#ifdef OTTER_BOARD_ZYBO
+/* What CoreMark reported, for the board's pass/fail LEDs (main.c). */
+volatile int otter_coremark_validated = 0;   /* "Correct operation validated" */
+volatile int otter_coremark_errors = 0;      /* "Errors detected" or "ERROR!" */
+volatile ee_u32 otter_coremark_iterations = 0;
+
+static int starts_with(const char *s, const char *prefix)
+{
+    while (*prefix) {
+        if (*s++ != *prefix++) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void out_char(char c)
+{
+    if (c == '\n') {
+        platform_uart_putc('\r');
+    }
+    platform_uart_putc(c);
+}
+
+static void out_unsigned(ee_u32 v, unsigned base, int width, char pad)
+{
+    char buf[12];
+    int n = 0;
+
+    do {
+        buf[n++] = "0123456789abcdef"[v % base];
+        v /= base;
+    } while (v != 0U);
+    while (n < width--) {
+        out_char(pad);
+    }
+    while (n > 0) {
+        out_char(buf[--n]);
+    }
+}
+
+/* The subset of printf CoreMark uses: %d %u %lu %x %s %c, with a width and
+ * zero padding (%04x). */
 int ee_printf(const char *fmt, ...)
 {
     va_list args;
 
+    if (starts_with(fmt, "Correct operation validated")) {
+        otter_coremark_validated = 1;
+    }
+    if (starts_with(fmt, "Errors detected") || starts_with(fmt, "ERROR")) {
+        otter_coremark_errors = 1;
+    }
+
+    va_start(args, fmt);
+    if (starts_with(fmt, "Iterations       :")) {
+        va_list copy;
+        va_copy(copy, args);
+        otter_coremark_iterations = va_arg(copy, ee_u32);
+        va_end(copy);
+    }
+    for (const char *p = fmt; *p; p++) {
+        char pad = ' ';
+        int width = 0;
+
+        if (*p != '%') {
+            out_char(*p);
+            continue;
+        }
+        p++;
+        if (*p == '0') {
+            pad = '0';
+            p++;
+        }
+        while (*p >= '0' && *p <= '9') {
+            width = width * 10 + (*p++ - '0');
+        }
+        while (*p == 'l') {
+            p++;
+        }
+        switch (*p) {
+        case 'd': {
+            ee_s32 v = va_arg(args, ee_s32);
+            if (v < 0) {
+                out_char('-');
+                v = -v;
+            }
+            out_unsigned((ee_u32) v, 10U, width, pad);
+            break;
+        }
+        case 'u':
+            out_unsigned(va_arg(args, ee_u32), 10U, width, pad);
+            break;
+        case 'x':
+            out_unsigned(va_arg(args, ee_u32), 16U, width, pad);
+            break;
+        case 's':
+            for (const char *s = va_arg(args, const char *); *s; s++) {
+                out_char(*s);
+            }
+            break;
+        case 'c':
+            out_char((char) va_arg(args, int));
+            break;
+        case '\0':
+            p--;
+            break;
+        default:
+            out_char(*p);
+            break;
+        }
+    }
+    va_end(args);
+    return 0;
+}
+#else
+/* The simulation build has no UART; CoreMark's report is dropped, which also
+ * keeps this workload's cycle count comparable across snapshots. */
+int ee_printf(const char *fmt, ...)
+{
+    va_list args;
     va_start(args, fmt);
     va_end(args);
     (void) fmt;
     return 0;
 }
+#endif
