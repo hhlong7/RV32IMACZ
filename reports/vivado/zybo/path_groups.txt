@@ -1,0 +1,23 @@
+Worst setup path per (start module -> end module), from the 5000 worst endpoints
+   slack  lvl  modules                                                       start pin -> end pin
+  -0.115   29  CPU -> CPU                                                    CPU/pc_out_reg[7]/C -> CPU/pc_out_reg[8]_replica/D
+   0.478   26  CPU -> CPU/OTTER_BRANCH_PREDICTOR                             CPU/pc_out_reg[14]/C -> CPU/OTTER_BRANCH_PREDICTOR/ghr_spec_reg[0]/CE
+   1.221   29  CPU/OTTER_ROB -> CPU/RS_ALU                                   CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_ALU/slots_reg[6][src1][7]/CE
+   1.294   32  CPU/OTTER_FP_MULTIPLIER -> CPU/OTTER_FP_MULTIPLIER            CPU/OTTER_FP_MULTIPLIER/s2_q_reg[product]/CLK -> CPU/OTTER_FP_MULTIPLIER/s3_result_q_reg[12]/D
+   1.502   23  CPU/OTTER_ROB -> CPU/OTTER_LSU                                CPU/OTTER_ROB/head_reg[0]_rep__10/C -> CPU/OTTER_LSU/sq_reg[3][data][15]/CE
+   2.095   26  CPU/OTTER_ROB -> CPU                                          CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/pc_out_reg[7]/CE
+   2.211   34  CPU/OTTER_FP_DIVIDER -> CPU/OTTER_FP_DIVIDER                  CPU/OTTER_FP_DIVIDER/quotient_reg[15]/C -> CPU/OTTER_FP_DIVIDER/rounded_q_reg[19]/D
+   2.250   23  CPU/OTTER_ROB -> CPU/OTTER_CSR_FILE                           CPU/OTTER_ROB/head_reg[0]_rep__10/C -> CPU/OTTER_CSR_FILE/hpm_event_q_reg[14]/D
+   2.656   28  CPU/OTTER_ROB -> CPU/RS_IMUL                                  CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_IMUL/slots_reg[0][src2_ready]/D
+   3.095   24  CPU/OTTER_ROB -> CPU/RS_FDIV                                  CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_FDIV/slots_reg[1][src2][21]/D
+   3.177   25  CPU/OTTER_ROB -> CPU/RS_BR                                    CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_BR/slots_reg[3][src2_tag][3]/D
+   3.390   24  CPU/OTTER_ROB -> CPU/RS_IDIV                                  CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_IDIV/slots_reg[1][src2][6]/D
+   3.606   25  CPU/OTTER_ROB -> CPU/OTTER_RAT                                CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/OTTER_RAT/reg_g[5].ck_g[2].ck_busy_reg[2][5]/D
+   3.978   22  CPU/OTTER_LSU -> (top)                                        CPU/OTTER_LSU/STORE_BUFFER/count_q_reg[1]/C -> leds_q_reg[4]/CE
+   4.152   21  CPU/OTTER_LSU -> CPU/OTTER_LSU                                CPU/OTTER_LSU/STORE_BUFFER/count_q_reg[1]/C -> CPU/OTTER_LSU/DCACHE/data_reg[4][6][20]/D
+   4.272   22  CPU/OTTER_ROB -> CPU/OTTER_FP_ADDER                           CPU/OTTER_ROB/head_reg[0]_rep__13/C -> CPU/OTTER_FP_ADDER/s1_q_reg[small_sig][32]/D
+   4.356   16  CPU/OTTER_LSU -> CPU/OTTER_IMEM                               CPU/OTTER_LSU/STORE_BUFFER/count_q_reg[1]/C -> CPU/OTTER_IMEM/g_bank[4].ram_reg_1/DIADI[15]
+   4.387   24  CPU/OTTER_ROB -> CPU/RS_FADD                                  CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_FADD/slots_reg[0][src2][19]/D
+   4.405   22  CPU/OTTER_ROB -> CPU/RS_FMUL                                  CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/RS_FMUL/slots_reg[0][src2][11]/D
+   4.693   22  CPU/OTTER_LSU -> UART                                         CPU/OTTER_LSU/STORE_BUFFER/count_q_reg[1]/C -> UART/tx_count_reg[0]/R
+   4.716   25  CPU/OTTER_ROB -> CPU/OTTER_CACHE_FSM                          CPU/OTTER_ROB/head_reg[1]_rep__2/C -> CPU/OTTER_CACHE_FSM/FSM_sequential_PS_reg_rep__0/D

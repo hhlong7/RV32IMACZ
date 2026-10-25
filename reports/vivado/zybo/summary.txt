@@ -1,0 +1,22 @@
+==================== Zybo Z7-20 build (after place and route) ====================
+LUTs (total)         41985
+  LUT as Logic       41437
+  LUT as Memory        548
+Flip-flops           22860
+DSP48 slices             6
+Block RAM tiles         48
+Clock target        26.667 ns (37.5 MHz)
+Worst setup slack   -0.115 ns  -> FAILED
+Estimated Fmax        37.3 MHz (after place and route)
+Worst path per module pair (slack ns, logic levels, modules); all in path_groups.txt:
+    -0.115   29  CPU -> CPU                                                    CPU/
+     0.478   26  CPU -> CPU/OTTER_BRANCH_PREDICTOR                             CPU/
+     1.221   29  CPU/OTTER_ROB -> CPU/RS_ALU                                   CPU/
+     1.294   32  CPU/OTTER_FP_MULTIPLIER -> CPU/OTTER_FP_MULTIPLIER            CPU/
+     1.502   23  CPU/OTTER_ROB -> CPU/OTTER_LSU                                CPU/
+     2.095   26  CPU/OTTER_ROB -> CPU                                          CPU/
+     2.211   34  CPU/OTTER_FP_DIVIDER -> CPU/OTTER_FP_DIVIDER                  CPU/
+     2.250   23  CPU/OTTER_ROB -> CPU/OTTER_CSR_FILE                           CPU/
+     2.656   28  CPU/OTTER_ROB -> CPU/RS_IMUL                                  CPU/
+     3.095   24  CPU/OTTER_ROB -> CPU/RS_FDIV                                  CPU/
+Full reports: C:/Users/hhlon/Documents/RV32IMACZ/reports/vivado/zybo
