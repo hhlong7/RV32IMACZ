@@ -4,7 +4,7 @@
 // Target: Digilent Zybo Z7-20 (Zynq-7020, xc7z020clg400-1), programmable
 //         logic only (the ARM processing system is not used).
 // Description:
-//   The OTTER core with its block-RAM memories, a 37.5 MHz clock from the
+//   The OTTER core with its block-RAM memories, a 35.7 MHz clock from the
 //   board's 125 MHz oscillator, and these memory-mapped devices:
 //
 //     0x11000000  read   switches: [3:0] SW3..SW0, [6:4] BTN3..BTN1
@@ -27,7 +27,7 @@
 //   JE3, and ground to JE5).
 //////////////////////////////////////////////////////////////////////////////////
 module zybo_top #(
-    parameter int CLK_HZ = 37_500_000,      // core clock (keep in step with the MMCM)
+    parameter int CLK_HZ = 35_714_286,      // core clock (keep in step with the MMCM)
     parameter int BAUD = 115_200
 ) (
     input  logic       sysclk,              // 125 MHz
@@ -52,7 +52,8 @@ module zybo_top #(
     logic clk, locked;
 
 `ifdef SYNTHESIS
-    // 125 MHz x 6 = 750 MHz VCO, / 20 = 37.5 MHz.
+    // 125 MHz x 6 = 750 MHz VCO, / 21 = 35.714 MHz. (/ 20 = 37.5 MHz missed
+    // timing by 0.1 ns on the fetch loop; / 21 leaves about 1.2 ns.)
     logic clkfb, clkfb_buf, clk_mmcm;
 
     MMCME2_BASE #(
@@ -60,7 +61,7 @@ module zybo_top #(
         .CLKIN1_PERIOD(8.000),
         .DIVCLK_DIVIDE(1),
         .CLKFBOUT_MULT_F(6.000),
-        .CLKOUT0_DIVIDE_F(20.000),
+        .CLKOUT0_DIVIDE_F(21.000),
         .CLKOUT0_DUTY_CYCLE(0.500),
         .CLKOUT0_PHASE(0.000),
         .REF_JITTER1(0.010),

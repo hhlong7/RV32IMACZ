@@ -1,5 +1,5 @@
 # Build the Zybo Z7-20 bitstream: the OTTER core with block-RAM memories,
-# a 37.5 MHz clock, LEDs, switches, buttons, and a UART on Pmod JE
+# a 35.7 MHz clock, LEDs, switches, buttons, and a UART on Pmod JE
 # (board/zybo/zybo_top.sv, board/zybo/zybo.xdc).
 #
 # From the Vivado Tcl Console, after cd to the repository:

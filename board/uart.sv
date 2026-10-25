@@ -14,7 +14,7 @@
 //   still low half a bit after the falling edge.
 //////////////////////////////////////////////////////////////////////////////////
 module uart #(
-    parameter int CLK_HZ = 37_500_000,
+    parameter int CLK_HZ = 35_714_286,
     parameter int BAUD = 115_200,
     parameter int RX_FIFO = 16              // power of two
 ) (

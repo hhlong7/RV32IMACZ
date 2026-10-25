@@ -1,6 +1,6 @@
 # Zybo Z7-20 pins for zybo_top, from Digilent's Zybo-Z7-Master.xdc.
 
-# 125 MHz oscillator (the MMCM in zybo_top derives the 37.5 MHz core clock;
+# 125 MHz oscillator (the MMCM in zybo_top derives the 35.7 MHz core clock;
 # Vivado propagates the generated clock from this constraint).
 set_property -dict { PACKAGE_PIN K17 IOSTANDARD LVCMOS33 } [get_ports { sysclk }];
 create_clock -add -name sys_clk_pin -period 8.00 -waveform {0 4} [get_ports { sysclk }];

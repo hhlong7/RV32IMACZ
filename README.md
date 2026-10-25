@@ -313,7 +313,7 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 
 ## Running On A Zybo Z7-20
 
-The core runs on a Digilent Zybo Z7-20 at 37.5 MHz with 64 KB of block RAM,
+The core runs on a Digilent Zybo Z7-20 at 35.7 MHz with 64 KB of block RAM,
 LEDs, switches, and a UART terminal on Pmod JE. The demo program
 (`software/zybo_hello`) prints a banner, echoes what you type, and shows the
 switches on the LEDs. In the Vivado Tcl Console:

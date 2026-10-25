@@ -118,7 +118,7 @@ int main(void) {
 
         uint64_t now = read_counter_cycle();
         if (now >= next_beat) {
-            next_beat = now + 18750000u;    // half a second at 37.5 MHz
+            next_beat = now + 17857143u;    // half a second at 35.7 MHz
             leds ^= LED6_BLUE;
             LEDS = leds;
         }

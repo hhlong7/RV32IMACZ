@@ -63,6 +63,10 @@ void portable_free(void *p)
 volatile int otter_coremark_validated = 0;   /* "Correct operation validated" */
 volatile int otter_coremark_errors = 0;      /* "Errors detected" or "ERROR!" */
 volatile ee_u32 otter_coremark_iterations = 0;
+/* Which error CoreMark reported, for the board's diagnostic LEDs. */
+volatile int otter_coremark_crc_error = 0;   /* "[n]ERROR! list/matrix/state crc ..." */
+volatile int otter_coremark_time_error = 0;  /* "ERROR! Must execute for at least 10 secs" */
+volatile int otter_coremark_type_error = 0;  /* "ERROR! Please define ..." (data types) */
 
 static int starts_with(const char *s, const char *prefix)
 {
@@ -110,6 +114,16 @@ int ee_printf(const char *fmt, ...)
     }
     if (starts_with(fmt, "Errors detected") || starts_with(fmt, "ERROR")) {
         otter_coremark_errors = 1;
+    }
+    if (starts_with(fmt, "[%d]ERROR") || starts_with(fmt, "[%u]ERROR")) {
+        otter_coremark_errors = 1;
+        otter_coremark_crc_error = 1;
+    }
+    if (starts_with(fmt, "ERROR! Must execute")) {
+        otter_coremark_time_error = 1;
+    }
+    if (starts_with(fmt, "ERROR! Please define")) {
+        otter_coremark_type_error = 1;
     }
 
     va_start(args, fmt);

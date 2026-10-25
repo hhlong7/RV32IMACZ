@@ -17,10 +17,11 @@ Z7-20 (Zynq-7020, `xc7z020clg400-1`). The ARM processing system is not used.
 
 ## What runs
 
-- Core clock: **37.5 MHz**, from the board's 125 MHz oscillator through an
-  MMCM (6 x 125 MHz = 750 MHz, / 20). Post-route timing on the 7020 closes
-  at about 39.6 MHz (the fetch loop is the limit; see
-  [TIMING_CLOSURE_PLAN.md](TIMING_CLOSURE_PLAN.md)).
+- Core clock: **35.7 MHz**, from the board's 125 MHz oscillator through an
+  MMCM (6 x 125 MHz = 750 MHz, / 21). At 37.5 MHz (/ 20) post-route timing
+  missed by 0.1 ns on the fetch loop, and CoreMark failed its self-check on
+  the board; / 21 leaves about 1.2 ns of margin (see
+  [TIMING_CLOSURE_PLAN.md](TIMING_CLOSURE_PLAN.md) for the fetch loop).
 - Memory: 64 KB in block RAM, loaded with the program when the bitstream is
   built. Instructions come from two 8-bank copies (the I-cache refill and the
   next-line prefetch each read a whole 32-byte line per cycle); data from a
@@ -117,10 +118,19 @@ source tools/vivado/program_zybo.tcl
 | --- | --- |
 | LD6 solid blue | CoreMark is running (about 30 seconds: 10 of calibration, then the timed run) |
 | Everything blinking (LD0-LD3, LD5 and LD6 green) | finished, and CoreMark validated its results |
-| Everything blinking, LD5 and LD6 red | finished, but CoreMark reported errors |
+| LD5 and LD6 blinking **red**, LD0-LD3 steady | finished, but CoreMark reported errors; LD0-LD3 say which (below) |
+
+When it fails, the steady LD0-LD3 pattern stands in for CoreMark's report:
+
+| LED on | CoreMark reported |
+| --- | --- |
+| LD0 | a CRC check failed: the benchmark computed wrong results |
+| LD1 | the timed run was shorter than 10 seconds |
+| LD2 | a data-type size check failed |
+| LD3 | "Correct operation validated" (printed anyway) |
 
 With a terminal connected, CoreMark's full report appears, followed by the
-score (`CoreMark/MHz`, iterations per second at 37.5 MHz). BTN0 runs it
+score (`CoreMark/MHz`, iterations per second at 35.7 MHz). BTN0 runs it
 again. Vivado keeps `program` set for the rest of the session; `unset
 program` (or restarting Vivado) returns to the demo.
 
