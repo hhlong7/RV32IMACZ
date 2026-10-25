@@ -4,7 +4,10 @@ This repo contains a simulation-first RISC-V CPU built around a two-wide
 out-of-order core (Tomasulo's algorithm with a reorder buffer) and a practical
 verification flow. The current
 software target is `rv32imac_zicsr_zifencei`, and the repo includes directed
-tests, randomized tests, and a FreeRTOS + CoreMark demo.
+tests, randomized tests, and a FreeRTOS + CoreMark demo. The core runs on a
+Digilent Zybo Z7-20 FPGA board at 35.7 MHz, where FreeRTOS + CoreMark passes
+CoreMark's own result validation (see
+[Running On A Zybo Z7-20](#running-on-a-zybo-z7-20)).
 
 ## Project Overview
 
@@ -29,6 +32,8 @@ tests, randomized tests, and a FreeRTOS + CoreMark demo.
   Actions CI (see [Trying To Break The Out-Of-Order Core](#trying-to-break-the-out-of-order-core))
 - Performance tracking: every core version measured on the same seven
   workloads in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
+- FPGA: runs on a Zybo Z7-20 (Zynq-7020) at 35.7 MHz with 64 KB of block
+  RAM, LEDs, switches, and a UART; FreeRTOS + CoreMark validates on the board
 
 ## Supported ISA
 
@@ -313,19 +318,62 @@ Run on October 21, 2026 on the out-of-order core (milestone 4) with
 
 ## Running On A Zybo Z7-20
 
-The core runs on a Digilent Zybo Z7-20 at 35.7 MHz with 64 KB of block RAM,
-LEDs, switches, and a UART terminal on Pmod JE. The demo program
-(`software/zybo_hello`) prints a banner, echoes what you type, and shows the
-switches on the LEDs. In the Vivado Tcl Console:
+The core runs on a Digilent Zybo Z7-20 (Zynq-7020, programmable logic only)
+at **35.7 MHz**, with 64 KB of block RAM, LEDs, switches, buttons, and a UART
+on Pmod JE.
+
+**FreeRTOS + CoreMark runs on the board and passes.** CoreMark calibrates
+itself to a timed run of at least 10 seconds (about 28 seconds in all at
+35.7 MHz) and checks its own results against reference CRCs; on the board it
+reports "Correct operation validated", and every LED blinks green.
+
+| Post-route, Zybo Z7-20 (`xc7z020clg400-1`) | |
+| --- | ---: |
+| Core clock | 35.7 MHz (125 MHz x 6 / 21 in an MMCM) |
+| Timing | met: setup +0.002 ns, hold +0.035 ns |
+| LUTs | 41,959 of 53,200 (79%) |
+| Flip-flops | 22,859 of 106,400 (21%) |
+| Block RAM | 48 of 140 tiles (64 KB of memory, three copies) |
+| DSP slices | 6 |
+
+The score itself has not been read off the board yet (that needs a
+USB-serial adapter on Pmod JE). In simulation of the same board image the
+core reaches **3.1 CoreMark/MHz**, which would be about 110 CoreMark
+iterations per second at 35.7 MHz.
+
+On the LEDs:
+
+| LEDs | Meaning |
+| --- | --- |
+| LD6 solid blue | CoreMark running |
+| everything blinking, LD5 and LD6 green | finished, results validated |
+| LD5 and LD6 blinking red, LD0-LD3 steady | finished with errors; LD0 wrong results, LD1 run shorter than 10 s, LD2 data-type check, LD3 validated anyway |
+
+To build it and load it onto the board, in the Vivado Tcl Console:
 
 ```text
+cd C:/path/to/RV32IMACZ
+set program coremark.mem
 source tools/vivado/build_zybo.tcl
 source tools/vivado/program_zybo.tcl
 ```
 
-Wiring, the memory map, and running other programs:
+Without `set program`, the build loads the demo program
+(`software/zybo_hello`) instead, which prints a banner, echoes what you
+type, and shows the switches on the LEDs.
+
+Getting there took a few fixes found on the real board. The clock is 35.7 MHz
+because the first build at 37.5 MHz missed timing by 0.1 ns on the fetch
+loop. CoreMark first reported a run shorter than 10 seconds: the port read
+its iteration count from a seed hard-coded to 1, so `ITERATIONS` was
+ignored and it never calibrated. The simulation workload (one iteration,
+about 325,000 cycles) is unchanged by the fix.
+
+Wiring, the memory map, the serial terminal, and running other programs:
 [docs/BOARD_ZYBO.md](docs/BOARD_ZYBO.md). `tools/run_board_test.sh`
-simulates the whole board with a terminal model.
+simulates the whole board with a terminal model, and
+`tools/run_board_test.sh coremark` runs the CoreMark board image the same
+way.
 
 ## FPGA Synthesis Estimate
 
@@ -394,7 +442,9 @@ in LUT RAM (Vivado had it at 15,644 LUTs) and the L2 became optional and
 off, since on-chip block RAM refills a line as fast as the L2 did; neither
 changed any workload's cycle count. Estimated from Vivado's per-module
 numbers: about 34,000 LUTs; Vivado measured 41,808 LUTs (79% of the 7020)
-and 23,600 flip-flops post-route, closing at 39.6 MHz. All core logic, caches included, now runs on
+and 23,600 flip-flops post-route for the core alone, closing at 39.6 MHz.
+The full board design meets timing at 35.7 MHz (see
+[Running On A Zybo Z7-20](#running-on-a-zybo-z7-20)). All core logic, caches included, now runs on
 the rising edge (see [docs/TIMING_CLOSURE_PLAN.md](docs/TIMING_CLOSURE_PLAN.md)).
 The memories are synchronous block RAM (`imem.sv`, `otter_memory_v1_07.sv`),
 the same RTL in simulation and on the FPGA.
@@ -488,13 +538,17 @@ Each was caught by the verification flow before the milestone was reported:
 The current design is a two-wide out-of-order RV32IMAC core with a
 single-precision FP subset, atomics, compressed instructions, gshare branch
 prediction with early recovery, store-to-load forwarding, CSR/trap support,
-a store buffer, and a two-level fully associative cache hierarchy. On
-FreeRTOS + CoreMark it runs at IPC 1.107 (21% fewer cycles than the
+a store buffer, and fully associative L1 caches (an L2 is optional). On
+FreeRTOS + CoreMark it runs at IPC 1.106 (21% fewer cycles than the
 dual-issue in-order core it replaced). Milestone 5 restructured it for FPGA
-clock speed, trading about 8% IPC for a much shorter critical path; the
-post-route Vivado measurement of that clock speed is the next step. The repo
-also includes the verification flows above and a software bring-up path so
-the project is easier to study and extend.
+clock speed, trading about 8% IPC for a much shorter critical path, and it
+now runs on a Zybo Z7-20 at 35.7 MHz, where FreeRTOS + CoreMark validates on
+the hardware. The repo also includes the verification flows above and a
+software bring-up path so the project is easier to study and extend.
+
+Reaching 50 MHz would need the fetch loop split into two stages and the
+ROB-head-to-dispatch path shortened; a two-stage fetch was tried and cost
+about 5% of the cycles on FreeRTOS + CoreMark, so it was set aside.
 
 Possible next steps: a non-blocking D-cache (several outstanding misses) and
 a stride prefetcher, return-stack repair on mispredicts, a larger ROB, or a
