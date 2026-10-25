@@ -6,11 +6,12 @@ OBJDUMP := $(CROSS)-objdump
 ROOT := $(abspath ../..)
 BUILD := $(CURDIR)/build
 
-# `make` builds the simulation image (10 iterations; tools/run_freertos_coremark.sh).
+# `make` builds the simulation image (one iteration, about 325,000 cycles;
+# tools/run_freertos_coremark.sh).
 # `make zybo` builds board/zybo/coremark.mem for the Zybo Z7-20: CoreMark
 # calibrates itself to a valid timed run of at least 10 seconds (ITERATIONS=0), prints
 # its report on the UART, and blinks the LEDs when done (main.c).
-ITERATIONS ?= 10
+ITERATIONS ?= 1
 BOARD_CPPFLAGS :=
 ifeq ($(BOARD),zybo)
 BUILD := $(CURDIR)/build-zybo

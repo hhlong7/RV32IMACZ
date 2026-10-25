@@ -796,7 +796,7 @@ retire through the pipe instead of being killed in EX1):
 | `system_workload_benchmark` | TB completion cycles | 999 | 993 |
 | `system_workload_benchmark` | `flush_ex` | 105 | 98 |
 
-FreeRTOS + CoreMark (10 iterations, GCC 16.1 `-O2`) on the same RTL:
+FreeRTOS + CoreMark (one iteration, GCC 16.1 `-O2`) on the same RTL:
 PASS at cycle 381,132; 332,588 instructions retired (IPC 0.873); 84.9% of
 control-flow instructions predicted correctly; I-cache 99.3% and D-cache
 98.2% hit rate; 4.4% of instructions retired from the second issue slot.

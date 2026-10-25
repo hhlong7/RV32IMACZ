@@ -6,7 +6,7 @@
 #   tools/run_board_test.sh            the board demo (board/zybo/zybo_hello.mem);
 #                                      prints TB_ZYBO PASS or FAIL (part of CI)
 #   tools/run_board_test.sh coremark   FreeRTOS + CoreMark as built for the board,
-#                                      with a 20 kHz pretend clock so the 10-second
+#                                      with a 20 kHz pretend clock and one iteration so the
 #                                      run fits in a short simulation (needs the RISC-V
 #                                      compiler; takes several minutes)
 set -euo pipefail
@@ -20,7 +20,9 @@ cd "$ROOT"
 if [[ "$MODE" == "coremark" ]]; then
   TB=board/zybo/tb_zybo_coremark.sv
   MARK="TB_ZYBO_COREMARK PASS"
-  make -s -C software/freertos_coremark BOARD=zybo ZYBO_CLOCK_HZ=20000 BUILD="$WORK/sw" all \
+  # One iteration (about 325,000 cycles) is 16 "seconds" at the pretend
+  # 20 kHz clock, so it passes CoreMark's 10-second rule without calibrating.
+  make -s -C software/freertos_coremark BOARD=zybo ZYBO_CLOCK_HZ=20000 ITERATIONS=1 BUILD="$WORK/sw" all \
     > "$WORK/sw.log" 2>&1 || { cat "$WORK/sw.log"; exit 1; }
   cp "$WORK/sw/freertos_coremark.mem" "$WORK/Test_All.mem"
 else
