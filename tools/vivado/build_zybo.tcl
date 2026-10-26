@@ -14,6 +14,9 @@
 #                    the repository, or a name in board/zybo (coremark.mem)
 #   impl=0           stop after synthesis (resources and estimated timing,
 #                    no bitstream); default impl=1 builds the bitstream
+#   host=0           leave out the JTAG host bridge (exactly the design that
+#                    first ran CoreMark on the board); default host=1, which
+#                    lets tools/vivado/host.tcl load and run programs
 #
 # For example, synthesis only, from the Tcl Console:
 #   set impl 0
@@ -29,9 +32,11 @@ set root $otter_root
 
 if {![info exists program]} { set program [file join $root board zybo zybo_hello.mem] }
 if {![info exists impl]} { set impl 1 }
+if {![info exists host]} { set host 1 }
 foreach arg [expr {[info exists argv] ? $argv : {}}] {
     if {[regexp {^program=(.+)$} $arg -> v]} { set program [file normalize $v] }
     if {[regexp {^impl=(.+)$} $arg -> v]} { set impl $v }
+    if {[regexp {^host=(.+)$} $arg -> v]} { set host $v }
 }
 set program [otter_find_program $program]
 puts "Program image: $program"
@@ -44,12 +49,16 @@ file mkdir $build $out
 set memfiles [otter_prepare_mem $program $build]
 cd $build
 
-read_verilog -sv [concat [otter_sources] \
-    [list [file join $root board uart.sv] [file join $root board zybo zybo_top.sv]]]
+set_part $part
+if {$host} {
+    otter_create_jtag_axi [file join $build ip]
+}
+read_verilog -sv [concat [otter_sources] [otter_board_sources]]
 read_mem $memfiles
 read_xdc [file join $root board zybo zybo.xdc]
 
-synth_design -top zybo_top -part $part -verilog_define SYNTHESIS
+puts "Host bridge: [expr {$host ? {included (JTAG)} : {left out}}]"
+synth_design -top zybo_top -part $part -verilog_define SYNTHESIS -generic HOST=$host
 write_summary "Zybo Z7-20 build" "after synthesis" $out
 
 if {!$impl} {
@@ -73,6 +82,12 @@ report_clock_utilization -file [file join $out clock_utilization.txt]
 write_summary "Zybo Z7-20 build" "after place and route" $out
 
 write_bitstream -force [file join $build zybo_top.bit]
+# The JTAG-to-AXI master is a debug core; the Hardware Manager reads this
+# file to find it (program_zybo.tcl loads it).
+file delete -force [file join $build zybo_top.ltx]
+if {$host} {
+    write_debug_probes -force [file join $build zybo_top.ltx]
+}
 cd $root
 
 set wns [get_property SLACK [get_timing_paths -setup -max_paths 1 -nworst 1]]

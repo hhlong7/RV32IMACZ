@@ -12,14 +12,28 @@ set root [file normalize [file join [file dirname [info script]] .. ..]]
 set bit [file join $root build zybo zybo_top.bit]
 if {![file exists $bit]} { error "$bit not found; run tools/vivado/build_zybo.tcl first" }
 
-open_hw_manager
-connect_hw_server -allow_non_jtag
-open_hw_target
+# Each step is skipped if it is already done (for example by host.tcl).
+catch {open_hw_manager}
+if {[llength [get_hw_servers -quiet]] == 0} { connect_hw_server -allow_non_jtag }
+catch {open_hw_target}
 # The Zynq's JTAG chain also holds the ARM debug port; pick the FPGA.
 set device [lindex [get_hw_devices xc7z020*] 0]
 if {$device eq ""} { error "No xc7z020 found on the JTAG chain (is the board on and the cable in J12?)" }
 current_hw_device $device
 set_property PROGRAM.FILE $bit $device
+# Built with the host bridge: the debug-probes file lets the Hardware Manager
+# find the JTAG-to-AXI master.
+set ltx [file join $root build zybo zybo_top.ltx]
+if {[file exists $ltx]} {
+    set_property PROBES.FILE $ltx $device
+    set_property FULL_PROBES.FILE $ltx $device
+} else {
+    set_property PROBES.FILE {} $device
+    set_property FULL_PROBES.FILE {} $device
+}
 program_hw_devices $device
 refresh_hw_device $device
 puts "Programmed $device with $bit"
+if {[file exists $ltx]} {
+    puts "Host bridge present: source tools/vivado/host.tcl, then otter_connect"
+}

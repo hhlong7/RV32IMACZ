@@ -369,6 +369,11 @@ its iteration count from a seed hard-coded to 1, so `ITERATIONS` was
 ignored and it never calibrated. The simulation workload (one iteration,
 about 325,000 cycles) is unchanged by the fix.
 
+With the JTAG host bridge (built in by default), the Vivado Tcl Console can
+also load any program into the core and run it without rebuilding the
+bitstream, and read its console output over the same USB cable
+(`tools/vivado/host.tcl`: `otter_load`, `otter_run`, `otter_console`).
+
 Wiring, the memory map, the serial terminal, and running other programs:
 [docs/BOARD_ZYBO.md](docs/BOARD_ZYBO.md). `tools/run_board_test.sh`
 simulates the whole board with a terminal model, and

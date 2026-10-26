@@ -5,6 +5,10 @@
 #
 #   tools/run_board_test.sh            the board demo (board/zybo/zybo_hello.mem);
 #                                      prints TB_ZYBO PASS or FAIL (part of CI)
+#   tools/run_board_test.sh host       the JTAG host bridge: the built-in program
+#                                      (board CoreMark) runs, then the testbench
+#                                      loads the echo demo over the bridge, runs it,
+#                                      and uses the console
 #   tools/run_board_test.sh coremark   FreeRTOS + CoreMark as built for the board,
 #                                      with a 20 kHz pretend clock and one iteration so the
 #                                      run fits in a short simulation (needs the RISC-V
@@ -25,13 +29,19 @@ if [[ "$MODE" == "coremark" ]]; then
   make -s -C software/freertos_coremark BOARD=zybo ZYBO_CLOCK_HZ=20000 ITERATIONS=1 BUILD="$WORK/sw" all \
     > "$WORK/sw.log" 2>&1 || { cat "$WORK/sw.log"; exit 1; }
   cp "$WORK/sw/freertos_coremark.mem" "$WORK/Test_All.mem"
+elif [[ "$MODE" == "host" ]]; then
+  TB=board/zybo/tb_zybo_host.sv
+  MARK="TB_ZYBO_HOST PASS"
+  cp board/zybo/coremark.mem "$WORK/Test_All.mem"
+  cp board/zybo/zybo_hello.mem "$WORK/hello.mem"
 else
   TB=board/zybo/tb_zybo.sv
   MARK="TB_ZYBO PASS"
   cp board/zybo/zybo_hello.mem "$WORK/Test_All.mem"
 fi
 
-iverilog -g2012 -o "$WORK/tb.vvp" -c rtl.f board/uart.sv board/zybo/zybo_top.sv "$TB" \
+iverilog -g2012 -o "$WORK/tb.vvp" -c rtl.f board/uart.sv board/host_bridge.sv board/host_axi_master.sv \
+  board/zybo/zybo_top.sv "$TB" \
   > "$WORK/build.log" 2>&1 || { grep -i "error" "$WORK/build.log"; echo "board test FAIL (build)"; exit 1; }
 (cd "$WORK" && vvp -n tb.vvp) | tee "$WORK/run.log" | grep -v "^VCD" || true
 grep -q "$MARK" "$WORK/run.log"

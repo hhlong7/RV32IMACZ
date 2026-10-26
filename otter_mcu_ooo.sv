@@ -45,7 +45,19 @@ module OTTER_MCU
 
     output logic IOBUS_WR,
     output logic [31:0] IOBUS_OUT,
-    output logic [31:0] IOBUS_ADDR
+    output logic [31:0] IOBUS_ADDR,
+
+    // Program loading by a host (board/host_bridge.sv). Honored only while
+    // RESET is held: LOAD_EN then gives the data-memory port to the host,
+    // whose word writes also reach both instruction memories through the
+    // store snoop. LOAD_RDATA is the word read one cycle after LOAD_RE.
+    // Tie LOAD_EN low when there is no host.
+    input  logic LOAD_EN,
+    input  logic LOAD_WE,
+    input  logic LOAD_RE,
+    input  logic [31:0] LOAD_ADDR,
+    input  logic [31:0] LOAD_DATA,
+    output logic [31:0] LOAD_RDATA
 );
 
     localparam int BHT_ENTRIES = 512;
@@ -189,6 +201,11 @@ module OTTER_MCU
     logic mem_rden2_dc, mem_we2_dc, mem_sign_dc;
     logic [31:0] mem_addr2_dc, mem_din2_dc, mem_dout2_mem;
     logic [1:0] mem_size_dc;
+    // The load/store unit's side of the data-memory port, before the host
+    // load mux.
+    logic lsu_mem_rden2, lsu_mem_we2, lsu_mem_sign;
+    logic [31:0] lsu_mem_addr2, lsu_mem_din2;
+    logic [1:0] lsu_mem_size;
     logic lsu_commit_store, lsu_sb_full, lsu_drained, lsu_busy;
     logic [26:0] imem_line, prefetch_line;
     logic atomic_commit_valid, atomic_commit_write, atomic_commit_sc_success;
@@ -1103,12 +1120,12 @@ module OTTER_MCU
         .store_buffer_full(lsu_sb_full),
         .drained(lsu_drained),
         .busy(lsu_busy),
-        .mem_rden2(mem_rden2_dc),
-        .mem_we2(mem_we2_dc),
-        .mem_addr2(mem_addr2_dc),
-        .mem_din2(mem_din2_dc),
-        .mem_size(mem_size_dc),
-        .mem_sign(mem_sign_dc),
+        .mem_rden2(lsu_mem_rden2),
+        .mem_we2(lsu_mem_we2),
+        .mem_addr2(lsu_mem_addr2),
+        .mem_din2(lsu_mem_din2),
+        .mem_size(lsu_mem_size),
+        .mem_sign(lsu_mem_sign),
         .mem_dout2(mem_dout2_mem),
         .atomic_commit_valid(atomic_commit_valid),
         .atomic_commit_write(atomic_commit_write),
@@ -1526,5 +1543,27 @@ module OTTER_MCU
 
     assign IOBUS_OUT = mem_din2_dc;
     assign IOBUS_ADDR = mem_addr2_dc;
+
+    // Host program loading (see the LOAD_* ports): whole words, only while
+    // the core is held in reset, so it never competes with the core.
+    logic load_active;
+    assign load_active = LOAD_EN && RESET;
+    always_comb begin
+        mem_rden2_dc = lsu_mem_rden2;
+        mem_we2_dc = lsu_mem_we2;
+        mem_addr2_dc = lsu_mem_addr2;
+        mem_din2_dc = lsu_mem_din2;
+        mem_size_dc = lsu_mem_size;
+        mem_sign_dc = lsu_mem_sign;
+        if (load_active) begin
+            mem_rden2_dc = LOAD_RE;
+            mem_we2_dc = LOAD_WE;
+            mem_addr2_dc = LOAD_ADDR;
+            mem_din2_dc = LOAD_DATA;
+            mem_size_dc = 2'd2;
+            mem_sign_dc = 1'b0;     // the memory's word read is coded with sign 0
+        end
+    end
+    assign LOAD_RDATA = mem_dout2_mem;
 
 endmodule

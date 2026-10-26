@@ -25,6 +25,8 @@
 #   program=<file>    memory image: a full path, a path in the repository, or
 #                     a name in board/zybo such as coremark.mem (default
 #                     zybo_hello.mem, the echo demo)
+#   host=0            leave out the JTAG host bridge (default host=1; see
+#                     tools/vivado/host.tcl)
 #   elaborate=0       create the project without opening the elaborated design
 #
 # The project lands in vivado/otter_core/ (ignored by git). Running the
@@ -32,10 +34,12 @@
 
 if {![info exists core]}      { set core 0 }
 if {![info exists elaborate]} { set elaborate 1 }
+if {![info exists host]}      { set host 1 }
 foreach arg [expr {[info exists argv] ? $argv : {}}] {
     if {[regexp {^core=(.+)$} $arg -> v]}      { set core $v }
     if {[regexp {^program=(.+)$} $arg -> v]}   { set program $v }
     if {[regexp {^elaborate=(.+)$} $arg -> v]} { set elaborate $v }
+    if {[regexp {^host=(.+)$} $arg -> v]}      { set host $v }
 }
 
 set here [file dirname [file normalize [info script]]]
@@ -55,7 +59,7 @@ set_property target_language Verilog [current_project]
 # the board top for the board design.
 set sources [otter_sources]
 if {!$core} {
-    lappend sources [file join $root board uart.sv] [file join $root board zybo zybo_top.sv]
+    set sources [concat $sources [otter_board_sources]]
 }
 add_files -norecurse -fileset sources_1 $sources
 set_property file_type SystemVerilog [get_files -of_objects [get_filesets sources_1]]
@@ -74,6 +78,8 @@ if {$core} {
         -value {-mode out_of_context} -objects [get_runs synth_1]
 } else {
     set_property top zybo_top [get_filesets sources_1]
+    set_property generic "HOST=$host" [get_filesets sources_1]
+    if {$host} { otter_create_jtag_axi }
     add_files -norecurse -fileset constrs_1 [file join $root board zybo zybo.xdc]
     # Same steps as build_zybo.tcl, which met timing at 35.7 MHz with
     # physical optimization after placement.
@@ -84,7 +90,7 @@ update_compile_order -fileset sources_1
 # Testbenches for Vivado's simulator (xsim): tb_core (core alone) and
 # tb_zybo (board). Both load Test_All.mem from the simulation directory.
 add_files -norecurse -fileset sim_1 [list [file join $root tb_core.sv] \
-    [file join $root board zybo tb_zybo.sv]]
+    [file join $root board zybo tb_zybo.sv] [file join $root board zybo tb_zybo_host.sv]]
 set_property file_type SystemVerilog [get_files -of_objects [get_filesets sim_1] *.sv]
 set_property top [expr {$core ? "tb_core" : "tb_zybo"}] [get_filesets sim_1]
 

@@ -13,6 +13,7 @@ Z7-20 (Zynq-7020, `xc7z020clg400-1`). The ARM processing system is not used.
 | FreeRTOS + CoreMark for the board | `board/zybo/coremark.mem` (`make zybo` in `software/freertos_coremark`) |
 | Build to bitstream | `tools/vivado/build_zybo.tcl` |
 | Load the bitstream onto the board | `tools/vivado/program_zybo.tcl` |
+| Load and run programs, console, over JTAG | `tools/vivado/host.tcl` (`board/host_bridge.sv`) |
 | Board-level simulation | `tools/run_board_test.sh` (`board/zybo/tb_zybo.sv`) |
 
 ## What runs
@@ -171,6 +172,56 @@ program` (or restarting Vivado) returns to the demo.
 
 `tools/run_board_test.sh coremark` simulates this on the board top with a
 pretend 20 kHz clock, so the 10-second run fits in a short simulation.
+
+## Loading and running programs over JTAG (host bridge)
+
+Bitstreams built with the host bridge (the default; `set host 0` before
+`build_zybo.tcl` leaves it out) let the Vivado Tcl Console load programs into
+the core, run them, and talk to them over the board's USB-JTAG cable (J12),
+with no rebuild per program and no USB-serial adapter. At power-up the core
+still runs the bitstream's built-in program.
+
+After `program_zybo.tcl`, in the Vivado Tcl Console:
+
+```text
+source tools/vivado/host.tcl
+otter_connect                  ;# finds the board, checks the bridge
+otter_load coremark.mem        ;# holds the core, loads, reads back to verify
+otter_run                      ;# starts it
+otter_console 60               ;# prints its output (waits up to 60 s)
+```
+
+| Command | Does |
+| --- | --- |
+| `otter_connect` | open the Hardware Manager and the board if needed, find the bridge |
+| `otter_load <file.mem>` | hold the core, write the image (up to its last nonzero word), read it back |
+| `otter_run` / `otter_stop` | release / hold the core (BTN0 still restarts the loaded program) |
+| `otter_console [quiet] [limit]` | print what the program printed; stops after `quiet` seconds of silence (3) |
+| `otter_send text`, `otter_send -line text` | type to the program (`-line` adds Enter) |
+| `otter_cycles` | clock cycles since the core was last released |
+| `otter_sseg` | the program's seven-segment value (the test programs' pass/fail code) |
+| `otter_read <addr> [n]` | read memory words (core stopped) |
+| `otter_status`, `otter_detach` | state; let a running program print without waiting for the laptop |
+
+Each JTAG transaction takes on the order of a millisecond, so loading
+CoreMark (about 4,200 words, plus the read-back) takes some seconds, and
+console output arrives in bursts as it is polled.
+
+While the laptop is attached (`otter_load` / `otter_run` attach it), a
+program that prints faster than the console is read waits for room; when
+not attached, output the laptop does not read is dropped once the 4 KB
+console buffer is full, so a program running on its own never stalls.
+
+Bridge registers (AXI4-Lite, `board/host_bridge.sv`): CONTROL `0x00`
+(hold, attach), STATUS `0x04`, LOAD_ADDR `0x08`, LOAD_DATA `0x0C` (write or
+read one word, then the address advances), CONSOLE_OUT `0x10` (up to three
+bytes per read), CONSOLE_IN `0x14`, CYCLES `0x18`/`0x1C`, SSEG `0x20`, ID
+`0x24` (`0x4F545452`). The core side is the `LOAD_*` port of `OTTER_MCU`,
+active only while the bridge holds the core in reset.
+
+`tools/run_board_test.sh host` simulates the whole sequence: the built-in
+program runs, the testbench loads the echo demo over the bridge, verifies
+it, runs it, types to it, and checks the counter, BTN0, and holding.
 
 ## Running another program
 

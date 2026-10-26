@@ -37,6 +37,33 @@ proc otter_sources {} {
     return $sources
 }
 
+# The board design's own sources (zybo_top and what it uses), after rtl.f.
+proc otter_board_sources {} {
+    global otter_root
+    set b [file join $otter_root board]
+    return [list [file join $b uart.sv] [file join $b host_bridge.sv] \
+                 [file join $b host_axi_master.sv] [file join $b zybo zybo_top.sv]]
+}
+
+# Vivado's JTAG-to-AXI Master IP as jtag_axi_0 (AXI4-Lite), which
+# board/host_axi_master.sv instantiates. In a project it becomes part of the
+# project; without one, give `dir` and it is generated and synthesized there.
+proc otter_create_jtag_axi {{dir ""}} {
+    if {$dir ne ""} {
+        file delete -force [file join $dir jtag_axi_0]
+        file mkdir $dir
+        create_ip -name jtag_axi -vendor xilinx.com -library ip -module_name jtag_axi_0 -dir $dir
+    } else {
+        create_ip -name jtag_axi -vendor xilinx.com -library ip -module_name jtag_axi_0
+    }
+    # PROTOCOL 2 = AXI4-Lite (0 would be full AXI4).
+    set_property -dict [list CONFIG.PROTOCOL {2}] [get_ips jtag_axi_0]
+    generate_target all [get_ips jtag_axi_0]
+    if {$dir ne ""} {
+        synth_ip [get_ips jtag_axi_0]
+    }
+}
+
 # The memories load their contents at synthesis: Memory reads Test_All.mem,
 # and imem reads Test_All.mem.bank0.mem .. bank7.mem, bank b holding the words whose
 # address bits [4:2] are b (imem.sv). Writes all nine files for `program`

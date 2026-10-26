@@ -56,7 +56,13 @@ module OTTER_Wrapper(
               .IOBUS_IN(IOBUS_in),
               .IOBUS_OUT(IOBUS_out),
               .IOBUS_ADDR(IOBUS_addr),
-              .IOBUS_WR(IOBUS_wr)
+              .IOBUS_WR(IOBUS_wr),
+              .LOAD_EN(1'b0),
+              .LOAD_WE(1'b0),
+              .LOAD_RE(1'b0),
+              .LOAD_ADDR(32'b0),
+              .LOAD_DATA(32'b0),
+              .LOAD_RDATA()
             );
 
   // Declare Seven Segment Display /////////////////////////////////////////

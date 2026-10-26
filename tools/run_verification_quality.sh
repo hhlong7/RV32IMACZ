@@ -34,5 +34,6 @@ python3 tools/lockstep.py --random "${LOCKSTEP_RANDOM:-200}" ${REQUIRE_TOOLS[@]+
 
 echo; echo "== 6/6 Zybo board simulation (UART terminal, LEDs, switches) =="
 bash tools/run_board_test.sh | tee "$LOG_DIR/board.log"
+bash tools/run_board_test.sh host | tee "$LOG_DIR/board_host.log"
 
 echo; echo "All checks passed. Logs: $LOG_DIR"
