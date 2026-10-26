@@ -38,7 +38,7 @@ proc otter_sources {} {
 }
 
 # The memories load their contents at synthesis: Memory reads Test_All.mem,
-# and imem reads Test_All.mem.bank0 .. bank7, bank b holding the words whose
+# and imem reads Test_All.mem.bank0.mem .. bank7.mem, bank b holding the words whose
 # address bits [4:2] are b (imem.sv). Writes all nine files for `program`
 # (a .mem image, one 32-bit hex word per line) into `dir`; returns them.
 proc otter_prepare_mem {program dir} {
@@ -61,7 +61,7 @@ proc otter_prepare_mem {program dir} {
     for {set b 0} {$b < 8} {incr b} {
         set bank {}
         for {set i $b} {$i < 16384} {incr i 8} { lappend bank [lindex $words $i] }
-        set f [file join $dir Test_All.mem.bank$b]
+        set f [file join $dir Test_All.mem.bank$b.mem]
         set fh [open $f w]
         puts $fh [join $bank "\n"]
         close $fh

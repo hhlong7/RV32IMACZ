@@ -98,9 +98,44 @@ Typed characters echo back, the switches show on LD3..LD0 (and are reported
 when they change), and `i` prints the `mcycle` and `minstret` counters.
 BTN0 restarts the program. The design is lost at power-off; program it again.
 
-To open the design in the Vivado GUI instead (elaborated schematic, then
-Run Synthesis / Implementation / Generate Bitstream from the Flow Navigator):
-`source tools/vivado/create_project.tcl`.
+## Using a saved Vivado project (GUI)
+
+Instead of running `build_zybo.tcl` every time, create a Vivado project once
+and then work in the GUI. The project keeps every run's results, so after a
+change Vivado re-runs only what that change affects.
+
+**Once**, in the Vivado Tcl Console:
+
+```text
+cd C:/Users/hhlon/Documents/RV32IMACZ
+set program coremark.mem
+source tools/vivado/create_project.tcl
+```
+
+(Leave out `set program` for the echo demo.) This creates
+`vivado/otter_core/otter_core.xpr` (ignored by git) with the board design,
+the pin constraints, and the program in the memories, and opens it.
+
+**Every time after that:**
+
+1. Open Vivado, then **File > Project > Open** (or the Recent Projects list)
+   and pick `vivado/otter_core/otter_core.xpr`.
+2. In the Flow Navigator on the left: **Run Synthesis**, then **Run
+   Implementation**, then **Generate Bitstream** (clicking Generate Bitstream
+   alone runs whatever earlier steps are out of date).
+3. **Open Hardware Manager > Open Target > Auto Connect**, then **Program
+   Device**; the bitstream path is filled in
+   (`vivado/otter_core/otter_core.runs/impl_1/zybo_top.bit`).
+
+After pulling new RTL from git, the project sees the changed files and marks
+synthesis out of date; clicking Generate Bitstream rebuilds everything that
+needs it. To switch programs, run `create_project.tcl` again with the new
+`set program` (it replaces the project).
+
+Check **Timing** in the Project Summary after implementation: the design
+meets 35.7 MHz with almost no margin, so a different placement can miss it by
+a little. If it does, run implementation again or use `build_zybo.tcl`,
+which met it.
 
 ## Running CoreMark on the board
 

@@ -13,7 +13,8 @@
 //     a byte-enabled write mirroring data-side stores (snoop_*), so code
 //       written by stores is fetched correctly after fence.i
 //   Simulation loads the banks from MEM_FILE; synthesis loads bank b from
-//   MEM_FILE.bank<b> (tools/vivado/build_zybo.tcl writes those files).
+//   MEM_FILE.bank<b>.mem (tools/vivado/otter_common.tcl writes those files;
+//   the .mem ending lets a Vivado project recognize them as memory files).
 //////////////////////////////////////////////////////////////////////////////////
 module imem #(
     parameter MEM_FILE = "Test_All.mem"
@@ -75,7 +76,7 @@ module imem #(
             logic [31:0] q;                 // registered read data
 `ifdef SYNTHESIS
             localparam logic [7:0] DIGIT = 8'h30 + b;
-            initial $readmemh({MEM_FILE, ".bank", DIGIT}, ram);
+            initial $readmemh({MEM_FILE, ".bank", DIGIT, ".mem"}, ram);
 `else
             initial begin
                 #0;     // after the image is loaded
